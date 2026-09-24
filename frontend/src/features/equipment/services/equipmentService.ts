@@ -3,11 +3,16 @@ import type { PaginatedResponse, ApiResponse } from '@/types/api'
 import type {
   EquipmentType,
   EquipmentModel,
+  EquipmentUnit,
   CreateEquipmentTypePayload,
   UpdateEquipmentTypePayload,
   CreateEquipmentModelPayload,
   UpdateEquipmentModelPayload,
+  CreateEquipmentUnitPayload,
+  UpdateEquipmentUnitPayload,
+  UpdateEquipmentUnitStatusPayload,
   EquipmentModelFilterParams,
+  EquipmentUnitFilterParams,
 } from '@/types/equipment'
 
 export const equipmentService = {
@@ -19,7 +24,7 @@ export const equipmentService = {
     if (page) params.append('page', String(page))
 
     const response = await api.get<EquipmentType[]>(`/equipment/types?${params.toString()}`)
-    return response as unknown as PaginatedResponse<EquipmentType> // Overloaded logic in controller
+    return response as unknown as PaginatedResponse<EquipmentType>
   },
 
   createType: async (payload: CreateEquipmentTypePayload): Promise<EquipmentType> => {
@@ -61,6 +66,42 @@ export const equipmentService = {
 
   deleteModel: async (id: number): Promise<void> => {
     await api.delete(`/equipment/models/${id}`)
+  },
+
+  // --- Physical Equipment Units ---
+  getUnits: async (params: EquipmentUnitFilterParams = {}): Promise<PaginatedResponse<EquipmentUnit>> => {
+    const query = new URLSearchParams()
+    if (params.search) query.append('search', params.search)
+    if (params.equipment_model_id) query.append('equipment_model_id', String(params.equipment_model_id))
+    if (params.status) query.append('status', params.status)
+    if (params.page) query.append('page', String(params.page))
+    if (params.per_page) query.append('per_page', String(params.per_page))
+
+    return api.getPaginated<EquipmentUnit>(`/equipment/units?${query.toString()}`)
+  },
+
+  getUnit: async (id: number): Promise<EquipmentUnit> => {
+    const response = await api.get<EquipmentUnit>(`/equipment/units/${id}`)
+    return response.data
+  },
+
+  createUnit: async (payload: CreateEquipmentUnitPayload): Promise<EquipmentUnit> => {
+    const response = await api.post<EquipmentUnit>('/equipment/units', payload)
+    return response.data
+  },
+
+  updateUnit: async (id: number, payload: UpdateEquipmentUnitPayload): Promise<EquipmentUnit> => {
+    const response = await api.put<EquipmentUnit>(`/equipment/units/${id}`, payload)
+    return response.data
+  },
+
+  updateUnitStatus: async (id: number, payload: UpdateEquipmentUnitStatusPayload): Promise<EquipmentUnit> => {
+    const response = await api.post<EquipmentUnit>(`/equipment/units/${id}/status`, payload)
+    return response.data
+  },
+
+  deleteUnit: async (id: number): Promise<void> => {
+    await api.delete(`/equipment/units/${id}`)
   },
 }
 

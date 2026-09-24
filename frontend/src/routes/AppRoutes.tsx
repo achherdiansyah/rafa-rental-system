@@ -24,6 +24,7 @@ const UserPortalPlaceholder = lazy(() => import('@/pages/UserPortalPlaceholder')
 const AdminPortalPlaceholder = lazy(() => import('@/pages/AdminPortalPlaceholder'))
 const OwnerPortalPlaceholder = lazy(() => import('@/pages/OwnerPortalPlaceholder'))
 const AdminEquipmentMasterPage = lazy(() => import('@/features/equipment/pages/AdminEquipmentMasterPage'))
+const AdminEquipmentUnitsPage = lazy(() => import('@/features/equipment/pages/AdminEquipmentUnitsPage'))
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -65,7 +66,7 @@ export const AppRoutes: React.FC = () => {
               <Route index element={<AdminPortalPlaceholder />} />
               <Route path="equipment" element={<AdminEquipmentMasterPage />} />
               <Route path="bookings" element={<AdminPortalPlaceholder />} />
-              <Route path="units" element={<AdminPortalPlaceholder />} />
+              <Route path="units" element={<AdminEquipmentUnitsPage />} />
               <Route path="timesheets" element={<AdminPortalPlaceholder />} />
               <Route path="payments" element={<AdminPortalPlaceholder />} />
               <Route path="refunds" element={<AdminPortalPlaceholder />} />

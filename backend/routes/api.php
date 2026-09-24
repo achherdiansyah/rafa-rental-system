@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\Admin\AdminUserController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\EquipmentModelController;
 use App\Http\Controllers\Api\V1\EquipmentTypeController;
+use App\Http\Controllers\Api\V1\EquipmentUnitController;
 use App\Http\Controllers\Api\V1\HealthCheckController;
 use App\Http\Controllers\Api\V1\Owner\OwnerUserController;
 use App\Http\Controllers\Api\V1\ProfileController;
@@ -69,6 +70,15 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::put('/models/{model}', [EquipmentModelController::class, 'update'])->name('models.update');
             Route::patch('/models/{model}', [EquipmentModelController::class, 'update'])->name('models.update.patch');
             Route::delete('/models/{model}', [EquipmentModelController::class, 'destroy'])->name('models.destroy');
+
+            // Physical Equipment Units
+            Route::get('/units', [EquipmentUnitController::class, 'index'])->name('units.index');
+            Route::get('/units/{unit}', [EquipmentUnitController::class, 'show'])->name('units.show');
+            Route::post('/units', [EquipmentUnitController::class, 'store'])->name('units.store');
+            Route::put('/units/{unit}', [EquipmentUnitController::class, 'update'])->name('units.update');
+            Route::patch('/units/{unit}', [EquipmentUnitController::class, 'update'])->name('units.update.patch');
+            Route::post('/units/{unit}/status', [EquipmentUnitController::class, 'updateStatus'])->name('units.status');
+            Route::delete('/units/{unit}', [EquipmentUnitController::class, 'destroy'])->name('units.destroy');
         });
 
         /*
