@@ -23,6 +23,7 @@ const UnauthorizedPage = lazy(() => import('@/pages/UnauthorizedPage'))
 const UserPortalPlaceholder = lazy(() => import('@/pages/UserPortalPlaceholder'))
 const AdminPortalPlaceholder = lazy(() => import('@/pages/AdminPortalPlaceholder'))
 const OwnerPortalPlaceholder = lazy(() => import('@/pages/OwnerPortalPlaceholder'))
+const AdminEquipmentMasterPage = lazy(() => import('@/features/equipment/pages/AdminEquipmentMasterPage'))
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -62,6 +63,7 @@ export const AppRoutes: React.FC = () => {
           <Route element={<RoleRoute allowedRoles={['ADMIN', 'OWNER']} />}>
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminPortalPlaceholder />} />
+              <Route path="equipment" element={<AdminEquipmentMasterPage />} />
               <Route path="bookings" element={<AdminPortalPlaceholder />} />
               <Route path="units" element={<AdminPortalPlaceholder />} />
               <Route path="timesheets" element={<AdminPortalPlaceholder />} />

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Outlet } from 'react-router-dom'
-import { LayoutDashboard, CheckSquare, Truck, Clock, CreditCard, RefreshCw } from 'lucide-react'
+import { LayoutDashboard, CheckSquare, Layers, Truck, Clock, CreditCard, RefreshCw } from 'lucide-react'
 import { Navbar } from './Navbar'
 import { Sidebar } from './Sidebar'
 import type { SidebarItem } from './Sidebar'
@@ -10,6 +10,7 @@ export const AdminLayout: React.FC = () => {
 
   const navItems: SidebarItem[] = [
     { label: 'Admin Desk', href: '/admin', icon: <LayoutDashboard size={18} /> },
+    { label: 'Master Armada & Tipe', href: '/admin/equipment', icon: <Layers size={18} /> },
     { label: 'Approval Booking', href: '/admin/bookings', icon: <CheckSquare size={18} /> },
     { label: 'Alokasi Unit Fisik', href: '/admin/units', icon: <Truck size={18} /> },
     { label: 'Validasi Timesheet', href: '/admin/timesheets', icon: <Clock size={18} /> },

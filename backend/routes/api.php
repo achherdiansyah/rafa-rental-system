@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Api\V1\Admin\AdminUserController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\EquipmentModelController;
+use App\Http\Controllers\Api\V1\EquipmentTypeController;
 use App\Http\Controllers\Api\V1\HealthCheckController;
 use App\Http\Controllers\Api\V1\Owner\OwnerUserController;
 use App\Http\Controllers\Api\V1\ProfileController;
@@ -30,7 +32,15 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('reset-password');
     });
 
-    // 3. Authenticated Routes (Sanctum)
+    // 3. Public Equipment Catalog Endpoints (Read-only)
+    Route::prefix('equipment')->name('equipment.')->group(function () {
+        Route::get('/types', [EquipmentTypeController::class, 'index'])->name('types.index');
+        Route::get('/types/{type}', [EquipmentTypeController::class, 'show'])->name('types.show');
+        Route::get('/models', [EquipmentModelController::class, 'index'])->name('models.index');
+        Route::get('/models/{model}', [EquipmentModelController::class, 'show'])->name('models.show');
+    });
+
+    // 4. Authenticated Routes (Sanctum)
     Route::middleware('auth:sanctum')->group(function () {
         // Auth Session management
         Route::prefix('auth')->name('auth.')->group(function () {
@@ -46,6 +56,19 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
             // Profile Verification (Admin/Owner only via Gate in Request)
             Route::post('/verify', [ProfileController::class, 'verify'])->name('verify');
+        });
+
+        // Equipment Master Management (Admin/Owner)
+        Route::middleware('role:ADMIN,OWNER')->prefix('equipment')->name('equipment.admin.')->group(function () {
+            Route::post('/types', [EquipmentTypeController::class, 'store'])->name('types.store');
+            Route::put('/types/{type}', [EquipmentTypeController::class, 'update'])->name('types.update');
+            Route::patch('/types/{type}', [EquipmentTypeController::class, 'update'])->name('types.update.patch');
+            Route::delete('/types/{type}', [EquipmentTypeController::class, 'destroy'])->name('types.destroy');
+
+            Route::post('/models', [EquipmentModelController::class, 'store'])->name('models.store');
+            Route::put('/models/{model}', [EquipmentModelController::class, 'update'])->name('models.update');
+            Route::patch('/models/{model}', [EquipmentModelController::class, 'update'])->name('models.update.patch');
+            Route::delete('/models/{model}', [EquipmentModelController::class, 'destroy'])->name('models.destroy');
         });
 
         /*
