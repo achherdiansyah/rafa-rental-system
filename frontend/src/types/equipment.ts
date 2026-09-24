@@ -17,6 +17,17 @@ export interface EquipmentType {
   updated_at?: string
 }
 
+export interface EquipmentAttachment {
+  id: number
+  document_type: string
+  file_name: string
+  mime_type: string
+  file_size: number
+  url: string
+  uploaded_by: number
+  created_at?: string
+}
+
 export interface EquipmentModel {
   id: number
   equipment_type_id: number
@@ -26,6 +37,7 @@ export interface EquipmentModel {
   capacity_unit: string
   is_active: boolean
   type?: EquipmentType
+  attachments?: EquipmentAttachment[]
   units_count?: number
   created_at?: string
   updated_at?: string

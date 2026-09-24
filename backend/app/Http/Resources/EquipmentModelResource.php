@@ -28,6 +28,7 @@ class EquipmentModelResource extends JsonResource
             'is_active' => (bool) $this->is_active,
             'type' => new EquipmentTypeResource($this->whenLoaded('type')),
             'prices' => $this->whenLoaded('prices'),
+            'attachments' => AttachmentResource::collection($this->whenLoaded('attachments')),
             'units_count' => $this->whenCounted('units'),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),

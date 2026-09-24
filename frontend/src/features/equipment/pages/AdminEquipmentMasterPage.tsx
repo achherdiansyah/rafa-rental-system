@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react'
-import { Plus, Search, Edit2, Trash2, Layers, Truck } from 'lucide-react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { Plus, Search, Edit2, Trash2, Layers, Truck, Image, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/form/Input'
 import { Select } from '@/components/form/Select'
@@ -62,6 +62,11 @@ export const AdminEquipmentMasterPage: React.FC = () => {
   // --- Delete Dialog ---
   const [deleteTarget, setDeleteTarget] = useState<{ type: 'type' | 'model'; id: number; name: string } | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  // --- Photo Management Modal State ---
+  const [photoModalModel, setPhotoModalModel] = useState<EquipmentModel | null>(null)
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Fetch Types List (All for select options)
   const fetchAllTypes = useCallback(async () => {
@@ -249,6 +254,39 @@ export const AdminEquipmentMasterPage: React.FC = () => {
     }
   }
 
+  // --- Photo Upload Handler ---
+  const handleUploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !photoModalModel) return
+
+    setIsUploadingPhoto(true)
+    try {
+      await equipmentService.uploadModelPhoto(photoModalModel.id, file)
+      success('Foto alat berat berhasil diunggah.')
+      fetchModels(modelMeta.current_page)
+      // Close or refresh model state
+      setPhotoModalModel(null)
+    } catch (err) {
+      const apiErr = err as ApiError
+      toastError(apiErr.message || 'Gagal mengunggah foto.')
+    } finally {
+      setIsUploadingPhoto(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const handleDeletePhoto = async (modelId: number, attachmentId: number) => {
+    try {
+      await equipmentService.deleteModelPhoto(modelId, attachmentId)
+      success('Foto berhasil dihapus.')
+      fetchModels(modelMeta.current_page)
+      setPhotoModalModel(null)
+    } catch (err) {
+      const apiErr = err as ApiError
+      toastError(apiErr.message || 'Gagal menghapus foto.')
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -375,6 +413,15 @@ export const AdminEquipmentMasterPage: React.FC = () => {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right space-x-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setPhotoModalModel(model)}
+                          title="Kelola Foto Alat"
+                          aria-label={`Kelola foto ${model.model_name}`}
+                        >
+                          <Image size={14} />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -626,6 +673,62 @@ export const AdminEquipmentMasterPage: React.FC = () => {
         variant="danger"
         isLoading={isDeleting}
       />
+
+      {/* MODAL: PHOTO MANAGEMENT */}
+      <Modal
+        isOpen={!!photoModalModel}
+        onClose={() => setPhotoModalModel(null)}
+        title={`Foto Armada: ${photoModalModel?.brand} ${photoModalModel?.model_name}`}
+        size="lg"
+      >
+        <div className="space-y-4">
+          <div className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-200">
+            <div>
+              <p className="text-xs font-semibold text-slate-700">Unggah Foto Baru</p>
+              <p className="text-xs text-slate-500">Format: JPG, PNG, WEBP. Maksimum 5 MB.</p>
+            </div>
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleUploadPhoto}
+              className="hidden"
+            />
+            <Button
+              size="sm"
+              isLoading={isUploadingPhoto}
+              onClick={() => fileInputRef.current?.click()}
+              leftIcon={<Plus size={14} />}
+            >
+              Pilih Foto
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-96 overflow-y-auto p-1">
+            {photoModalModel?.attachments && photoModalModel.attachments.length > 0 ? (
+              photoModalModel.attachments.map((att) => (
+                <div key={att.id} className="group relative rounded-xl border border-slate-200 overflow-hidden bg-slate-100 aspect-video">
+                  <img src={att.url} alt={att.file_name} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-2">
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => photoModalModel && handleDeletePhoto(photoModalModel.id, att.id)}
+                      leftIcon={<X size={14} />}
+                    >
+                      Hapus
+                    </Button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-8 text-slate-400 text-sm">
+                Belum ada foto yang diunggah untuk model ini.
+              </div>
+            )}
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

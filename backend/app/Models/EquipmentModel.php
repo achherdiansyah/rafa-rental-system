@@ -43,4 +43,9 @@ class EquipmentModel extends Model
     {
         return $this->hasMany(EquipmentPrice::class);
     }
+
+    public function attachments()
+    {
+        return $this->morphMany(Attachment::class, 'attachable');
+    }
 }

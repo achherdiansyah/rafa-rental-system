@@ -68,6 +68,21 @@ export const equipmentService = {
     await api.delete(`/equipment/models/${id}`)
   },
 
+  uploadModelPhoto: async (modelId: number, file: File): Promise<void> => {
+    const formData = new FormData()
+    formData.append('photo', file)
+
+    await api.post(`/equipment/models/${modelId}/photos`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+  },
+
+  deleteModelPhoto: async (modelId: number, attachmentId: number): Promise<void> => {
+    await api.delete(`/equipment/models/${modelId}/photos/${attachmentId}`)
+  },
+
   // --- Physical Equipment Units ---
   getUnits: async (params: EquipmentUnitFilterParams = {}): Promise<PaginatedResponse<EquipmentUnit>> => {
     const query = new URLSearchParams()

@@ -6,3 +6,4 @@ Dokumentasi implementasi modul master data armada, inventaris unit fisik, dan sk
 
 - `01-equipment-type-model.md`: Implementasi backend REST API dan antarmuka manajemen Admin untuk master data tipe alat berat (`equipment_types`) dan seri model armada (`equipment_models`).
 - `02-equipment-unit.md`: Spesifikasi REST API dan antarmuka manajemen Admin untuk inventaris nomor seri unit fisik (`equipment_units`), aturan transisi status keselamatan (*status safety guards*), dan pelacakan Hour Meter.
+- `03-equipment-specification-media.md`: Spesifikasi lampiran foto model alat berat (`attachments`), arsitektur storage lokal/private, validasi MIME gambar, dan antarmuka kelola foto Admin.

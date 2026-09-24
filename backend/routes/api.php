@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Admin\AdminUserController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\EquipmentMediaController;
 use App\Http\Controllers\Api\V1\EquipmentModelController;
 use App\Http\Controllers\Api\V1\EquipmentTypeController;
 use App\Http\Controllers\Api\V1\EquipmentUnitController;
@@ -70,6 +71,10 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::put('/models/{model}', [EquipmentModelController::class, 'update'])->name('models.update');
             Route::patch('/models/{model}', [EquipmentModelController::class, 'update'])->name('models.update.patch');
             Route::delete('/models/{model}', [EquipmentModelController::class, 'destroy'])->name('models.destroy');
+
+            // Equipment Media
+            Route::post('/models/{model}/photos', [EquipmentMediaController::class, 'uploadPhoto'])->name('models.photos.upload');
+            Route::delete('/models/{model}/photos/{attachment}', [EquipmentMediaController::class, 'deletePhoto'])->name('models.photos.delete');
 
             // Physical Equipment Units
             Route::get('/units', [EquipmentUnitController::class, 'index'])->name('units.index');
