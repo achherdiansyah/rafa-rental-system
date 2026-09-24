@@ -1,0 +1,29 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: rafa-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: rafa_rental
+      MYSQL_USER: rafa
+      MYSQL_PASSWORD: rafa_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - rafa_mysql_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: rafa-phpmyadmin
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+    ports:
+      - "8082:80"
+
+volumes:
+  rafa_mysql_data:
