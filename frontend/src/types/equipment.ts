@@ -122,3 +122,55 @@ export interface EquipmentUnitFilterParams {
   page?: number
   per_page?: number
 }
+
+export interface EquipmentPriceVersion {
+  id: number
+  equipment_price_id: number
+  old_base_rate: number
+  new_base_rate: number
+  changed_at: string
+  changed_by: number
+  changed_by_user?: {
+    id: number
+    name: string
+  }
+}
+
+export interface EquipmentPrice {
+  id: number
+  equipment_model_id: number
+  price_type: 'HOURLY' | 'DAILY' | 'MONTHLY' | 'LUMP_SUM'
+  is_all_in: boolean
+  base_rate: number
+  minimum_hours: number
+  overtime_rate: number
+  effective_date: string
+  model?: EquipmentModel
+  versions?: EquipmentPriceVersion[]
+  created_at?: string
+  updated_at?: string
+}
+
+export interface CreateEquipmentPricePayload {
+  equipment_model_id: number
+  price_type: 'HOURLY' | 'DAILY' | 'MONTHLY' | 'LUMP_SUM'
+  is_all_in: boolean
+  base_rate: number
+  minimum_hours: number
+  overtime_rate: number
+  effective_date: string
+}
+
+export interface UpdateEquipmentPricePayload {
+  base_rate: number
+  minimum_hours?: number
+  overtime_rate?: number
+  effective_date?: string
+}
+
+export interface EquipmentPriceFilterParams {
+  equipment_model_id?: number | string
+  is_all_in?: boolean
+  page?: number
+  per_page?: number
+}

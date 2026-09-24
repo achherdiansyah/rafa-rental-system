@@ -4,6 +4,7 @@ import type {
   EquipmentType,
   EquipmentModel,
   EquipmentUnit,
+  EquipmentPrice,
   CreateEquipmentTypePayload,
   UpdateEquipmentTypePayload,
   CreateEquipmentModelPayload,
@@ -11,8 +12,11 @@ import type {
   CreateEquipmentUnitPayload,
   UpdateEquipmentUnitPayload,
   UpdateEquipmentUnitStatusPayload,
+  CreateEquipmentPricePayload,
+  UpdateEquipmentPricePayload,
   EquipmentModelFilterParams,
   EquipmentUnitFilterParams,
+  EquipmentPriceFilterParams,
 } from '@/types/equipment'
 
 export const equipmentService = {
@@ -117,6 +121,32 @@ export const equipmentService = {
 
   deleteUnit: async (id: number): Promise<void> => {
     await api.delete(`/equipment/units/${id}`)
+  },
+
+  // --- Equipment Pricing ---
+  getPrices: async (params: EquipmentPriceFilterParams = {}): Promise<PaginatedResponse<EquipmentPrice>> => {
+    const query = new URLSearchParams()
+    if (params.equipment_model_id) query.append('equipment_model_id', String(params.equipment_model_id))
+    if (params.is_all_in !== undefined) query.append('is_all_in', params.is_all_in ? '1' : '0')
+    if (params.page) query.append('page', String(params.page))
+    if (params.per_page) query.append('per_page', String(params.per_page))
+
+    return api.getPaginated<EquipmentPrice>(`/equipment/prices?${query.toString()}`)
+  },
+
+  getPrice: async (id: number): Promise<EquipmentPrice> => {
+    const response = await api.get<EquipmentPrice>(`/equipment/prices/${id}`)
+    return response.data
+  },
+
+  createPrice: async (payload: CreateEquipmentPricePayload): Promise<EquipmentPrice> => {
+    const response = await api.post<EquipmentPrice>('/equipment/prices', payload)
+    return response.data
+  },
+
+  updatePrice: async (id: number, payload: UpdateEquipmentPricePayload): Promise<EquipmentPrice> => {
+    const response = await api.put<EquipmentPrice>(`/equipment/prices/${id}`, payload)
+    return response.data
   },
 }
 

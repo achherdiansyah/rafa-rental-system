@@ -23,6 +23,7 @@ const UnauthorizedPage = lazy(() => import('@/pages/UnauthorizedPage'))
 const UserPortalPlaceholder = lazy(() => import('@/pages/UserPortalPlaceholder'))
 const AdminPortalPlaceholder = lazy(() => import('@/pages/AdminPortalPlaceholder'))
 const OwnerPortalPlaceholder = lazy(() => import('@/pages/OwnerPortalPlaceholder'))
+const OwnerPricingPage = lazy(() => import('@/features/equipment/pages/OwnerPricingPage'))
 const AdminEquipmentMasterPage = lazy(() => import('@/features/equipment/pages/AdminEquipmentMasterPage'))
 const AdminEquipmentUnitsPage = lazy(() => import('@/features/equipment/pages/AdminEquipmentUnitsPage'))
 
@@ -78,7 +79,7 @@ export const AppRoutes: React.FC = () => {
             <Route path="/owner" element={<OwnerLayout />}>
               <Route index element={<OwnerPortalPlaceholder />} />
               <Route path="revenue" element={<OwnerPortalPlaceholder />} />
-              <Route path="pricing" element={<OwnerPortalPlaceholder />} />
+              <Route path="pricing" element={<OwnerPricingPage />} />
               <Route path="audit" element={<OwnerPortalPlaceholder />} />
               <Route path="settings" element={<OwnerPortalPlaceholder />} />
             </Route>

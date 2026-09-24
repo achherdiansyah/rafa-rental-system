@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\Admin\AdminUserController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\EquipmentMediaController;
 use App\Http\Controllers\Api\V1\EquipmentModelController;
+use App\Http\Controllers\Api\V1\EquipmentPriceController;
 use App\Http\Controllers\Api\V1\EquipmentTypeController;
 use App\Http\Controllers\Api\V1\EquipmentUnitController;
 use App\Http\Controllers\Api\V1\HealthCheckController;
@@ -84,6 +85,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::patch('/units/{unit}', [EquipmentUnitController::class, 'update'])->name('units.update.patch');
             Route::post('/units/{unit}/status', [EquipmentUnitController::class, 'updateStatus'])->name('units.status');
             Route::delete('/units/{unit}', [EquipmentUnitController::class, 'destroy'])->name('units.destroy');
+
+            // Equipment Pricing (Read for Admin/Owner, Mutate for Owner)
+            Route::get('/prices', [EquipmentPriceController::class, 'index'])->name('prices.index');
+            Route::get('/prices/{price}', [EquipmentPriceController::class, 'show'])->name('prices.show');
+            Route::post('/prices', [EquipmentPriceController::class, 'store'])->name('prices.store');
+            Route::put('/prices/{price}', [EquipmentPriceController::class, 'update'])->name('prices.update');
         });
 
         /*
