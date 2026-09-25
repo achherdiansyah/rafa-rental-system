@@ -1,3 +1,5 @@
+import type { EquipmentModel } from './equipment'
+
 export interface RecommendationCriteria {
   id: number
   request_id: number
@@ -18,13 +20,10 @@ export interface RecommendationResult {
   id: number
   request_id: number
   equipment_model_id: number
+  rank?: number
   match_score: number
   reasoning_text: string
-  model: {
-    id: number
-    brand: string
-    model_name: string
-  }
+  model?: EquipmentModel
   created_at: string
 }
 

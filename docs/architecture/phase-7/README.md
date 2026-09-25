@@ -21,8 +21,9 @@ Prinsip Utama:
 |---|---|---|
 | **7A** | Domain Foundation, Entity Relasi, Input Kriteria, & Scoring Engine | Selesai (`1d757b6`) |
 | **7B** | Implementasi Bobot & Aturan Evaluasi Detail Multi-Kriteria | Selesai (`1647307`) |
-| **7C** | REST API Endpoints, Sanitasi Response, Paginasi, & Otorisasi RBAC | Selesai (Aktif) |
-| **7D** | Antarmuka Wizard Rekomendasi Pelanggan & Integrasi Katalog | Pending |
+| **7C** | REST API Endpoints, Sanitasi Response, Paginasi, & Otorisasi RBAC | Selesai (`978f476`) |
+| **7D** | Antarmuka Rekomendasi Pelanggan, Wizard Input, & Integrasi Katalog | Selesai (Aktif) |
+| **7E** | Pengujian Integrasi Menyeluruh & Quality Gate Rekomendasi | Pending |
 
 ---
 
@@ -31,3 +32,4 @@ Prinsip Utama:
 - `01-recommendation-domain.md`: Spesifikasi entitas basis data (`recommendation_requests`, `recommendation_criteria`, `recommendation_results`), relasi model, arsitektur *Rule-Based Scoring Service*, dan REST API.
 - `02-scoring-engine.md`: Spesifikasi matematis formula *Weighted Scoring*, normalisasi bobot, mekanisme penentuan peringkat deterministik (*tie-breaking*), dan pelacakan teks eksplanasi.
 - `03-recommendation-api.md`: Spesifikasi REST API (`/api/v1/recommendations`), validasi *StoreRecommendationRequest*, struktur *resource envelope*, paginasi, dan matriks otorisasi RBAC.
+- `04-recommendation-ui.md`: Spesifikasi antarmuka pengguna (`/app/recommendations`), alur wizard kriteria, kartu peringkat armada, dan penanganan state UX.
