@@ -30,6 +30,8 @@ class RecommendationCriteriaResource extends JsonResource
             'target_productivity' => $this->target_productivity,
             'location_access' => $this->location_access,
             'duration_days' => $this->duration_days,
+            'start_date' => $this->start_date?->toDateString(),
+            'end_date' => $this->end_date?->toDateString(),
             'budget_range' => $this->budget_range,
             'additional_params' => $this->additional_params,
         ];

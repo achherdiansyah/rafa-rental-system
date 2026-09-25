@@ -25,6 +25,8 @@ class RecommendationCriteria extends Model
         'target_productivity',
         'location_access',
         'duration_days',
+        'start_date',
+        'end_date',
         'budget_range',
         'additional_params',
     ];
@@ -37,6 +39,8 @@ class RecommendationCriteria extends Model
             'reach_requirement' => 'decimal:2',
             'load_capacity' => 'decimal:2',
             'duration_days' => 'integer',
+            'start_date' => 'date',
+            'end_date' => 'date',
             'additional_params' => 'array',
         ];
     }

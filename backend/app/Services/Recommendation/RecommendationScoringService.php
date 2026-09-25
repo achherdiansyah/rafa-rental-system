@@ -4,14 +4,21 @@ namespace App\Services\Recommendation;
 
 use App\Models\EquipmentModel;
 use App\Models\RecommendationCriteria;
+use App\Services\Equipment\EquipmentAvailabilityService;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
 class RecommendationScoringService
 {
+    public function __construct(
+        protected EquipmentAvailabilityService $availabilityService
+    ) {}
+
     /**
      * Compute recommendation match scores, rank models deterministically, and generate explanation.
+     * Excludes models that have zero availability during the requested period.
      *
-     * @return Collection<int, array{model: EquipmentModel, score: float, reasoning: string, breakdown: array<string, array{name: string, weight: float, score: float, contribution: float}>}>
+     * @return Collection<int, array{model: EquipmentModel, score: float, lowest_rate: float, model_id: int, reasoning: string, breakdown: array<string, mixed>}>
      */
     public function evaluate(RecommendationCriteria $criteria): Collection
     {
@@ -32,7 +39,28 @@ class RecommendationScoringService
             ->with(['type', 'prices'])
             ->get();
 
-        $scored = $models->map(function (EquipmentModel $model) use ($criteria, $activeCriteria, $totalWeight) {
+        // 1. Resolve period for availability check
+        $startDate = $criteria->start_date ? Carbon::parse($criteria->start_date) : null;
+        $endDate = $criteria->end_date ? Carbon::parse($criteria->end_date) : null;
+
+        if ($startDate && ! $endDate && $criteria->duration_days) {
+            $endDate = $startDate->copy()->addDays($criteria->duration_days - 1);
+        }
+
+        // 2. Fetch bulk availability map for all models
+        $modelIds = $models->pluck('id')->all();
+        $availabilityMap = $this->availabilityService->getAvailabilityMap($modelIds, $startDate, $endDate);
+
+        $scored = collect();
+
+        foreach ($models as $model) {
+            $availableUnits = (int) $availabilityMap->get($model->id, 0);
+
+            // Business Rule: Exclude equipment that is physically unavailable
+            if ($availableUnits <= 0) {
+                continue;
+            }
+
             $breakdown = [];
             $totalWeightedScore = 0.0;
 
@@ -58,17 +86,18 @@ class RecommendationScoringService
             $lowestPrice = $model->prices->min('base_rate');
             $lowestRate = $lowestPrice !== null ? (float) $lowestPrice : PHP_FLOAT_MAX;
 
-            $reasoning = $this->generateReasoningText($model, $criteria, $breakdown, $finalScore);
+            $reasoning = $this->generateReasoningText($model, $criteria, $breakdown, $finalScore, $availableUnits);
 
-            return [
+            $scored->push([
                 'model' => $model,
                 'score' => $finalScore,
                 'lowest_rate' => $lowestRate,
                 'model_id' => $model->id,
+                'available_units' => $availableUnits,
                 'reasoning' => $reasoning,
                 'breakdown' => $breakdown,
-            ];
-        });
+            ]);
+        }
 
         // Filter by threshold, sort deterministically, and take max results
         // Sort order: 1) score DESC, 2) lowest_rate ASC, 3) model_id ASC
@@ -203,7 +232,8 @@ class RecommendationScoringService
         EquipmentModel $model,
         RecommendationCriteria $criteria,
         array $breakdown,
-        float $finalScore
+        float $finalScore,
+        int $availableUnits = 0
     ): string {
         $reasons = [];
 

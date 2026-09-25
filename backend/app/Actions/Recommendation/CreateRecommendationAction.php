@@ -39,6 +39,8 @@ class CreateRecommendationAction
                 'target_productivity' => $data['target_productivity'] ?? null,
                 'location_access' => $data['location_access'] ?? null,
                 'duration_days' => $data['duration_days'] ?? null,
+                'start_date' => $data['start_date'] ?? null,
+                'end_date' => $data['end_date'] ?? null,
                 'budget_range' => $data['budget_range'] ?? null,
                 'additional_params' => $data['additional_params'] ?? null,
             ]);
