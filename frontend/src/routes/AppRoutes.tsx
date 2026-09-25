@@ -30,6 +30,7 @@ const AdminBankAccountsPage = lazy(() => import('@/features/bank/pages/AdminBank
 const EquipmentCatalogPage = lazy(() => import('@/features/equipment/pages/EquipmentCatalogPage'))
 const EquipmentDetailPage = lazy(() => import('@/features/equipment/pages/EquipmentDetailPage'))
 const RecommendationPage = lazy(() => import('@/features/recommendation/pages/RecommendationPage'))
+const UserProjectLocationsPage = lazy(() => import('@/features/project/pages/UserProjectLocationsPage'))
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -62,6 +63,7 @@ export const AppRoutes: React.FC = () => {
               <Route path="equipment/:id" element={<EquipmentDetailPage />} />
               <Route path="recommendations" element={<RecommendationPage />} />
               <Route path="recommendation" element={<RecommendationPage />} />
+              <Route path="locations" element={<UserProjectLocationsPage />} />
               <Route path="bookings" element={<UserPortalPlaceholder />} />
               <Route path="invoices" element={<UserPortalPlaceholder />} />
               <Route path="profile" element={<ProfilePage />} />

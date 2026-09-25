@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\HealthCheckController;
 use App\Http\Controllers\Api\V1\Owner\OwnerUserController;
 use App\Http\Controllers\Api\V1\PricingCalculationController;
 use App\Http\Controllers\Api\V1\ProfileController;
+use App\Http\Controllers\Api\V1\ProjectLocationController;
 use App\Http\Controllers\Api\V1\RecommendationController;
 use Illuminate\Support\Facades\Route;
 
@@ -72,6 +73,16 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('/{bankAccount}', [BankAccountController::class, 'show'])->name('show');
             Route::post('/', [BankAccountController::class, 'store'])->name('store');
             Route::put('/{bankAccount}', [BankAccountController::class, 'update'])->name('update');
+        });
+
+        // Project Locations (Customer project delivery destinations)
+        Route::prefix('project-locations')->name('project-locations.')->group(function () {
+            Route::get('/', [ProjectLocationController::class, 'index'])->name('index');
+            Route::post('/', [ProjectLocationController::class, 'store'])->name('store');
+            Route::get('/{projectLocation}', [ProjectLocationController::class, 'show'])->name('show');
+            Route::put('/{projectLocation}', [ProjectLocationController::class, 'update'])->name('update');
+            Route::patch('/{projectLocation}', [ProjectLocationController::class, 'update'])->name('update.patch');
+            Route::delete('/{projectLocation}', [ProjectLocationController::class, 'destroy'])->name('destroy');
         });
 
         // Recommendation System (Decision support for equipment selection)
