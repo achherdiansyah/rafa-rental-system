@@ -176,6 +176,100 @@ class PricingCalculationTest extends TestCase
         $this->assertEquals(1600000, $resNew->json('data.grand_total')); // 200,000 * 8h
     }
 
+    public function test_pricing_calculation_fails_if_equipment_model_is_inactive(): void
+    {
+        $model = EquipmentModel::factory()->inactive()->create();
+
+        EquipmentPrice::factory()->create([
+            'equipment_model_id' => $model->id,
+            'is_all_in' => false,
+            'base_rate' => 150000.00,
+            'effective_date' => '2026-01-01',
+        ]);
+
+        $payload = [
+            'items' => [
+                [
+                    'equipment_model_id' => $model->id,
+                    'quantity' => 1,
+                    'start_date' => '2026-10-01',
+                    'end_date' => '2026-10-02',
+                    'is_all_in' => false,
+                ],
+            ],
+        ];
+
+        $response = $this->postJson('/api/v1/pricing/calculate', $payload);
+
+        $response->assertStatus(409)
+            ->assertJson([
+                'success' => false,
+                'code' => 'BUSINESS_RULE_VIOLATION',
+            ]);
+
+        $this->assertStringContainsString('sedang tidak aktif', $response->json('message'));
+    }
+
+    public function test_pricing_calculation_rejects_negative_mob_and_demob_rates(): void
+    {
+        $model = EquipmentModel::factory()->create();
+
+        $payload = [
+            'items' => [
+                [
+                    'equipment_model_id' => $model->id,
+                    'quantity' => 1,
+                    'start_date' => '2026-10-01',
+                    'end_date' => '2026-10-02',
+                    'is_all_in' => false,
+                    'mob_rate_per_unit' => -50000,
+                    'demob_rate_per_unit' => -100000,
+                ],
+            ],
+        ];
+
+        $response = $this->postJson('/api/v1/pricing/calculate', $payload);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors([
+                'items.0.mob_rate_per_unit',
+                'items.0.demob_rate_per_unit',
+            ]);
+    }
+
+    public function test_pricing_calculation_with_zero_mob_and_demob(): void
+    {
+        $model = EquipmentModel::factory()->create();
+        EquipmentPrice::factory()->create([
+            'equipment_model_id' => $model->id,
+            'is_all_in' => false,
+            'base_rate' => 100000.00,
+            'effective_date' => '2026-01-01',
+        ]);
+
+        $payload = [
+            'items' => [
+                [
+                    'equipment_model_id' => $model->id,
+                    'quantity' => 1,
+                    'start_date' => '2026-10-01',
+                    'end_date' => '2026-10-01', // 1 day
+                    'is_all_in' => false,
+                    'mob_rate_per_unit' => 0,
+                    'demob_rate_per_unit' => 0,
+                ],
+            ],
+        ];
+
+        $response = $this->postJson('/api/v1/pricing/calculate', $payload);
+
+        $response->assertStatus(200);
+        $this->assertEquals(800000, $response->json('data.total_rental_amount'));
+        $this->assertEquals(0, $response->json('data.total_mob_amount'));
+        $this->assertEquals(0, $response->json('data.total_demob_amount'));
+        $this->assertEquals(800000, $response->json('data.grand_total'));
+    }
+
     public function test_validation_fails_on_missing_fields_or_wrong_dates(): void
     {
         $payload = [

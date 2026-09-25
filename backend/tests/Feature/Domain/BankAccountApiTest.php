@@ -156,4 +156,44 @@ class BankAccountApiTest extends TestCase
 
         $this->assertFalse($account->fresh()->is_active);
     }
+
+    public function test_user_cannot_update_bank_account(): void
+    {
+        $user = User::factory()->create(['role' => UserRole::USER]);
+        $account = BankAccount::factory()->create();
+
+        Sanctum::actingAs($user);
+
+        $response = $this->putJson("/api/v1/bank-accounts/{$account->id}", [
+            'bank_name' => 'Hacked Bank',
+            'is_active' => false,
+        ]);
+
+        $response->assertStatus(403);
+    }
+
+    public function test_owner_can_manage_bank_accounts(): void
+    {
+        $owner = User::factory()->owner()->create();
+        Sanctum::actingAs($owner);
+
+        // Owner can list inactive
+        BankAccount::factory()->create(['is_active' => false]);
+        $this->getJson('/api/v1/bank-accounts')->assertStatus(200);
+
+        // Owner can create
+        $createRes = $this->postJson('/api/v1/bank-accounts', [
+            'bank_name' => 'Owner Bank',
+            'account_number' => 'OWNER-123',
+            'account_name' => 'OWNER PT',
+            'is_active' => true,
+        ]);
+        $createRes->assertStatus(201);
+        $accountId = $createRes->json('data.id');
+
+        // Owner can update
+        $this->putJson("/api/v1/bank-accounts/{$accountId}", [
+            'bank_name' => 'Owner Bank Updated',
+        ])->assertStatus(200);
+    }
 }

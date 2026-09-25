@@ -2,6 +2,7 @@
 
 namespace App\Actions\Equipment\Media;
 
+use App\Exceptions\BusinessRuleException;
 use App\Models\Attachment;
 use App\Models\EquipmentModel;
 use Illuminate\Support\Facades\DB;
@@ -16,8 +17,8 @@ class DeleteEquipmentPhotoAction
     {
         DB::transaction(function () use ($model, $attachment) {
             // Ensure the attachment belongs to this model
-            if ($attachment->attachable_type !== EquipmentModel::class || $attachment->attachable_id !== $model->id) {
-                return;
+            if ($attachment->attachable_type !== EquipmentModel::class || (int) $attachment->attachable_id !== (int) $model->id) {
+                throw new BusinessRuleException('Foto tidak terhubung dengan model alat berat ini.');
             }
 
             if (Storage::disk('public')->exists($attachment->file_path)) {

@@ -12,3 +12,4 @@ Dokumentasi implementasi modul master data armada, inventaris unit fisik, dan sk
 - `06-bank-account.md`: Implementasi master rekening bank perusahaan (`bank_accounts`), perlindungan otorisasi Admin/Owner, penyaringan rekening aktif untuk instruksi pembayaran pelanggan, dan antarmuka manajemen.
 - `07-admin-master-data-ui.md`: Standar implementasi komponen antarmuka admin, filter paginasi sisi server, optimasi pencarian debounced, dan pengujian UI master data.
 - `08-user-equipment-catalog.md`: Spesifikasi antarmuka katalog armada pelanggan (`/app/equipment` & `/app/equipment/:id`), tampilan spesifikasi, galeri foto, dan perbandingan tarif sewa All-in/Non All-in.
+- `09-integration-test-report.md`: Laporan pengujian integrasi komprehensif master data, armada, otorisasi RBAC multi-role, integritas data/FK, pengujian kalkulasi harga MOB/DEMOB, dan hasil quality gate Phase 6.

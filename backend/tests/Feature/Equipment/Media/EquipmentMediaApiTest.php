@@ -142,6 +142,69 @@ class EquipmentMediaApiTest extends TestCase
         Storage::disk('public')->assertMissing($path);
     }
 
+    public function test_regular_user_cannot_delete_equipment_photo(): void
+    {
+        $user = User::factory()->create(['role' => UserRole::USER]);
+        $model = EquipmentModel::factory()->create();
+        $attachment = $model->attachments()->create([
+            'document_type' => 'EQUIPMENT_PHOTO',
+            'file_path' => 'test.jpg',
+            'file_name' => 'test.jpg',
+            'mime_type' => 'image/jpeg',
+            'file_size' => 100,
+            'uploaded_by' => $user->id,
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $response = $this->deleteJson("/api/v1/equipment/models/{$model->id}/photos/{$attachment->id}");
+
+        $response->assertStatus(403);
+    }
+
+    public function test_cannot_delete_photo_belonging_to_another_model(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $model1 = EquipmentModel::factory()->create();
+        $model2 = EquipmentModel::factory()->create();
+
+        $attachment = $model1->attachments()->create([
+            'document_type' => 'EQUIPMENT_PHOTO',
+            'file_path' => 'model1.jpg',
+            'file_name' => 'model1.jpg',
+            'mime_type' => 'image/jpeg',
+            'file_size' => 100,
+            'uploaded_by' => $admin->id,
+        ]);
+
+        Sanctum::actingAs($admin);
+
+        // Attempt deleting model1's attachment using model2's endpoint
+        $response = $this->deleteJson("/api/v1/equipment/models/{$model2->id}/photos/{$attachment->id}");
+
+        $response->assertStatus(409)
+            ->assertJson([
+                'success' => false,
+                'code' => 'BUSINESS_RULE_VIOLATION',
+            ]);
+    }
+
+    public function test_owner_can_upload_and_delete_equipment_photo(): void
+    {
+        $owner = User::factory()->owner()->create();
+        $model = EquipmentModel::factory()->create();
+
+        Sanctum::actingAs($owner);
+
+        $file = UploadedFile::fake()->image('excavator.jpg');
+        $uploadRes = $this->postJson("/api/v1/equipment/models/{$model->id}/photos", ['photo' => $file]);
+        $uploadRes->assertStatus(201);
+
+        $attachmentId = $uploadRes->json('data.id');
+        $deleteRes = $this->deleteJson("/api/v1/equipment/models/{$model->id}/photos/{$attachmentId}");
+        $deleteRes->assertStatus(200);
+    }
+
     public function test_public_can_view_model_details_with_photos(): void
     {
         $model = EquipmentModel::factory()->create();

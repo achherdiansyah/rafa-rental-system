@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Domain;
 
+use App\Actions\Equipment\Pricing\UpdateEquipmentPriceAction;
 use App\Models\EquipmentModel;
 use App\Models\EquipmentPrice;
 use App\Models\EquipmentPriceVersion;
@@ -92,5 +93,43 @@ class PricingDomainTest extends TestCase
 
         $this->assertTrue($priceAllIn->is_all_in);
         $this->assertFalse($priceNotAllIn->is_all_in);
+    }
+
+    public function test_price_version_chain_continuity_across_sequential_updates(): void
+    {
+        $owner = User::factory()->owner()->create();
+        $action = app(UpdateEquipmentPriceAction::class);
+
+        $price = EquipmentPrice::factory()->create(['base_rate' => 100000.00]);
+
+        // First update: 100k -> 150k
+        $action->execute($price, ['base_rate' => 150000.00], $owner);
+        // Second update: 150k -> 200k
+        $action->execute($price, ['base_rate' => 200000.00], $owner);
+
+        $versions = $price->versions()->orderBy('id')->get();
+        $this->assertCount(2, $versions);
+
+        $this->assertEquals('100000.00', $versions[0]->old_base_rate);
+        $this->assertEquals('150000.00', $versions[0]->new_base_rate);
+
+        $this->assertEquals('150000.00', $versions[1]->old_base_rate);
+        $this->assertEquals('200000.00', $versions[1]->new_base_rate);
+    }
+
+    public function test_no_price_version_created_when_base_rate_is_unchanged(): void
+    {
+        $owner = User::factory()->owner()->create();
+        $action = app(UpdateEquipmentPriceAction::class);
+
+        $price = EquipmentPrice::factory()->create(['base_rate' => 100000.00]);
+
+        // Update other fields but same base rate
+        $action->execute($price, [
+            'base_rate' => 100000.00,
+            'minimum_hours' => 10,
+        ], $owner);
+
+        $this->assertCount(0, $price->versions);
     }
 }

@@ -136,4 +136,58 @@ class EquipmentPriceApiTest extends TestCase
 
         $this->assertCount(1, $response->json('data.versions'));
     }
+
+    public function test_admin_and_owner_can_list_prices(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $owner = User::factory()->owner()->create();
+        EquipmentPrice::factory()->count(3)->create();
+
+        Sanctum::actingAs($admin);
+        $this->getJson('/api/v1/equipment/prices')->assertStatus(200);
+
+        Sanctum::actingAs($owner);
+        $this->getJson('/api/v1/equipment/prices')->assertStatus(200);
+    }
+
+    public function test_admin_cannot_create_or_update_master_price(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $model = EquipmentModel::factory()->create();
+        $price = EquipmentPrice::factory()->create();
+
+        Sanctum::actingAs($admin);
+
+        $this->postJson('/api/v1/equipment/prices', [
+            'equipment_model_id' => $model->id,
+            'price_type' => 'HOURLY',
+            'is_all_in' => false,
+            'base_rate' => 250000.00,
+            'minimum_hours' => 8,
+            'overtime_rate' => 300000.00,
+            'effective_date' => '2026-10-01',
+        ])->assertStatus(403);
+
+        $this->putJson("/api/v1/equipment/prices/{$price->id}", [
+            'base_rate' => 300000.00,
+            'minimum_hours' => 8,
+            'overtime_rate' => 350000.00,
+            'effective_date' => '2026-11-01',
+        ])->assertStatus(403);
+    }
+
+    public function test_regular_user_cannot_update_master_price(): void
+    {
+        $user = User::factory()->create(['role' => UserRole::USER]);
+        $price = EquipmentPrice::factory()->create();
+
+        Sanctum::actingAs($user);
+
+        $this->putJson("/api/v1/equipment/prices/{$price->id}", [
+            'base_rate' => 300000.00,
+            'minimum_hours' => 8,
+            'overtime_rate' => 350000.00,
+            'effective_date' => '2026-11-01',
+        ])->assertStatus(403);
+    }
 }

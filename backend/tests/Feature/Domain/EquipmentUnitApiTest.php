@@ -218,4 +218,112 @@ class EquipmentUnitApiTest extends TestCase
         $response->assertStatus(200);
         $this->assertSoftDeleted('equipment_units', ['id' => $unit->id]);
     }
+
+    public function test_admin_can_show_equipment_unit(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $unit = EquipmentUnit::factory()->create(['serial_number' => 'SHOW-SN-001']);
+
+        Sanctum::actingAs($admin);
+
+        $response = $this->getJson("/api/v1/equipment/units/{$unit->id}");
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'id' => $unit->id,
+                    'serial_number' => 'SHOW-SN-001',
+                ],
+            ]);
+    }
+
+    public function test_admin_can_patch_equipment_unit(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $unit = EquipmentUnit::factory()->create(['serial_number' => 'PATCH-OLD']);
+
+        Sanctum::actingAs($admin);
+
+        $response = $this->patchJson("/api/v1/equipment/units/{$unit->id}", [
+            'serial_number' => 'PATCH-NEW',
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertDatabaseHas('equipment_units', [
+            'id' => $unit->id,
+            'serial_number' => 'PATCH-NEW',
+        ]);
+    }
+
+    public function test_cannot_create_unit_with_invalid_model_id(): void
+    {
+        $admin = User::factory()->admin()->create();
+        Sanctum::actingAs($admin);
+
+        $response = $this->postJson('/api/v1/equipment/units', [
+            'equipment_model_id' => 999999,
+            'serial_number' => 'SN-INVALID-MODEL',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['equipment_model_id']);
+    }
+
+    public function test_user_cannot_mutate_equipment_units(): void
+    {
+        $user = User::factory()->create(['role' => UserRole::USER]);
+        $unit = EquipmentUnit::factory()->create();
+
+        Sanctum::actingAs($user);
+
+        // GET show
+        $this->getJson("/api/v1/equipment/units/{$unit->id}")->assertStatus(403);
+
+        // POST store
+        $this->postJson('/api/v1/equipment/units', [
+            'equipment_model_id' => $unit->equipment_model_id,
+            'serial_number' => 'HACKED-SN',
+        ])->assertStatus(403);
+
+        // PUT update
+        $this->putJson("/api/v1/equipment/units/{$unit->id}", [
+            'serial_number' => 'HACKED-SN',
+        ])->assertStatus(403);
+
+        // PATCH update
+        $this->patchJson("/api/v1/equipment/units/{$unit->id}", [
+            'serial_number' => 'HACKED-SN',
+        ])->assertStatus(403);
+
+        // POST status
+        $this->postJson("/api/v1/equipment/units/{$unit->id}/status", [
+            'status' => 'MAINTENANCE',
+        ])->assertStatus(403);
+
+        // DELETE
+        $this->deleteJson("/api/v1/equipment/units/{$unit->id}")->assertStatus(403);
+    }
+
+    public function test_owner_can_manage_equipment_units(): void
+    {
+        $owner = User::factory()->owner()->create();
+        $model = EquipmentModel::factory()->create();
+
+        Sanctum::actingAs($owner);
+
+        // Create
+        $createRes = $this->postJson('/api/v1/equipment/units', [
+            'equipment_model_id' => $model->id,
+            'serial_number' => 'OWNER-SN-001',
+        ]);
+        $createRes->assertStatus(201);
+        $unitId = $createRes->json('data.id');
+
+        // Show
+        $this->getJson("/api/v1/equipment/units/{$unitId}")->assertStatus(200);
+
+        // Delete
+        $this->deleteJson("/api/v1/equipment/units/{$unitId}")->assertStatus(200);
+    }
 }

@@ -243,4 +243,156 @@ class EquipmentTypeAndModelApiTest extends TestCase
         $response->assertStatus(200);
         $this->assertSoftDeleted('equipment_models', ['id' => $model->id]);
     }
+
+    public function test_public_can_show_equipment_type(): void
+    {
+        $type = EquipmentType::factory()->create(['name' => 'Bulldozer Show']);
+
+        $response = $this->getJson("/api/v1/equipment/types/{$type->id}");
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'id' => $type->id,
+                    'name' => 'Bulldozer Show',
+                ],
+            ]);
+    }
+
+    public function test_admin_can_update_equipment_type(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $type = EquipmentType::factory()->create(['name' => 'Old Type Name']);
+
+        Sanctum::actingAs($admin);
+
+        $response = $this->putJson("/api/v1/equipment/types/{$type->id}", [
+            'name' => 'Updated Type Name',
+            'description' => 'Updated desc',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'name' => 'Updated Type Name',
+                ],
+            ]);
+
+        $this->assertDatabaseHas('equipment_types', ['id' => $type->id, 'name' => 'Updated Type Name']);
+    }
+
+    public function test_admin_can_patch_equipment_type(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $type = EquipmentType::factory()->create(['name' => 'Patch Type Name', 'description' => 'Original desc']);
+
+        Sanctum::actingAs($admin);
+
+        $response = $this->patchJson("/api/v1/equipment/types/{$type->id}", [
+            'name' => 'Patched Type Name',
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertDatabaseHas('equipment_types', ['id' => $type->id, 'name' => 'Patched Type Name']);
+    }
+
+    public function test_admin_can_delete_empty_equipment_type(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $type = EquipmentType::factory()->create(['name' => 'Empty Type']);
+
+        Sanctum::actingAs($admin);
+
+        $response = $this->deleteJson("/api/v1/equipment/types/{$type->id}");
+
+        $response->assertStatus(200);
+        $this->assertSoftDeleted('equipment_types', ['id' => $type->id]);
+    }
+
+    public function test_user_cannot_update_or_delete_equipment_type(): void
+    {
+        $user = User::factory()->create(['role' => UserRole::USER]);
+        $type = EquipmentType::factory()->create();
+
+        Sanctum::actingAs($user);
+
+        $this->putJson("/api/v1/equipment/types/{$type->id}", ['name' => 'Hacked Type'])->assertStatus(403);
+        $this->patchJson("/api/v1/equipment/types/{$type->id}", ['name' => 'Hacked Type'])->assertStatus(403);
+        $this->deleteJson("/api/v1/equipment/types/{$type->id}")->assertStatus(403);
+    }
+
+    public function test_user_cannot_create_update_or_delete_equipment_model(): void
+    {
+        $user = User::factory()->create(['role' => UserRole::USER]);
+        $type = EquipmentType::factory()->create();
+        $model = EquipmentModel::factory()->create(['equipment_type_id' => $type->id]);
+
+        Sanctum::actingAs($user);
+
+        $this->postJson('/api/v1/equipment/models', [
+            'equipment_type_id' => $type->id,
+            'brand' => 'Komatsu',
+            'model_name' => 'Hacked Model',
+            'capacity_value' => 10,
+            'capacity_unit' => 'Ton',
+        ])->assertStatus(403);
+
+        $this->putJson("/api/v1/equipment/models/{$model->id}", [
+            'model_name' => 'Hacked Model Name',
+        ])->assertStatus(403);
+
+        $this->patchJson("/api/v1/equipment/models/{$model->id}", [
+            'model_name' => 'Hacked Model Name',
+        ])->assertStatus(403);
+
+        $this->deleteJson("/api/v1/equipment/models/{$model->id}")->assertStatus(403);
+    }
+
+    public function test_admin_can_patch_equipment_model(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $model = EquipmentModel::factory()->create(['brand' => 'Komatsu', 'model_name' => 'PC200-Original']);
+
+        Sanctum::actingAs($admin);
+
+        $response = $this->patchJson("/api/v1/equipment/models/{$model->id}", [
+            'model_name' => 'PC200-Patched',
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertDatabaseHas('equipment_models', [
+            'id' => $model->id,
+            'model_name' => 'PC200-Patched',
+        ]);
+    }
+
+    public function test_owner_can_manage_types_and_models(): void
+    {
+        $owner = User::factory()->owner()->create();
+        Sanctum::actingAs($owner);
+
+        // Owner create type
+        $typeRes = $this->postJson('/api/v1/equipment/types', [
+            'name' => 'Owner Created Type',
+        ]);
+        $typeRes->assertStatus(201);
+        $typeId = $typeRes->json('data.id');
+
+        // Owner create model
+        $modelRes = $this->postJson('/api/v1/equipment/models', [
+            'equipment_type_id' => $typeId,
+            'brand' => 'Volvo',
+            'model_name' => 'EC210D',
+            'capacity_value' => 21,
+            'capacity_unit' => 'Ton',
+        ]);
+        $modelRes->assertStatus(201);
+        $modelId = $modelRes->json('data.id');
+
+        // Owner delete model & type
+        $this->deleteJson("/api/v1/equipment/models/{$modelId}")->assertStatus(200);
+        $this->deleteJson("/api/v1/equipment/types/{$typeId}")->assertStatus(200);
+    }
 }

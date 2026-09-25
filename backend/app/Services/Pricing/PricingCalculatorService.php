@@ -26,9 +26,9 @@ class PricingCalculatorService
     {
         /** @var EquipmentModel|null $model */
         $model = EquipmentModel::find($input->equipmentModelId);
-        if (! $model) {
+        if (! $model || ! $model->is_active) {
             throw new BusinessRuleException(
-                "Model peralatan ID #{$input->equipmentModelId} tidak ditemukan."
+                "Model peralatan ID #{$input->equipmentModelId} tidak ditemukan atau sedang tidak aktif."
             );
         }
 
