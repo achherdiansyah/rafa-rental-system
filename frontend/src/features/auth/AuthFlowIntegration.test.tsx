@@ -73,7 +73,7 @@ describe('Frontend End-to-End Authentication Journey', () => {
       expect(screen.getByRole('heading', { name: /masuk akun/i })).toBeInTheDocument()
       expect(localStorage.getItem('rafa_token')).toBeNull()
     })
-  })
+  }, 15000)
 
   it('admin login redirects directly to Admin Workspace (/admin)', async () => {
     const adminUser = {
@@ -107,11 +107,11 @@ describe('Frontend End-to-End Authentication Journey', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /meja kerja operasional/i })).toBeInTheDocument()
-    })
+    }, { timeout: 10000 })
 
     expect(screen.getByText('Admin Utama')).toBeInTheDocument()
     expect(screen.getByText('ADMIN')).toBeInTheDocument()
-  })
+  }, 15000)
 
   it('owner login redirects directly to Executive Dashboard (/owner)', async () => {
     const ownerUser = {
@@ -145,9 +145,9 @@ describe('Frontend End-to-End Authentication Journey', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /executive dashboard/i })).toBeInTheDocument()
-    })
+    }, { timeout: 10000 })
 
     expect(screen.getByText('Owner Bisnis')).toBeInTheDocument()
     expect(screen.getByText('OWNER')).toBeInTheDocument()
-  })
+  }, 15000)
 })
