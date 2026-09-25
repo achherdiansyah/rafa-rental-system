@@ -8,3 +8,4 @@ Dokumentasi implementasi modul master data armada, inventaris unit fisik, dan sk
 - `02-equipment-unit.md`: Spesifikasi REST API dan antarmuka manajemen Admin untuk inventaris nomor seri unit fisik (`equipment_units`), aturan transisi status keselamatan (*status safety guards*), dan pelacakan Hour Meter.
 - `03-equipment-specification-media.md`: Spesifikasi lampiran foto model alat berat (`attachments`), arsitektur storage lokal/private, validasi MIME gambar, dan antarmuka kelola foto Admin.
 - `04-pricing-version.md`: Implementasi master tarif sewa (`equipment_prices`), skema All-in/Non All-in, presisi `DECIMAL(15,2)`, imutabilitas audit versi harga (`equipment_price_versions`), dan pembatasan wewenang khusus Owner.
+- `05-price-scheme-mob-demob.md`: Spesifikasi skema sewa per-equipment line (All-in vs Non All-in), perhitungan logistik MOB/DEMOB per physical unit, dan mesin kalkulasi harga rental (`PricingCalculatorService`).

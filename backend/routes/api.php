@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\EquipmentTypeController;
 use App\Http\Controllers\Api\V1\EquipmentUnitController;
 use App\Http\Controllers\Api\V1\HealthCheckController;
 use App\Http\Controllers\Api\V1\Owner\OwnerUserController;
+use App\Http\Controllers\Api\V1\PricingCalculationController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -35,13 +36,15 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('reset-password');
     });
 
-    // 3. Public Equipment Catalog Endpoints (Read-only)
+    // 3. Public Equipment Catalog & Pricing Simulation Endpoints (Read-only / Calculation)
     Route::prefix('equipment')->name('equipment.')->group(function () {
         Route::get('/types', [EquipmentTypeController::class, 'index'])->name('types.index');
         Route::get('/types/{type}', [EquipmentTypeController::class, 'show'])->name('types.show');
         Route::get('/models', [EquipmentModelController::class, 'index'])->name('models.index');
         Route::get('/models/{model}', [EquipmentModelController::class, 'show'])->name('models.show');
     });
+
+    Route::post('/pricing/calculate', PricingCalculationController::class)->name('pricing.calculate');
 
     // 4. Authenticated Routes (Sanctum)
     Route::middleware('auth:sanctum')->group(function () {
