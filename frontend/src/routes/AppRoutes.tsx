@@ -67,8 +67,9 @@ export const AppRoutes: React.FC = () => {
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminPortalPlaceholder />} />
               <Route path="equipment" element={<AdminEquipmentMasterPage />} />
-              <Route path="bookings" element={<AdminPortalPlaceholder />} />
               <Route path="units" element={<AdminEquipmentUnitsPage />} />
+              <Route path="banks" element={<AdminBankAccountsPage />} />
+              <Route path="bookings" element={<AdminPortalPlaceholder />} />
               <Route path="timesheets" element={<AdminPortalPlaceholder />} />
               <Route path="payments" element={<AdminPortalPlaceholder />} />
               <Route path="refunds" element={<AdminPortalPlaceholder />} />
