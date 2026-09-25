@@ -7,7 +7,6 @@ use App\Enums\EquipmentStatus;
 use App\Models\Booking;
 use App\Models\BookingDetail;
 use App\Models\EquipmentModel;
-use App\Models\EquipmentType;
 use App\Models\EquipmentUnit;
 use App\Models\User;
 use App\Services\Equipment\EquipmentAvailabilityService;

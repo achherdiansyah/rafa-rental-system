@@ -2,9 +2,11 @@
 
 namespace Tests\Unit\Services;
 
+use App\Enums\EquipmentStatus;
 use App\Models\EquipmentModel;
 use App\Models\EquipmentPrice;
 use App\Models\EquipmentType;
+use App\Models\EquipmentUnit;
 use App\Models\RecommendationCriteria;
 use App\Models\RecommendationRequest;
 use App\Models\User;
@@ -24,6 +26,14 @@ class RecommendationScoringServiceTest extends TestCase
         $this->service = app(RecommendationScoringService::class);
     }
 
+    private function addUnit(EquipmentModel $model): void
+    {
+        EquipmentUnit::factory()->create([
+            'equipment_model_id' => $model->id,
+            'status' => EquipmentStatus::AVAILABLE,
+        ]);
+    }
+
     public function test_evaluates_and_ranks_models_by_weighted_score(): void
     {
         $excavatorType = EquipmentType::factory()->create(['name' => 'Hydraulic Excavator']);
@@ -39,6 +49,7 @@ class RecommendationScoringServiceTest extends TestCase
             'is_active' => true,
         ]);
         EquipmentPrice::factory()->create(['equipment_model_id' => $excavator->id, 'base_rate' => 250000.00]);
+        $this->addUnit($excavator);
 
         // Bulldozer model - 28 Ton
         $bulldozer = EquipmentModel::factory()->create([
@@ -50,6 +61,7 @@ class RecommendationScoringServiceTest extends TestCase
             'is_active' => true,
         ]);
         EquipmentPrice::factory()->create(['equipment_model_id' => $bulldozer->id, 'base_rate' => 450000.00]);
+        $this->addUnit($bulldozer);
 
         $user = User::factory()->create();
         $request = RecommendationRequest::factory()->create(['user_id' => $user->id]);
@@ -76,6 +88,7 @@ class RecommendationScoringServiceTest extends TestCase
             'is_active' => true,
         ]);
         EquipmentPrice::factory()->create(['equipment_model_id' => $model->id]);
+        $this->addUnit($model);
 
         $user = User::factory()->create();
         $request = RecommendationRequest::factory()->create(['user_id' => $user->id]);
@@ -107,6 +120,7 @@ class RecommendationScoringServiceTest extends TestCase
             'is_active' => true,
         ]);
         EquipmentPrice::factory()->create(['equipment_model_id' => $modelA->id, 'base_rate' => 200000.00]);
+        $this->addUnit($modelA);
 
         // Model B: More expensive (300k/hr)
         $modelB = EquipmentModel::factory()->create([
@@ -117,6 +131,7 @@ class RecommendationScoringServiceTest extends TestCase
             'is_active' => true,
         ]);
         EquipmentPrice::factory()->create(['equipment_model_id' => $modelB->id, 'base_rate' => 300000.00]);
+        $this->addUnit($modelB);
 
         $user = User::factory()->create();
         $request = RecommendationRequest::factory()->create(['user_id' => $user->id]);
@@ -145,12 +160,14 @@ class RecommendationScoringServiceTest extends TestCase
             'is_active' => true,
         ]);
         EquipmentPrice::factory()->create(['equipment_model_id' => $activeModel->id]);
+        $this->addUnit($activeModel);
 
         $inactiveModel = EquipmentModel::factory()->create([
             'equipment_type_id' => $type->id,
             'is_active' => false,
         ]);
         EquipmentPrice::factory()->create(['equipment_model_id' => $inactiveModel->id]);
+        $this->addUnit($inactiveModel);
 
         $user = User::factory()->create();
         $request = RecommendationRequest::factory()->create(['user_id' => $user->id]);
@@ -176,6 +193,7 @@ class RecommendationScoringServiceTest extends TestCase
             'capacity_value' => 20.00,
             'is_active' => true,
         ]);
+        $this->addUnit($model);
 
         $user = User::factory()->create();
         $request = RecommendationRequest::factory()->create(['user_id' => $user->id]);
@@ -206,6 +224,7 @@ class RecommendationScoringServiceTest extends TestCase
             'is_active' => true,
         ]);
         EquipmentPrice::factory()->create(['equipment_model_id' => $model->id]);
+        $this->addUnit($model);
 
         $user = User::factory()->create();
         $request = RecommendationRequest::factory()->create(['user_id' => $user->id]);
@@ -237,6 +256,7 @@ class RecommendationScoringServiceTest extends TestCase
             'is_active' => true,
         ]);
         EquipmentPrice::factory()->create(['equipment_model_id' => $model->id]);
+        $this->addUnit($model);
 
         $user = User::factory()->create();
         $request = RecommendationRequest::factory()->create(['user_id' => $user->id]);

@@ -2,11 +2,13 @@
 
 namespace Tests\Feature\Recommendation;
 
+use App\Enums\EquipmentStatus;
 use App\Enums\RecommendationStatus;
 use App\Enums\UserRole;
 use App\Models\EquipmentModel;
 use App\Models\EquipmentPrice;
 use App\Models\EquipmentType;
+use App\Models\EquipmentUnit;
 use App\Models\RecommendationCriteria;
 use App\Models\RecommendationRequest;
 use App\Models\RecommendationResult;
@@ -18,6 +20,14 @@ use Tests\TestCase;
 class RecommendationApiTest extends TestCase
 {
     use RefreshDatabase;
+
+    private function addUnit(EquipmentModel $model): void
+    {
+        EquipmentUnit::factory()->create([
+            'equipment_model_id' => $model->id,
+            'status' => EquipmentStatus::AVAILABLE,
+        ]);
+    }
 
     public function test_user_can_submit_recommendation_request_and_receive_scored_results(): void
     {
@@ -35,6 +45,7 @@ class RecommendationApiTest extends TestCase
             'is_active' => true,
         ]);
         EquipmentPrice::factory()->create(['equipment_model_id' => $model1->id]);
+        $this->addUnit($model1);
 
         $model2 = EquipmentModel::factory()->create([
             'equipment_type_id' => $bulldozerType->id,
@@ -44,6 +55,7 @@ class RecommendationApiTest extends TestCase
             'is_active' => true,
         ]);
         EquipmentPrice::factory()->create(['equipment_model_id' => $model2->id]);
+        $this->addUnit($model2);
 
         Sanctum::actingAs($user);
 
@@ -265,9 +277,11 @@ class RecommendationApiTest extends TestCase
 
         $m1 = EquipmentModel::factory()->create(['equipment_type_id' => $type->id, 'capacity_value' => 20]);
         EquipmentPrice::factory()->create(['equipment_model_id' => $m1->id]);
+        $this->addUnit($m1);
 
         $m2 = EquipmentModel::factory()->create(['equipment_type_id' => $type->id, 'capacity_value' => 30]);
         EquipmentPrice::factory()->create(['equipment_model_id' => $m2->id]);
+        $this->addUnit($m2);
 
         Sanctum::actingAs($user);
 
