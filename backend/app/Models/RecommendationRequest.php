@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\RecommendationStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,6 +17,13 @@ class RecommendationRequest extends Model
         'user_id',
         'status',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'status' => RecommendationStatus::class,
+        ];
+    }
 
     public function user(): BelongsTo
     {

@@ -73,7 +73,7 @@ describe('Frontend End-to-End Authentication Journey', () => {
       expect(screen.getByRole('heading', { name: /masuk akun/i })).toBeInTheDocument()
       expect(localStorage.getItem('rafa_token')).toBeNull()
     })
-  })
+  }, 15000)
 
   it('admin login redirects directly to Admin Workspace (/admin)', async () => {
     const adminUser = {

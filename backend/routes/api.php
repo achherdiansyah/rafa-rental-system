@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\HealthCheckController;
 use App\Http\Controllers\Api\V1\Owner\OwnerUserController;
 use App\Http\Controllers\Api\V1\PricingCalculationController;
 use App\Http\Controllers\Api\V1\ProfileController;
+use App\Http\Controllers\Api\V1\RecommendationController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -71,6 +72,14 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('/{bankAccount}', [BankAccountController::class, 'show'])->name('show');
             Route::post('/', [BankAccountController::class, 'store'])->name('store');
             Route::put('/{bankAccount}', [BankAccountController::class, 'update'])->name('update');
+        });
+
+        // Recommendation System (Decision support for equipment selection)
+        Route::prefix('recommendations')->name('recommendations.')->group(function () {
+            Route::get('/', [RecommendationController::class, 'index'])->name('index');
+            Route::post('/request', [RecommendationController::class, 'requestRecommendation'])->name('request');
+            Route::post('/', [RecommendationController::class, 'requestRecommendation'])->name('store');
+            Route::get('/{recommendationRequest}', [RecommendationController::class, 'show'])->name('show');
         });
 
         // Equipment Master Management (Admin/Owner)
