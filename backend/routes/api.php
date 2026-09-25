@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\Admin\AdminUserController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BankAccountController;
+use App\Http\Controllers\Api\V1\CartController;
 use App\Http\Controllers\Api\V1\EquipmentMediaController;
 use App\Http\Controllers\Api\V1\EquipmentModelController;
 use App\Http\Controllers\Api\V1\EquipmentPriceController;
@@ -91,6 +92,17 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::post('/request', [RecommendationController::class, 'requestRecommendation'])->name('request');
             Route::post('/', [RecommendationController::class, 'requestRecommendation'])->name('store');
             Route::get('/{recommendationRequest}', [RecommendationController::class, 'show'])->name('show');
+        });
+
+        // Shopping Cart for Rental Bookings
+        Route::prefix('cart')->name('cart.')->group(function () {
+            Route::get('/', [CartController::class, 'getCart'])->name('get');
+            Route::delete('/', [CartController::class, 'clear'])->name('clear');
+            Route::put('/location', [CartController::class, 'updateLocation'])->name('location.update');
+            Route::post('/items', [CartController::class, 'addItem'])->name('items.add');
+            Route::put('/items/{cartItem}', [CartController::class, 'updateItem'])->name('items.update');
+            Route::patch('/items/{cartItem}', [CartController::class, 'updateItem'])->name('items.update.patch');
+            Route::delete('/items/{cartItem}', [CartController::class, 'removeItem'])->name('items.remove');
         });
 
         // Equipment Master Management (Admin/Owner)

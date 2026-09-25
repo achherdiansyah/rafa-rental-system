@@ -17,8 +17,8 @@ Phase 8 bertujuan untuk mengimplementasikan alur pemesanan sewa armada alat bera
 
 | Subphase | Fokus Modul | Status |
 |---|---|---|
-| **8A** | Manajemen Lokasi Proyek Pelanggan (*Project Location Management*) | Selesai (Aktif) |
-| **8B** | Keranjang Belanja Pelanggan (*Cart Management*) | Pending |
+| **8A** | Manajemen Lokasi Proyek Pelanggan (*Project Location Management*) | Selesai (`e625c86`) |
+| **8B** | Keranjang Belanja Pelanggan (*Cart Management*) | Selesai (Aktif) |
 | **8C** | Pembuatan Booking & Validasi Ketersediaan Armada | Pending |
 | **8D** | Booking Approval & Verifikasi Admin | Pending |
 
@@ -27,3 +27,4 @@ Phase 8 bertujuan untuk mengimplementasikan alur pemesanan sewa armada alat bera
 ## 3. Daftar Dokumen
 
 - `01-project-location.md`: Spesifikasi entitas lokasi proyek (`project_locations`), aturan relasi booking, pembatasan otorisasi RBAC, REST API, dan antarmuka web pelanggan.
+- `02-cart-backend.md`: Spesifikasi keranjang belanja (`carts`, `cart_items`), validasi model aktif, kepemilikan user, REST API, dan pengujian.
