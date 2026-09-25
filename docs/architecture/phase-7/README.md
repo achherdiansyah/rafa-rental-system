@@ -19,8 +19,8 @@ Prinsip Utama:
 
 | Subphase | Fokus Modul | Status |
 |---|---|---|
-| **7A** | Domain Foundation, Entity Relasi, Input Kriteria, & Scoring Engine | Selesai (Aktif) |
-| **7B** | Implementasi Bobot & Aturan Evaluasi Detail Multi-Kriteria | Pending |
+| **7A** | Domain Foundation, Entity Relasi, Input Kriteria, & Scoring Engine | Selesai (`1d757b6`) |
+| **7B** | Implementasi Bobot & Aturan Evaluasi Detail Multi-Kriteria | Selesai (Aktif) |
 | **7C** | Penjelasan Hasil Penilaian (Reasoning & Decision Traceability) | Pending |
 | **7D** | Antarmuka Wizard Rekomendasi Pelanggan & Integrasi Katalog | Pending |
 
@@ -29,3 +29,4 @@ Prinsip Utama:
 ## 3. Daftar Dokumen
 
 - `01-recommendation-domain.md`: Spesifikasi entitas basis data (`recommendation_requests`, `recommendation_criteria`, `recommendation_results`), relasi model, arsitektur *Rule-Based Scoring Service*, dan REST API.
+- `02-scoring-engine.md`: Spesifikasi matematis formula *Weighted Scoring*, normalisasi bobot, mekanisme penentuan peringkat deterministik (*tie-breaking*), dan pelacakan teks eksplanasi.

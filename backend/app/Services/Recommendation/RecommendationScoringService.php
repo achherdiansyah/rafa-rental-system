@@ -9,89 +9,125 @@ use Illuminate\Support\Collection;
 class RecommendationScoringService
 {
     /**
-     * Compute recommendation match scores and generate reasoning text for active equipment models.
+     * Compute recommendation match scores, rank models deterministically, and generate explanation.
      *
-     * @return Collection<int, array{model: EquipmentModel, score: float, reasoning: string}>
+     * @return Collection<int, array{model: EquipmentModel, score: float, reasoning: string, breakdown: array<string, array{name: string, weight: float, score: float, contribution: float}>}>
      */
     public function evaluate(RecommendationCriteria $criteria): Collection
     {
-        $weights = config('recommendation.weights', [
-            'capacity_match' => 0.40,
-            'terrain_suitability' => 0.30,
-            'project_suitability' => 0.20,
-            'price_suitability' => 0.10,
-        ]);
+        $criteriaConfig = config('recommendation.criteria', []);
+        $activeCriteria = array_filter($criteriaConfig, fn ($c) => ($c['is_active'] ?? true) === true);
+
+        // Normalize weights so the sum always equals 1.0 (100%)
+        $totalWeight = array_sum(array_column($activeCriteria, 'weight'));
+        if ($totalWeight <= 0) {
+            $totalWeight = 1.0;
+        }
 
         $minThreshold = (float) config('recommendation.min_score_threshold', 50.00);
         $maxResults = (int) config('recommendation.default_max_results', 5);
 
-        // Retrieve active equipment models with type and prices
+        // Retrieve active equipment models with type and active prices
         $models = EquipmentModel::where('is_active', true)
             ->with(['type', 'prices'])
             ->get();
 
-        $scored = $models->map(function (EquipmentModel $model) use ($criteria, $weights) {
-            $capacityScore = $this->calculateCapacityScore($model, $criteria);
-            $terrainScore = $this->calculateTerrainScore($model, $criteria);
-            $projectScore = $this->calculateProjectScore($model, $criteria);
-            $priceScore = $this->calculatePriceScore($model, $criteria);
+        $scored = $models->map(function (EquipmentModel $model) use ($criteria, $activeCriteria, $totalWeight) {
+            $breakdown = [];
+            $totalWeightedScore = 0.0;
 
-            $finalScore = round(
-                ($capacityScore * $weights['capacity_match']) +
-                ($terrainScore * $weights['terrain_suitability']) +
-                ($projectScore * $weights['project_suitability']) +
-                ($priceScore * $weights['price_suitability']),
-                2
-            );
+            foreach ($activeCriteria as $key => $config) {
+                $rawScore = $this->calculateCriteriaScore($key, $model, $criteria);
+                $normalizedWeight = (float) ($config['weight'] / $totalWeight);
+                $contribution = round($rawScore * $normalizedWeight, 2);
 
-            $reasoning = $this->generateReasoningText(
-                $model,
-                $criteria,
-                $capacityScore,
-                $terrainScore,
-                $projectScore,
-                $finalScore
-            );
+                $totalWeightedScore += $rawScore * $normalizedWeight;
+
+                $breakdown[$key] = [
+                    'name' => $config['name'] ?? $key,
+                    'code' => $config['code'] ?? strtoupper($key),
+                    'weight' => round($normalizedWeight, 4),
+                    'score' => round($rawScore, 2),
+                    'contribution' => $contribution,
+                ];
+            }
+
+            $finalScore = min(100.00, max(0.00, round($totalWeightedScore, 2)));
+
+            // Compute lowest active base rate for deterministic tie-breaking
+            $lowestPrice = $model->prices->min('base_rate');
+            $lowestRate = $lowestPrice !== null ? (float) $lowestPrice : PHP_FLOAT_MAX;
+
+            $reasoning = $this->generateReasoningText($model, $criteria, $breakdown, $finalScore);
 
             return [
                 'model' => $model,
                 'score' => $finalScore,
+                'lowest_rate' => $lowestRate,
+                'model_id' => $model->id,
                 'reasoning' => $reasoning,
+                'breakdown' => $breakdown,
             ];
         });
 
-        // Filter by threshold and order by highest score
+        // Filter by threshold, sort deterministically, and take max results
+        // Sort order: 1) score DESC, 2) lowest_rate ASC, 3) model_id ASC
         return $scored
             ->filter(fn ($item) => $item['score'] >= $minThreshold)
-            ->sortByDesc('score')
+            ->sort(function ($a, $b) {
+                // 1. Score descending
+                if ($a['score'] !== $b['score']) {
+                    return $b['score'] <=> $a['score'];
+                }
+
+                // 2. Lowest price ascending (more economical wins tie)
+                if ($a['lowest_rate'] !== $b['lowest_rate']) {
+                    return $a['lowest_rate'] <=> $b['lowest_rate'];
+                }
+
+                // 3. Model ID ascending (deterministic fallback)
+                return $a['model_id'] <=> $b['model_id'];
+            })
             ->take($maxResults)
             ->values();
     }
 
+    private function calculateCriteriaScore(string $key, EquipmentModel $model, RecommendationCriteria $criteria): float
+    {
+        return match ($key) {
+            'capacity_match' => $this->calculateCapacityScore($model, $criteria),
+            'terrain_suitability' => $this->calculateTerrainScore($model, $criteria),
+            'project_suitability' => $this->calculateProjectScore($model, $criteria),
+            'price_suitability' => $this->calculatePriceScore($model, $criteria),
+            default => 75.0,
+        };
+    }
+
     private function calculateCapacityScore(EquipmentModel $model, RecommendationCriteria $criteria): float
     {
-        if (! $criteria->load_capacity || $criteria->load_capacity <= 0) {
-            return 85.0; // Default baseline if capacity not explicitly specified
+        if (! $criteria->load_capacity || (float) $criteria->load_capacity <= 0) {
+            return 85.0; // Standard default when capacity is not specified
         }
 
         $modelCap = (float) $model->capacity_value;
         $reqCap = (float) $criteria->load_capacity;
 
         if ($modelCap >= $reqCap) {
-            // Optimal if capacity matches or slightly exceeds requirement
             $ratio = $modelCap / $reqCap;
-            if ($ratio <= 1.5) {
-                return 100.0;
-            } elseif ($ratio <= 2.5) {
-                return 90.0; // Slightly overcapacity
+            if ($ratio <= 1.25) {
+                return 100.0; // Perfect fit (within 25% margin)
+            } elseif ($ratio <= 1.75) {
+                return 92.0; // Good fit (slight overcapacity)
+            } elseif ($ratio <= 2.50) {
+                return 80.0; // Moderate overcapacity
             } else {
-                return 75.0; // Significant overcapacity
+                return 65.0; // Excessive overcapacity
             }
         } else {
-            // Under-capacity penalty
-            $deficitRatio = $modelCap / $reqCap;
+            // Deficit penalty: proportional to how short the unit is
+            $ratio = $modelCap / $reqCap;
 
-            return max(20.0, round($deficitRatio * 80.0, 2));
+            return max(20.0, round($ratio * 75.0, 2));
         }
     }
 
@@ -100,12 +136,12 @@ class RecommendationScoringService
         $terrain = strtolower(trim((string) $criteria->terrain_condition));
         $typeName = strtolower($model->type?->name ?? '');
 
-        if (str_contains($terrain, 'lumpur') || str_contains($terrain, 'rawa')) {
+        if (str_contains($terrain, 'lumpur') || str_contains($terrain, 'rawa') || str_contains($terrain, 'basah')) {
             if (str_contains($typeName, 'excavator')) {
-                return 95.0;
+                return 98.0;
             }
             if (str_contains($typeName, 'bulldozer')) {
-                return 80.0;
+                return 82.0;
             }
 
             return 50.0;
@@ -113,21 +149,21 @@ class RecommendationScoringService
 
         if (str_contains($terrain, 'keras') || str_contains($terrain, 'bebatuan') || str_contains($terrain, 'tambang')) {
             if (str_contains($typeName, 'bulldozer') || str_contains($typeName, 'excavator')) {
-                return 95.0;
+                return 96.0;
             }
 
             return 70.0;
         }
 
         if (str_contains($terrain, 'aspal') || str_contains($terrain, 'datar') || str_contains($terrain, 'gravel')) {
-            if (str_contains($typeName, 'grader') || str_contains($typeName, 'roller')) {
-                return 95.0;
+            if (str_contains($typeName, 'grader') || str_contains($typeName, 'roller') || str_contains($typeName, 'loader')) {
+                return 98.0;
             }
 
             return 85.0;
         }
 
-        return 80.0; // Default standard terrain suitability
+        return 80.0; // Baseline standard terrain
     }
 
     private function calculateProjectScore(EquipmentModel $model, RecommendationCriteria $criteria): float
@@ -139,47 +175,63 @@ class RecommendationScoringService
             return str_contains($typeName, 'excavator') ? 100.0 : 60.0;
         }
 
-        if (str_contains($project, 'jalan') || str_contains($project, 'perataan') || str_contains($project, 'land clearing')) {
-            return (str_contains($typeName, 'bulldozer') || str_contains($typeName, 'grader')) ? 100.0 : 70.0;
+        if (str_contains($project, 'jalan') || str_contains($project, 'perataan') || str_contains($project, 'land clearing') || str_contains($project, 'timbunan')) {
+            if (str_contains($typeName, 'bulldozer') || str_contains($typeName, 'grader')) {
+                return 100.0;
+            }
+
+            return 70.0;
         }
 
-        return 80.0; // Generic baseline project match
+        return 80.0; // General construction match
     }
 
     private function calculatePriceScore(EquipmentModel $model, RecommendationCriteria $criteria): float
     {
-        // Active price presence ensures commercial readiness
-        $hasActivePrice = $model->prices->isNotEmpty();
+        // Models with established price rates have full commercial readiness
+        if ($model->prices->isEmpty()) {
+            return 55.0;
+        }
 
-        return $hasActivePrice ? 90.0 : 60.0;
+        return 95.0;
     }
 
+    /**
+     * @param  array<string, array{name: string, score: float, contribution: float}>  $breakdown
+     */
     private function generateReasoningText(
         EquipmentModel $model,
         RecommendationCriteria $criteria,
-        float $capScore,
-        float $terrainScore,
-        float $projScore,
+        array $breakdown,
         float $finalScore
     ): string {
         $reasons = [];
 
-        $reasons[] = "Model {$model->brand} {$model->model_name} (Kapasitas {$model->capacity_value} {$model->capacity_unit}) memiliki skor kecocokan total {$finalScore}%.";
+        $reasons[] = "Model {$model->brand} {$model->model_name} (Kapasitas {$model->capacity_value} {$model->capacity_unit}) memperoleh total skor kesesuaian {$finalScore}%.";
 
-        if ($criteria->load_capacity) {
+        if ($criteria->load_capacity && isset($breakdown['capacity_match'])) {
+            $capScore = $breakdown['capacity_match']['score'];
             if ($capScore >= 90.0) {
-                $reasons[] = "Kapasitas unit sangat optimal untuk beban target {$criteria->load_capacity}.";
+                $reasons[] = "Kapasitas muat unit sangat efisien dan memadai untuk beban target {$criteria->load_capacity} {$model->capacity_unit}.";
             } elseif ($capScore < 70.0) {
-                $reasons[] = "Kapasitas unit berada di bawah target {$criteria->load_capacity}, disarankan evaluasi beban.";
+                $reasons[] = "Kapasitas unit berada di bawah target beban {$criteria->load_capacity} {$model->capacity_unit}, disarankan evaluasi beban berkala.";
             }
         }
 
-        if ($criteria->terrain_condition) {
-            $reasons[] = "Sistem roda/crawler cocok untuk karakteristik medan '{$criteria->terrain_condition}'.";
+        if ($criteria->terrain_condition && isset($breakdown['terrain_suitability'])) {
+            $reasons[] = "Konfigurasi traksi sesuai untuk karakteristik medan '{$criteria->terrain_condition}'.";
         }
 
-        if ($criteria->project_type) {
-            $reasons[] = "Spesifikasi tipe {$model->type?->name} relevan dengan jenis proyek '{$criteria->project_type}'.";
+        if ($criteria->project_type && isset($breakdown['project_suitability'])) {
+            $reasons[] = "Fungsi operasional tipe {$model->type?->name} relevan dengan jenis pekerjaan '{$criteria->project_type}'.";
+        }
+
+        if ($criteria->depth_requirement) {
+            $reasons[] = "Mendukung kedalaman operasional hingga {$criteria->depth_requirement} meter.";
+        }
+
+        if ($criteria->reach_requirement) {
+            $reasons[] = "Mendukung jangkauan boom/arm hingga {$criteria->reach_requirement} meter.";
         }
 
         return implode(' ', $reasons);
