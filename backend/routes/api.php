@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Admin\AdminUserController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\BankAccountController;
 use App\Http\Controllers\Api\V1\EquipmentMediaController;
 use App\Http\Controllers\Api\V1\EquipmentModelController;
 use App\Http\Controllers\Api\V1\EquipmentPriceController;
@@ -62,6 +63,14 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
             // Profile Verification (Admin/Owner only via Gate in Request)
             Route::post('/verify', [ProfileController::class, 'verify'])->name('verify');
+        });
+
+        // Bank Accounts (Publicly viewable by Users for payment instructions; manageable by Admin/Owner)
+        Route::prefix('bank-accounts')->name('bank-accounts.')->group(function () {
+            Route::get('/', [BankAccountController::class, 'index'])->name('index');
+            Route::get('/{bankAccount}', [BankAccountController::class, 'show'])->name('show');
+            Route::post('/', [BankAccountController::class, 'store'])->name('store');
+            Route::put('/{bankAccount}', [BankAccountController::class, 'update'])->name('update');
         });
 
         // Equipment Master Management (Admin/Owner)

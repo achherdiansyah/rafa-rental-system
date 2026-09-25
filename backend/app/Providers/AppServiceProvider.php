@@ -61,7 +61,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('view-audit-logs', fn (User $user) => $user->isOwner());
         Gate::define('manage-pricing-master', fn (User $user) => $user->isOwner());
         Gate::define('approve-refund', fn (User $user) => $user->isOwner());
-        Gate::define('manage-bank-accounts', fn (User $user) => $user->isOwner());
+        Gate::define('manage-bank-accounts', fn (User $user) => $user->hasRole(UserRole::ADMIN, UserRole::OWNER));
         Gate::define('decommission-equipment', fn (User $user) => $user->isOwner());
         Gate::define('deactivate-user', fn (User $user) => $user->isOwner());
     }
