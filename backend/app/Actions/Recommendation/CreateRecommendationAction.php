@@ -55,7 +55,13 @@ class CreateRecommendationAction
                 ]);
             }
 
-            $recRequest->load(['criteria', 'results.model.type', 'results.model.prices', 'user']);
+            $recRequest->load([
+                'criteria',
+                'results.model' => function ($q) {
+                    $q->with(['type', 'prices', 'attachments'])->withCount('units');
+                },
+                'user',
+            ]);
 
             return $recRequest;
         });

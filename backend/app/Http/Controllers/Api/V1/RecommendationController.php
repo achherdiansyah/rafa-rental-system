@@ -24,8 +24,9 @@ class RecommendationController extends ApiController
 
         $query = RecommendationRequest::with([
             'criteria',
-            'results.model.type',
-            'results.model.prices',
+            'results.model' => function ($q) {
+                $q->with(['type', 'prices', 'attachments'])->withCount('units');
+            },
         ])->latest();
 
         // Regular users can only access their own history
@@ -78,8 +79,9 @@ class RecommendationController extends ApiController
 
         $recommendationRequest->load([
             'criteria',
-            'results.model.type',
-            'results.model.prices',
+            'results.model' => function ($q) {
+                $q->with(['type', 'prices', 'attachments'])->withCount('units');
+            },
         ]);
 
         return $this->success(

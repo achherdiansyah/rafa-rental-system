@@ -22,6 +22,7 @@ class RecommendationResultResource extends JsonResource
             'id' => $this->id,
             'request_id' => $this->request_id,
             'equipment_model_id' => $this->equipment_model_id,
+            'rank' => $this->rank ?? null,
             'match_score' => (float) $this->match_score,
             'reasoning_text' => $this->reasoning_text,
             'model' => new EquipmentModelResource($this->whenLoaded('model')),

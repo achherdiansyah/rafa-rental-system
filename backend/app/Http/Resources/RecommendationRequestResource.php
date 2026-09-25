@@ -23,7 +23,16 @@ class RecommendationRequestResource extends JsonResource
             'user_id' => $this->user_id,
             'status' => $this->status instanceof \BackedEnum ? $this->status->value : $this->status,
             'criteria' => new RecommendationCriteriaResource($this->whenLoaded('criteria')),
-            'results' => RecommendationResultResource::collection($this->whenLoaded('results')),
+            'results' => $this->whenLoaded('results', function () {
+                return $this->results
+                    ->sortByDesc('match_score')
+                    ->values()
+                    ->map(function ($result, $index) {
+                        $result->rank = $index + 1;
+
+                        return new RecommendationResultResource($result);
+                    });
+            }),
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
         ];

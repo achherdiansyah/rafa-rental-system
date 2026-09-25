@@ -241,6 +241,98 @@ class RecommendationApiTest extends TestCase
             ]);
     }
 
+    public function test_post_recommendations_endpoint_works_as_alternative_to_request_alias(): void
+    {
+        $user = User::factory()->create(['role' => UserRole::USER]);
+        Sanctum::actingAs($user);
+
+        $payload = [
+            'project_type' => 'Perataan Tanah Proyek Tol',
+            'terrain_condition' => 'Tanah Keras / Datar',
+            'load_capacity' => 20.00,
+        ];
+
+        // Direct POST /api/v1/recommendations
+        $response = $this->postJson('/api/v1/recommendations', $payload);
+        $response->assertStatus(201);
+        $this->assertEquals(RecommendationStatus::PROCESSED->value, $response->json('data.status'));
+    }
+
+    public function test_results_include_sequential_ranking_starting_at_one(): void
+    {
+        $user = User::factory()->create(['role' => UserRole::USER]);
+        $type = EquipmentType::factory()->create(['name' => 'Excavator']);
+
+        $m1 = EquipmentModel::factory()->create(['equipment_type_id' => $type->id, 'capacity_value' => 20]);
+        EquipmentPrice::factory()->create(['equipment_model_id' => $m1->id]);
+
+        $m2 = EquipmentModel::factory()->create(['equipment_type_id' => $type->id, 'capacity_value' => 30]);
+        EquipmentPrice::factory()->create(['equipment_model_id' => $m2->id]);
+
+        Sanctum::actingAs($user);
+
+        $response = $this->postJson('/api/v1/recommendations', [
+            'project_type' => 'Galian Basah',
+            'terrain_condition' => 'Lumpur',
+            'load_capacity' => 20.00,
+        ]);
+
+        $response->assertStatus(201);
+        $results = $response->json('data.results');
+        $this->assertNotEmpty($results);
+        $this->assertEquals(1, $results[0]['rank']);
+        if (count($results) > 1) {
+            $this->assertEquals(2, $results[1]['rank']);
+        }
+    }
+
+    public function test_admin_can_filter_recommendations_by_user_id(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $user1 = User::factory()->create();
+        $user2 = User::factory()->create();
+
+        $req1 = RecommendationRequest::factory()->create(['user_id' => $user1->id]);
+        $req2 = RecommendationRequest::factory()->create(['user_id' => $user2->id]);
+
+        Sanctum::actingAs($admin);
+
+        // Filter user1
+        $res = $this->getJson("/api/v1/recommendations?user_id={$user1->id}");
+        $res->assertStatus(200);
+        $this->assertCount(1, $res->json('data'));
+        $this->assertEquals($req1->id, $res->json('data.0.id'));
+    }
+
+    public function test_pagination_meta_structure_in_recommendations_list(): void
+    {
+        $user = User::factory()->create(['role' => UserRole::USER]);
+        RecommendationRequest::factory()->count(15)->create(['user_id' => $user->id]);
+
+        Sanctum::actingAs($user);
+
+        $response = $this->getJson('/api/v1/recommendations?per_page=5&page=2');
+
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                'success',
+                'message',
+                'data',
+                'meta' => [
+                    'current_page',
+                    'per_page',
+                    'total',
+                    'last_page',
+                ],
+            ]);
+
+        $this->assertCount(5, $response->json('data'));
+        $this->assertEquals(2, $response->json('meta.current_page'));
+        $this->assertEquals(5, $response->json('meta.per_page'));
+        $this->assertEquals(15, $response->json('meta.total'));
+        $this->assertEquals(3, $response->json('meta.last_page'));
+    }
+
     public function test_unauthenticated_request_is_rejected(): void
     {
         $this->getJson('/api/v1/recommendations')->assertStatus(401);
