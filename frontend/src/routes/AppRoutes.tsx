@@ -27,6 +27,8 @@ const OwnerPricingPage = lazy(() => import('@/features/equipment/pages/OwnerPric
 const AdminEquipmentMasterPage = lazy(() => import('@/features/equipment/pages/AdminEquipmentMasterPage'))
 const AdminEquipmentUnitsPage = lazy(() => import('@/features/equipment/pages/AdminEquipmentUnitsPage'))
 const AdminBankAccountsPage = lazy(() => import('@/features/bank/pages/AdminBankAccountsPage'))
+const EquipmentCatalogPage = lazy(() => import('@/features/equipment/pages/EquipmentCatalogPage'))
+const EquipmentDetailPage = lazy(() => import('@/features/equipment/pages/EquipmentDetailPage'))
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -55,7 +57,8 @@ export const AppRoutes: React.FC = () => {
           <Route element={<RoleRoute allowedRoles={['USER']} />}>
             <Route path="/app" element={<UserLayout />}>
               <Route index element={<UserPortalPlaceholder />} />
-              <Route path="equipment" element={<UserPortalPlaceholder />} />
+              <Route path="equipment" element={<EquipmentCatalogPage />} />
+              <Route path="equipment/:id" element={<EquipmentDetailPage />} />
               <Route path="bookings" element={<UserPortalPlaceholder />} />
               <Route path="invoices" element={<UserPortalPlaceholder />} />
               <Route path="profile" element={<ProfilePage />} />

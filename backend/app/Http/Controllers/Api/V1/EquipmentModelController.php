@@ -20,7 +20,7 @@ class EquipmentModelController extends ApiController
      */
     public function index(Request $request): JsonResponse
     {
-        $query = EquipmentModel::with(['type', 'attachments'])->withCount('units')->latest();
+        $query = EquipmentModel::with(['type', 'attachments', 'prices'])->withCount('units')->latest();
 
         if ($search = $request->query('search')) {
             $query->where(function ($q) use ($search) {

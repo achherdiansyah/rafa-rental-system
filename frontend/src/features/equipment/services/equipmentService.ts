@@ -58,6 +58,11 @@ export const equipmentService = {
     return api.getPaginated<EquipmentModel>(`/equipment/models?${query.toString()}`)
   },
 
+  getModel: async (id: number): Promise<EquipmentModel> => {
+    const response = await api.get<EquipmentModel>(`/equipment/models/${id}`)
+    return response.data
+  },
+
   createModel: async (payload: CreateEquipmentModelPayload): Promise<EquipmentModel> => {
     const response = await api.post<EquipmentModel>('/equipment/models', payload)
     return response.data

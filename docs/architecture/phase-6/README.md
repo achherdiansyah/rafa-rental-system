@@ -11,3 +11,4 @@ Dokumentasi implementasi modul master data armada, inventaris unit fisik, dan sk
 - `05-price-scheme-mob-demob.md`: Spesifikasi skema sewa per-equipment line (All-in vs Non All-in), perhitungan logistik MOB/DEMOB per physical unit, dan mesin kalkulasi harga rental (`PricingCalculatorService`).
 - `06-bank-account.md`: Implementasi master rekening bank perusahaan (`bank_accounts`), perlindungan otorisasi Admin/Owner, penyaringan rekening aktif untuk instruksi pembayaran pelanggan, dan antarmuka manajemen.
 - `07-admin-master-data-ui.md`: Standar implementasi komponen antarmuka admin, filter paginasi sisi server, optimasi pencarian debounced, dan pengujian UI master data.
+- `08-user-equipment-catalog.md`: Spesifikasi antarmuka katalog armada pelanggan (`/app/equipment` & `/app/equipment/:id`), tampilan spesifikasi, galeri foto, dan perbandingan tarif sewa All-in/Non All-in.

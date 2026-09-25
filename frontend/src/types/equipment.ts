@@ -37,6 +37,7 @@ export interface EquipmentModel {
   capacity_unit: string
   is_active: boolean
   type?: EquipmentType
+  prices?: EquipmentPrice[]
   attachments?: EquipmentAttachment[]
   units_count?: number
   created_at?: string
