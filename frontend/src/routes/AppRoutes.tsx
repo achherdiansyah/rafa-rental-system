@@ -23,6 +23,12 @@ const UnauthorizedPage = lazy(() => import('@/pages/UnauthorizedPage'))
 const UserPortalPlaceholder = lazy(() => import('@/pages/UserPortalPlaceholder'))
 const AdminPortalPlaceholder = lazy(() => import('@/pages/AdminPortalPlaceholder'))
 const OwnerPortalPlaceholder = lazy(() => import('@/pages/OwnerPortalPlaceholder'))
+const OwnerPricingPage = lazy(() => import('@/features/equipment/pages/OwnerPricingPage'))
+const AdminEquipmentMasterPage = lazy(() => import('@/features/equipment/pages/AdminEquipmentMasterPage'))
+const AdminEquipmentUnitsPage = lazy(() => import('@/features/equipment/pages/AdminEquipmentUnitsPage'))
+const AdminBankAccountsPage = lazy(() => import('@/features/bank/pages/AdminBankAccountsPage'))
+const EquipmentCatalogPage = lazy(() => import('@/features/equipment/pages/EquipmentCatalogPage'))
+const EquipmentDetailPage = lazy(() => import('@/features/equipment/pages/EquipmentDetailPage'))
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -51,7 +57,8 @@ export const AppRoutes: React.FC = () => {
           <Route element={<RoleRoute allowedRoles={['USER']} />}>
             <Route path="/app" element={<UserLayout />}>
               <Route index element={<UserPortalPlaceholder />} />
-              <Route path="equipment" element={<UserPortalPlaceholder />} />
+              <Route path="equipment" element={<EquipmentCatalogPage />} />
+              <Route path="equipment/:id" element={<EquipmentDetailPage />} />
               <Route path="bookings" element={<UserPortalPlaceholder />} />
               <Route path="invoices" element={<UserPortalPlaceholder />} />
               <Route path="profile" element={<ProfilePage />} />
@@ -62,8 +69,10 @@ export const AppRoutes: React.FC = () => {
           <Route element={<RoleRoute allowedRoles={['ADMIN', 'OWNER']} />}>
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminPortalPlaceholder />} />
+              <Route path="equipment" element={<AdminEquipmentMasterPage />} />
+              <Route path="units" element={<AdminEquipmentUnitsPage />} />
+              <Route path="banks" element={<AdminBankAccountsPage />} />
               <Route path="bookings" element={<AdminPortalPlaceholder />} />
-              <Route path="units" element={<AdminPortalPlaceholder />} />
               <Route path="timesheets" element={<AdminPortalPlaceholder />} />
               <Route path="payments" element={<AdminPortalPlaceholder />} />
               <Route path="refunds" element={<AdminPortalPlaceholder />} />
@@ -75,9 +84,9 @@ export const AppRoutes: React.FC = () => {
             <Route path="/owner" element={<OwnerLayout />}>
               <Route index element={<OwnerPortalPlaceholder />} />
               <Route path="revenue" element={<OwnerPortalPlaceholder />} />
-              <Route path="pricing" element={<OwnerPortalPlaceholder />} />
+              <Route path="pricing" element={<OwnerPricingPage />} />
               <Route path="audit" element={<OwnerPortalPlaceholder />} />
-              <Route path="settings" element={<OwnerPortalPlaceholder />} />
+              <Route path="settings" element={<AdminBankAccountsPage />} />
             </Route>
           </Route>
         </Route>
