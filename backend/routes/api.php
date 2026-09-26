@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\Admin\AdminUserController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BankAccountController;
+use App\Http\Controllers\Api\V1\BookingController;
 use App\Http\Controllers\Api\V1\CartController;
 use App\Http\Controllers\Api\V1\EquipmentMediaController;
 use App\Http\Controllers\Api\V1\EquipmentModelController;
@@ -103,6 +104,14 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::put('/items/{cartItem}', [CartController::class, 'updateItem'])->name('items.update');
             Route::patch('/items/{cartItem}', [CartController::class, 'updateItem'])->name('items.update.patch');
             Route::delete('/items/{cartItem}', [CartController::class, 'removeItem'])->name('items.remove');
+        });
+
+        // Booking Module (Draft -> Submission -> Approval)
+        Route::prefix('bookings')->name('bookings.')->group(function () {
+            Route::get('/', [BookingController::class, 'index'])->name('index');
+            Route::post('/', [BookingController::class, 'store'])->name('store');
+            Route::get('/{booking}', [BookingController::class, 'show'])->name('show');
+            Route::post('/{booking}/submit', [BookingController::class, 'submit'])->name('submit');
         });
 
         // Equipment Master Management (Admin/Owner)

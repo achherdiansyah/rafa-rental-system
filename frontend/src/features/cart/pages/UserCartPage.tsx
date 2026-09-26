@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ShoppingCart, Trash2, Truck, MapPin, Info, ArrowRight } from 'lucide-react'
 import { cartService } from '../services/cartService'
+import { bookingService } from '@/features/booking/services/bookingService'
 import { projectLocationService } from '@/features/project/services/projectLocationService'
 import type { Cart, CartItem } from '@/types/cart'
 import type { ProjectLocation } from '@/types/projectLocation'
@@ -46,6 +47,7 @@ export const UserCartPage: React.FC = () => {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [isClearOpen, setIsClearOpen] = useState(false)
   const [isClearing, setIsClearing] = useState(false)
+  const [isCreatingBooking, setIsCreatingBooking] = useState(false)
 
   const loadCart = async () => {
     setIsLoading(true)
@@ -175,6 +177,21 @@ export const UserCartPage: React.FC = () => {
       }
     } catch (err: any) {
       showErrorToast(err?.message || 'Gagal memperbarui lokasi proyek.')
+    }
+  }
+
+  const handleCheckoutToBooking = async () => {
+    setIsCreatingBooking(true)
+    try {
+      const res = await bookingService.createFromCart()
+      if (res.success && res.data) {
+        showSuccessToast(`Booking ${res.data.booking_code} berhasil dibuat sebagai draft.`)
+        navigate('/app/bookings')
+      }
+    } catch (err: any) {
+      showErrorToast(err?.message || 'Gagal membuat booking dari keranjang.')
+    } finally {
+      setIsCreatingBooking(false)
     }
   }
 
@@ -382,8 +399,9 @@ export const UserCartPage: React.FC = () => {
               </div>
               <Button
                 className="gap-2 shrink-0"
-                disabled={!cart?.project_location_id || items.length === 0}
-                onClick={() => showSuccessToast('Checkout booking tersedia pada Phase 8D.')}
+                disabled={!cart?.project_location_id || items.length === 0 || isCreatingBooking}
+                isLoading={isCreatingBooking}
+                onClick={handleCheckoutToBooking}
               >
                 Lanjut ke Booking
                 <ArrowRight size={16} />
