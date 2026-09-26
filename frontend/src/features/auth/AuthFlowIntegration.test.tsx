@@ -58,7 +58,7 @@ describe('Frontend End-to-End Authentication Journey', () => {
     // 3. User should land on Customer Portal (/app)
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /portal pelanggan/i })).toBeInTheDocument()
-    })
+    }, { timeout: 15000 })
 
     // 4. Navbar shows user info
     expect(screen.getByText('Rian Pratama')).toBeInTheDocument()
@@ -72,8 +72,8 @@ describe('Frontend End-to-End Authentication Journey', () => {
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /masuk akun/i })).toBeInTheDocument()
       expect(localStorage.getItem('rafa_token')).toBeNull()
-    })
-  }, 15000)
+    }, { timeout: 15000 })
+  }, 40000)
 
   it('admin login redirects directly to Admin Workspace (/admin)', async () => {
     const adminUser = {

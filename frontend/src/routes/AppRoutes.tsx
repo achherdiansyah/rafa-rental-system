@@ -31,6 +31,7 @@ const EquipmentCatalogPage = lazy(() => import('@/features/equipment/pages/Equip
 const EquipmentDetailPage = lazy(() => import('@/features/equipment/pages/EquipmentDetailPage'))
 const RecommendationPage = lazy(() => import('@/features/recommendation/pages/RecommendationPage'))
 const UserProjectLocationsPage = lazy(() => import('@/features/project/pages/UserProjectLocationsPage'))
+const UserCartPage = lazy(() => import('@/features/cart/pages/UserCartPage'))
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -64,6 +65,7 @@ export const AppRoutes: React.FC = () => {
               <Route path="recommendations" element={<RecommendationPage />} />
               <Route path="recommendation" element={<RecommendationPage />} />
               <Route path="locations" element={<UserProjectLocationsPage />} />
+              <Route path="cart" element={<UserCartPage />} />
               <Route path="bookings" element={<UserPortalPlaceholder />} />
               <Route path="invoices" element={<UserPortalPlaceholder />} />
               <Route path="profile" element={<ProfilePage />} />

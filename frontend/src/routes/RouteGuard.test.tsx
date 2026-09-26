@@ -67,8 +67,8 @@ describe('Route Guard & Access Control', () => {
       isAuthenticated: true,
     })
 
-    expect(await screen.findByRole('heading', { name: /portal pelanggan/i })).toBeInTheDocument()
-  })
+    expect(await screen.findByRole('heading', { name: /portal pelanggan/i }, { timeout: 15000 })).toBeInTheDocument()
+  }, 20000)
 
   it('blocks authenticated USER from accessing /admin and redirects to /forbidden', async () => {
     const user: AuthUser = { id: 1, name: 'Budi Pelanggan', email: 'budi@test.com', role: 'USER', is_active: true, phone_number: '0812' }

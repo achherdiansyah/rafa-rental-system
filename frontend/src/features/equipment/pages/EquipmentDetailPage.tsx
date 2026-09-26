@@ -3,9 +3,11 @@ import { useParams, Link } from 'react-router-dom'
 import { ArrowLeft, Layers, ShieldCheck, Clock, Check, Truck } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
 import { LoadingState } from '@/components/feedback/LoadingState'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { equipmentService } from '../services/equipmentService'
+import { AddToCartModal } from '@/features/cart/components/AddToCartModal'
 import type { EquipmentModel } from '@/types/equipment'
 
 export const EquipmentDetailPage: React.FC = () => {
@@ -15,6 +17,9 @@ export const EquipmentDetailPage: React.FC = () => {
   const [activePhotoIdx, setActivePhotoIdx] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [isError, setIsError] = useState(false)
+
+  const [isCartModalOpen, setIsCartModalOpen] = useState(false)
+  const [cartInitialScheme, setCartInitialScheme] = useState(false)
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -178,6 +183,18 @@ export const EquipmentDetailPage: React.FC = () => {
               <div className="flex items-center gap-2 text-slate-500 text-xs bg-slate-50 p-2.5 rounded-lg">
                 <span>Solar (BBM), upah dan akomodasi operator disediakan oleh penyewa di lokasi.</span>
               </div>
+              <Button
+                variant="outline"
+                className="w-full mt-1 gap-2"
+                disabled={!nonAllInPrice}
+                onClick={() => {
+                  setCartInitialScheme(false)
+                  setIsCartModalOpen(true)
+                }}
+              >
+                <Truck size={16} />
+                Sewa Skema Ini
+              </Button>
             </CardContent>
           </Card>
 
@@ -217,10 +234,30 @@ export const EquipmentDetailPage: React.FC = () => {
                 <Check size={16} className="text-emerald-500 shrink-0" />
                 <span>Termasuk perawatan harian di lapangan</span>
               </div>
+              <Button
+                variant="primary"
+                className="w-full mt-1 gap-2"
+                disabled={!allInPrice}
+                onClick={() => {
+                  setCartInitialScheme(true)
+                  setIsCartModalOpen(true)
+                }}
+              >
+                <Truck size={16} />
+                Sewa Skema Ini
+              </Button>
             </CardContent>
           </Card>
         </div>
       </div>
+
+      {/* Add To Cart Modal */}
+      <AddToCartModal
+        isOpen={isCartModalOpen}
+        onClose={() => setIsCartModalOpen(false)}
+        model={model}
+        initialIsAllIn={cartInitialScheme}
+      />
     </div>
   )
 }
