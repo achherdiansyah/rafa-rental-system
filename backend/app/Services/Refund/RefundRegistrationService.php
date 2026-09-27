@@ -8,6 +8,7 @@ use App\Enums\RefundStatus;
 use App\Models\Booking;
 use App\Models\Invoice;
 use App\Models\Refund;
+use App\Support\NotificationService;
 
 /**
  * Phase 11 refund registration: sources are booking cancellation after
@@ -16,6 +17,10 @@ use App\Models\Refund;
  */
 class RefundRegistrationService implements RefundBoundary
 {
+    public function __construct(
+        private readonly NotificationService $notifications
+    ) {}
+
     public function registerPendingRefund(Booking $booking, string $reason): void
     {
         foreach ($booking->invoices()->get() as $invoice) {
@@ -38,6 +43,12 @@ class RefundRegistrationService implements RefundBoundary
                 'reason' => $reason,
                 'status' => RefundStatus::PENDING,
             ]);
+
+            $this->notifications->sendToOwners(
+                'REFUND_PENDING',
+                $invoice,
+                'Refund pembatalan menunggu persetujuan (invoice #'.$invoice->invoice_number.').'
+            );
         }
     }
 
@@ -58,6 +69,12 @@ class RefundRegistrationService implements RefundBoundary
             'reason' => 'Kelebihan pembayaran invoice #'.$invoice->invoice_number,
             'status' => RefundStatus::PENDING,
         ]);
+
+        $this->notifications->sendToOwners(
+            'REFUND_PENDING',
+            $invoice,
+            'Kelebihan pembayaran menunggu persetujuan refund (invoice #'.$invoice->invoice_number.').'
+        );
     }
 
     private function existingFor(Invoice $invoice, RefundSource $source): bool

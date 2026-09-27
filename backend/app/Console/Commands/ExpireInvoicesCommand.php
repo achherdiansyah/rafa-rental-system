@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Enums\InvoiceStatus;
 use App\Models\Invoice;
 use App\Support\AuditLogger;
+use App\Support\NotificationService;
 use Illuminate\Console\Command;
 
 class ExpireInvoicesCommand extends Command
@@ -12,6 +13,12 @@ class ExpireInvoicesCommand extends Command
     protected $signature = 'invoices:expire';
 
     protected $description = 'Mark issued/unpaid invoices OVERDUE when the 24h deadline passes';
+
+    public function __construct(
+        private readonly NotificationService $notifications
+    ) {
+        parent::__construct();
+    }
 
     public function handle(): int
     {
@@ -29,6 +36,14 @@ class ExpireInvoicesCommand extends Command
                 ], [
                     'new_status' => InvoiceStatus::OVERDUE->value,
                 ]);
+
+                $invoice->load('booking.user');
+                $this->notifications->send(
+                    $invoice->booking?->user,
+                    'INVOICE_OVERDUE',
+                    $invoice,
+                    "Invoice {$invoice->invoice_number} melewati jatuh tempo."
+                );
 
                 $expired++;
             });

@@ -7,10 +7,15 @@ use App\Exceptions\InvalidStateTransitionException;
 use App\Models\Booking;
 use App\Models\User;
 use App\Support\AuditLogger;
+use App\Support\NotificationService;
 use Illuminate\Support\Facades\DB;
 
 class ApproveBookingAction
 {
+    public function __construct(
+        private readonly NotificationService $notifications
+    ) {}
+
     /**
      * Transition PENDING_APPROVAL -> APPROVED. Invoice/payment generation is
      * intentionally deferred to a later phase (BR-021).
@@ -44,6 +49,14 @@ class ApproveBookingAction
                 'new_status' => BookingStatus::APPROVED->value,
                 'payment_deadline_at' => $deadline->toIso8601String(),
             ]);
+
+            $booking->load('user');
+            $this->notifications->send(
+                $booking->user,
+                'BOOKING_APPROVED',
+                $booking,
+                "Booking {$booking->booking_code} disetujui."
+            );
 
             $booking->load([
                 'projectLocation',

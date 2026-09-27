@@ -10,6 +10,7 @@ use App\Models\Payment;
 use App\Models\User;
 use App\Support\AuditLogger;
 use App\Support\FileSecurity;
+use App\Support\NotificationService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -23,6 +24,10 @@ use Illuminate\Support\Facades\Gate;
  */
 class SubmitPaymentAction
 {
+    public function __construct(
+        private readonly NotificationService $notifications
+    ) {}
+
     /**
      * @param  array<string, mixed>  $data
      */
@@ -106,6 +111,12 @@ class SubmitPaymentAction
                 'reference' => $reference ?: null,
                 'submitted_by' => $payer->id,
             ]);
+
+            $this->notifications->sendToAdmins(
+                'PAYMENT_SUBMITTED',
+                $payment,
+                'Pembayaran baru menunggu verifikasi (invoice #'.$invoice->invoice_number.').'
+            );
 
             return $payment->fresh()->load([
                 'attachments',

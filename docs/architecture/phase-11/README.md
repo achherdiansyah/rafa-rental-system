@@ -18,9 +18,9 @@ layanan notifikasi.
 |---|---|---|
 | **11A** | Refund Core (domain, sumber cancellation/overpayment, lifecycle PENDING→PROCESSING→COMPLETED/FAILED, audit) | Selesai |
 | **11B** | Refund Approval & Settlement (OWNER approve, base validation, actor/reason/proof, audit) | Selesai |
-| **11C** | Outstanding & Customer Credit Control (per-customer, invoice-based, approved-payment, no N+1) | Selesai (Aktif) |
-| 11D | Refund UI (User + Admin) | Pending |
-| 11E | Notification | Pending |
+| **11C** | Outstanding & Customer Credit Control (per-customer, invoice-based, approved-payment, no N+1) | Selesai |
+| **11D** | In-App Notification (database channel, event + related entity, read state, API) | Selesai (Aktif) |
+| 11E | Refund & Outstanding UI (User + Admin) | Pending |
 | 11F | Integration Testing & Final Review | Pending |
 
 ---
@@ -35,3 +35,6 @@ layanan notifikasi.
 - `02-outstanding-credit-control.md`: Spesifikasi outstanding per customer dari
   invoice `ISSUED/UNPAID/PARTIALLY_PAID/OVERDUE`, basis approved payment,
   independen status booking, tanpa threshold rekaan, dan guard N+1.
+- `03-in-app-notification.md`: Spesifikasi notifikasi in-app — channel database
+  Laravel, event + related entity, state unread/read, scoping per user
+  (ADMIN/OWNER sesuai target), API list/unread-count/mark-read, tanpa Redis.

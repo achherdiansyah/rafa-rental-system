@@ -7,6 +7,7 @@ use App\Exceptions\InvalidStateTransitionException;
 use App\Models\Invoice;
 use App\Models\User;
 use App\Support\AuditLogger;
+use App\Support\NotificationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
@@ -16,6 +17,10 @@ use Illuminate\Support\Facades\Gate;
  */
 class IssueInvoiceAction
 {
+    public function __construct(
+        private readonly NotificationService $notifications
+    ) {}
+
     public function execute(User $actor, Invoice $invoice): Invoice
     {
         Gate::authorize('manage', $invoice);
@@ -42,6 +47,14 @@ class IssueInvoiceAction
                 'due_at' => $invoice->due_at->toIso8601String(),
                 'issued_by' => $actor->id,
             ]);
+
+            $invoice->load('booking.user');
+            $this->notifications->send(
+                $invoice->booking?->user,
+                'INVOICE_ISSUED',
+                $invoice,
+                "Invoice {$invoice->invoice_number} diterbitkan; jatuh tempo 24 jam."
+            );
 
             return $invoice->fresh()->load(['booking.projectLocation', 'details']);
         });

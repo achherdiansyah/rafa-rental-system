@@ -11,6 +11,7 @@ use App\Models\Refund;
 use App\Models\User;
 use App\Support\AuditLogger;
 use App\Support\FileSecurity;
+use App\Support\NotificationService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -25,6 +26,10 @@ use Illuminate\Support\Facades\Gate;
  */
 class RefundLifecycleService
 {
+    public function __construct(
+        private readonly NotificationService $notifications
+    ) {}
+
     /**
      * OWNER approval (Phase 1 permission matrix: approve-refund).
      *
@@ -47,6 +52,7 @@ class RefundLifecycleService
             ]);
 
             $this->audit('REFUND_APPROVED', $refund, $owner);
+            $this->notifyCustomer('REFUND_APPROVED', $refund, 'Pengembalian dana Anda disetujui.');
 
             return $refund->fresh()->load(['invoice.booking.projectLocation', 'attachments']);
         });
@@ -72,6 +78,7 @@ class RefundLifecycleService
             ]);
 
             $this->audit('REFUND_PROCESSING', $refund, $staff);
+            $this->notifyCustomer('REFUND_PROCESSING', $refund, 'Refund Anda sedang diproses via transfer bank.');
 
             return $refund->fresh()->load(['invoice.booking.projectLocation', 'attachments']);
         });
@@ -112,6 +119,7 @@ class RefundLifecycleService
             ]);
 
             $this->audit('REFUND_COMPLETED', $refund, $staff);
+            $this->notifyCustomer('REFUND_COMPLETED', $refund, 'Refund Anda telah ditransfer dan selesai.');
 
             return $refund->fresh()->load(['invoice.booking.projectLocation', 'attachments']);
         });
@@ -130,6 +138,7 @@ class RefundLifecycleService
             ]);
 
             $this->audit('REFUND_FAILED', $refund, $staff);
+            $this->notifyCustomer('REFUND_FAILED', $refund, 'Refund Anda gagal: '.trim($failureReason).'.');
 
             return $refund->fresh()->load(['invoice.booking.projectLocation', 'attachments']);
         });
@@ -187,6 +196,17 @@ class RefundLifecycleService
                 'Transisi refund tidak valid dari status '.$refund->status->value.'.'
             );
         }
+    }
+
+    private function notifyCustomer(string $event, Refund $refund, string $message): void
+    {
+        $refund->loadMissing(['invoice.booking.user']);
+        $this->notifications->send(
+            $refund->invoice?->booking?->user,
+            $event,
+            $refund,
+            $message
+        );
     }
 
     private function audit(string $event, Refund $refund, User $actor): void
