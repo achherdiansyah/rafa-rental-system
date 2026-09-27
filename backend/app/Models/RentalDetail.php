@@ -18,6 +18,8 @@ class RentalDetail extends Model
         'check_in_hm',
         'check_out_hm',
         'condition_notes',
+        'inspection_result',
+        'checked_out_at',
         'status',
     ];
 
@@ -27,6 +29,8 @@ class RentalDetail extends Model
             'status' => RentalStatus::class,
             'check_in_hm' => 'decimal:2',
             'check_out_hm' => 'decimal:2',
+            'inspection_result' => 'string',
+            'checked_out_at' => 'datetime',
         ];
     }
 

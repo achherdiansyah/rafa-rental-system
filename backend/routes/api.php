@@ -16,6 +16,8 @@ use App\Http\Controllers\Api\V1\PricingCalculationController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\ProjectLocationController;
 use App\Http\Controllers\Api\V1\RecommendationController;
+use App\Http\Controllers\Api\V1\RentalController;
+use App\Http\Controllers\Api\V1\TimesheetController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -119,6 +121,28 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::post('/{booking}/extend-deadline', [BookingController::class, 'extendDeadline'])->name('extend-deadline');
             Route::post('/{booking}/cancel', [BookingController::class, 'cancel'])->name('cancel');
             Route::post('/{booking}/reschedule', [BookingController::class, 'reschedule'])->name('reschedule');
+        });
+
+        // Rental Lifecycle (from CONFIRMED booking with assigned units)
+        Route::prefix('rentals')->name('rentals.')->group(function () {
+            Route::get('/', [RentalController::class, 'index'])->name('index');
+            Route::post('/', [RentalController::class, 'store'])->name('store');
+            Route::get('/{rental}', [RentalController::class, 'show'])->name('show');
+            Route::post('/{rental}/ready', [RentalController::class, 'ready'])->name('ready');
+            Route::post('/{rental}/{target}', [RentalController::class, 'transition'])->name('transition');
+        });
+
+        // Daily Operational Timesheet
+        Route::prefix('timesheets')->name('timesheets.')->group(function () {
+            Route::get('/', [TimesheetController::class, 'index'])->name('index');
+            Route::post('/', [TimesheetController::class, 'store'])->name('store');
+            Route::get('/{timesheet}', [TimesheetController::class, 'show'])->name('show');
+            Route::post('/{timesheet}/submit', [TimesheetController::class, 'submit'])->name('submit');
+            Route::post('/{timesheet}/signature', [TimesheetController::class, 'sign'])->name('signature');
+            Route::post('/{timesheet}/approve', [TimesheetController::class, 'approve'])->name('approve');
+            Route::post('/{timesheet}/reject', [TimesheetController::class, 'reject'])->name('reject');
+            Route::put('/{timesheet}/revise', [TimesheetController::class, 'revise'])->name('revise');
+            Route::get('/{timesheet}/revisions', [TimesheetController::class, 'revisions'])->name('revisions');
         });
 
         // Equipment Master Management (Admin/Owner)

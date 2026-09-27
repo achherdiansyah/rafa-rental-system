@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Timesheet extends Model
 {
@@ -17,9 +18,13 @@ class Timesheet extends Model
         'report_date',
         'start_hm',
         'end_hm',
+        'break_minutes',
         'total_work_hours',
         'standby_hours',
         'breakdown_hours',
+        'operator_name',
+        'notes',
+        'signature_reference',
         'status',
         'approved_by',
     ];
@@ -30,6 +35,7 @@ class Timesheet extends Model
             'report_date' => 'date',
             'start_hm' => 'decimal:2',
             'end_hm' => 'decimal:2',
+            'break_minutes' => 'integer',
             'total_work_hours' => 'decimal:2',
             'standby_hours' => 'decimal:2',
             'breakdown_hours' => 'decimal:2',
@@ -50,5 +56,10 @@ class Timesheet extends Model
     public function revisions(): HasMany
     {
         return $this->hasMany(TimesheetRevision::class);
+    }
+
+    public function attachments(): MorphMany
+    {
+        return $this->morphMany(Attachment::class, 'attachable');
     }
 }

@@ -25,7 +25,9 @@ class AttachmentResource extends JsonResource
             'file_name' => $this->file_name,
             'mime_type' => $this->mime_type,
             'file_size' => $this->file_size,
-            'url' => Storage::disk('public')->url($this->file_path),
+            'url' => Storage::disk('public')->exists($this->file_path)
+                ? Storage::disk('public')->url($this->file_path)
+                : null,
             'uploaded_by' => $this->uploaded_by,
             'created_at' => $this->created_at?->toIso8601String(),
         ];
