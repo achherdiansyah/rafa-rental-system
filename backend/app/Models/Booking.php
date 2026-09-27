@@ -24,6 +24,11 @@ class Booking extends Model
         'approved_at',
         'payment_deadline_at',
         'payment_met_at',
+        'cancelled_at',
+        'cancellation_reason',
+        'reschedule_requested_at',
+        'reschedule_reason',
+        'reschedule_history',
     ];
 
     protected function casts(): array
@@ -34,6 +39,9 @@ class Booking extends Model
             'approved_at' => 'datetime',
             'payment_deadline_at' => 'datetime',
             'payment_met_at' => 'datetime',
+            'cancelled_at' => 'datetime',
+            'reschedule_requested_at' => 'datetime',
+            'reschedule_history' => 'array',
         ];
     }
 

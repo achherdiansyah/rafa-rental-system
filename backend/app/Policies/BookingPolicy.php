@@ -83,4 +83,16 @@ class BookingPolicy
     {
         return $user->hasRole(UserRole::ADMIN, UserRole::OWNER);
     }
+
+    /**
+     * Determine whether the user can request a reschedule (own booking or staff).
+     */
+    public function reschedule(User $user, Booking $booking): bool
+    {
+        if ($user->isAdmin() || $user->isOwner()) {
+            return true;
+        }
+
+        return (int) $user->id === (int) $booking->user_id;
+    }
 }

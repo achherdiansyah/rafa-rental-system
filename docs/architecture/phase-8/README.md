@@ -23,8 +23,9 @@ Phase 8 bertujuan untuk mengimplementasikan alur pemesanan sewa armada alat bera
 | **8D** | Booking Core & Submission (Cart → Booking → PENDING_APPROVAL) | Selesai (`f8543c9`) |
 | **8E** | Availability Engine (*Single Source of Truth* + Pessimistic Locking) | Selesai (`e5ecdb5`) |
 | **8F** | Admin Approval, Unit Assignment & Replacement (PENDING_APPROVAL → APPROVED/REJECTED) | Selesai (`4db11c6`) |
-| **8G** | Booking Expiry & Slot Release (Deadline + Scheduler + Manual Extension) | Selesai (Aktif) |
-| **8H** | Final Review & Git Merge | Pending |
+| **8G** | Booking Expiry & Slot Release (Deadline + Scheduler + Manual Extension) | Selesai (`ff4551b`) |
+| **8H** | Cancellation, Reschedule & Unit Replacement | Selesai (Aktif) |
+| **8I** | Final Review & Git Merge | Pending |
 
 ---
 
@@ -37,3 +38,4 @@ Phase 8 bertujuan untuk mengimplementasikan alur pemesanan sewa armada alat bera
 - `05-availability-engine.md`: Spesifikasi mesin ketersediaan sebagai *single source of truth*, buffer operasional, deteksi overlap, dan pessimistic locking anti double-booking.
 - `06-admin-approval-unit-assignment.md`: Spesifikasi persetujuan/pengtolakan booking, penugasan unit fisik, guard konflik, riwayat assignment, penggantian unit, dan UI antrean Admin.
 - `07-booking-expiry.md`: Spesifikasi kadaluwarsa booking, boundary status pembayaran, scheduler `bookings:expire`, pelepasan slot, dan perpanjangan tenggat Admin.
+- `08-cancellation-reschedule-replacement.md`: Spesifikasi pembatalan bersyarat, reschedule dengan revalidasi availability, riwayat tanggal, dan penggantian unit (dengan boundary refund).

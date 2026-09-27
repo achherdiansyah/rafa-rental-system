@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { MapPin, Truck, CheckCircle2, XCircle, UserCheck } from 'lucide-react'
+import { MapPin, Truck, CheckCircle2, XCircle, UserCheck, RefreshCw } from 'lucide-react'
 import { bookingService } from '@/features/booking/services/bookingService'
 import { equipmentService } from '@/features/equipment/services/equipmentService'
 import type { Booking } from '@/types/booking'
@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Modal } from '@/components/ui/Modal'
 import { Textarea } from '@/components/form/Textarea'
+import { Select } from '@/components/form/Select'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/feedback/EmptyState'
 import { Alert } from '@/components/feedback/Alert'
@@ -54,6 +55,14 @@ export const AdminBookingsPage: React.FC = () => {
   const [availableUnits, setAvailableUnits] = useState<Record<number, EquipmentUnit[]>>({})
   const [selections, setSelections] = useState<UnitSelections>({})
   const [isAssigning, setIsAssigning] = useState(false)
+
+  // Replace modal
+  const [replaceTarget, setReplaceTarget] = useState<{ booking: Booking; assignmentId: number; modelId: number } | null>(null)
+  const [replaceOptions, setReplaceOptions] = useState<EquipmentUnit[]>([])
+  const [replaceSelection, setReplaceSelection] = useState('')
+  const [replaceReason, setReplaceReason] = useState('')
+  const [replaceError, setReplaceError] = useState('')
+  const [isReplacing, setIsReplacing] = useState(false)
 
   const loadBookings = async (status: BookingStatus | string = statusFilter) => {
     setIsLoading(true)
@@ -178,6 +187,53 @@ export const AdminBookingsPage: React.FC = () => {
     }
   }
 
+  const openReplaceModal = async (booking: Booking, assignmentId: number, modelId: number) => {
+    setReplaceTarget({ booking, assignmentId, modelId })
+    setReplaceSelection('')
+    setReplaceReason('')
+    setReplaceError('')
+    try {
+      const res = await equipmentService.getUnits({ equipment_model_id: modelId, status: 'AVAILABLE', per_page: 100 })
+      if (res.success && res.data) {
+        setReplaceOptions(res.data)
+      } else {
+        setReplaceOptions([])
+      }
+    } catch {
+      setReplaceOptions([])
+    }
+  }
+
+  const handleReplace = async () => {
+    if (!replaceTarget) return
+    if (!replaceSelection) {
+      setReplaceError('Pilih unit pengganti terlebih dahulu.')
+      return
+    }
+    if (replaceReason.trim().length < 5) {
+      setReplaceError('Alasan penggantian minimal 5 karakter.')
+      return
+    }
+    setIsReplacing(true)
+    try {
+      const res = await bookingService.replaceUnit(
+        replaceTarget.booking.id,
+        replaceTarget.assignmentId,
+        Number(replaceSelection),
+        replaceReason
+      )
+      if (res.success) {
+        showSuccessToast('Unit fisik berhasil diganti.')
+        setReplaceTarget(null)
+        loadBookings()
+      }
+    } catch (err: any) {
+      showErrorToast(err?.message || 'Gagal mengganti unit.')
+    } finally {
+      setIsReplacing(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -251,12 +307,29 @@ export const AdminBookingsPage: React.FC = () => {
                   {/* Line summary */}
                   {booking.details && booking.details.length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-1">
-                      {booking.details.map((d) => (
-                        <span key={d.id} className="text-xs bg-slate-50 border border-slate-100 rounded-lg px-2 py-1">
-                          <Truck size={11} className="inline mr-1 text-slate-400" />
-                          {d.model?.brand} {d.model?.model_name} × {d.quantity}
-                        </span>
-                      ))}
+                      {booking.details.map((d) => {
+                        const current = (d.unit_assignments ?? []).filter((a) => a.is_current)
+                        return (
+                          <span key={d.id} className="text-xs bg-slate-50 border border-slate-100 rounded-lg px-2 py-1 flex flex-wrap items-center gap-1.5">
+                            <Truck size={11} className="text-slate-400" />
+                            {d.model?.brand} {d.model?.model_name} × {d.quantity}
+                            {current.map((a) => (
+                              <span key={a.id} className="inline-flex items-center gap-1.5 ml-1 pl-2 border-l border-slate-200">
+                                <span className="font-mono">{a.unit?.serial_number}</span>
+                                {booking.status === 'APPROVED' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => openReplaceModal(booking, a.id, d.equipment_model_id)}
+                                    className="text-primary-600 hover:text-primary-800 font-medium cursor-pointer underline-offset-2 hover:underline"
+                                  >
+                                    Ganti
+                                  </button>
+                                )}
+                              </span>
+                            ))}
+                          </span>
+                        )
+                      })}
                     </div>
                   )}
                 </div>
@@ -404,6 +477,51 @@ export const AdminBookingsPage: React.FC = () => {
             </Button>
             <Button isLoading={isAssigning} onClick={handleAssign} className="gap-1.5">
               <UserCheck size={16} /> Tugaskan Unit
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Replace unit modal */}
+      <Modal
+        isOpen={replaceTarget !== null}
+        onClose={() => !isReplacing && setReplaceTarget(null)}
+        title={`Ganti Unit — ${replaceTarget?.booking.booking_code ?? ''}`}
+        size="md"
+      >
+        <div className="space-y-4">
+          <Select
+            label="Unit Pengganti *"
+            value={replaceSelection}
+            onChange={(e) => setReplaceSelection(e.target.value)}
+            error={replaceError}
+            disabled={isReplacing}
+          >
+            <option value="">-- Pilih Unit AVAILABLE --</option>
+            {replaceOptions.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.serial_number} — {u.plate_number ?? 'tanpa plat'}
+              </option>
+            ))}
+          </Select>
+          {replaceOptions.length === 0 && (
+            <p className="text-xs text-slate-500">Tidak ada unit AVAILABLE untuk model ini saat ini.</p>
+          )}
+          <Textarea
+            label="Alasan Penggantian * (min. 5 karakter)"
+            placeholder="Contoh: Mesin rusak pra-kirim, diganti unit cadangan."
+            value={replaceReason}
+            onChange={(e) => setReplaceReason(e.target.value)}
+            error={replaceError}
+            rows={3}
+            disabled={isReplacing}
+          />
+          <div className="flex justify-end gap-3 pt-2 border-t border-slate-100">
+            <Button variant="outline" onClick={() => setReplaceTarget(null)} disabled={isReplacing}>
+              Batal
+            </Button>
+            <Button isLoading={isReplacing} onClick={handleReplace} className="gap-1.5">
+              <RefreshCw size={16} /> Ganti Unit
             </Button>
           </div>
         </div>

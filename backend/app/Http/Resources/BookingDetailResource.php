@@ -24,6 +24,21 @@ class BookingDetailResource extends JsonResource
             'rental_rate_snapshot' => (float) $this->rental_rate_snapshot,
             'subtotal' => (float) $this->subtotal,
             'model' => new EquipmentModelResource($this->whenLoaded('model')),
+            'unit_assignments' => $this->whenLoaded('unitAssignments', function () {
+                return $this->unitAssignments->map(fn ($assignment) => [
+                    'id' => $assignment->id,
+                    'equipment_unit_id' => $assignment->equipment_unit_id,
+                    'status' => $assignment->status instanceof \BackedEnum ? $assignment->status->value : $assignment->status,
+                    'is_current' => (bool) $assignment->is_current,
+                    'replaced_reason' => $assignment->replaced_reason,
+                    'unit' => $assignment->unit ? [
+                        'id' => $assignment->unit->id,
+                        'serial_number' => $assignment->unit->serial_number,
+                        'plate_number' => $assignment->unit->plate_number,
+                        'status' => $assignment->unit->status instanceof \BackedEnum ? $assignment->unit->status->value : $assignment->unit->status,
+                    ] : null,
+                ]);
+            }),
             'created_at' => $this->created_at?->toISOString(),
         ];
     }

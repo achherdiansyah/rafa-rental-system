@@ -4,17 +4,21 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Booking\ApproveBookingAction;
 use App\Actions\Booking\AssignBookingUnitsAction;
+use App\Actions\Booking\CancelBookingAction;
 use App\Actions\Booking\CreateBookingFromCartAction;
 use App\Actions\Booking\ExtendPaymentDeadlineAction;
 use App\Actions\Booking\RejectBookingAction;
 use App\Actions\Booking\ReplaceUnitAssignmentAction;
+use App\Actions\Booking\RescheduleBookingAction;
 use App\Actions\Booking\SubmitBookingAction;
 use App\Actions\Cart\GetOrCreateUserCartAction;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Requests\Booking\AssignBookingUnitsRequest;
+use App\Http\Requests\Booking\CancelBookingRequest;
 use App\Http\Requests\Booking\ExtendDeadlineRequest;
 use App\Http\Requests\Booking\RejectBookingRequest;
 use App\Http\Requests\Booking\ReplaceUnitRequest;
+use App\Http\Requests\Booking\RescheduleBookingRequest;
 use App\Http\Resources\BookingResource;
 use App\Models\Booking;
 use App\Models\BookingUnitAssignment;
@@ -64,6 +68,7 @@ class BookingController extends ApiController
             'details.model' => function ($q) {
                 $q->with(['type', 'prices', 'attachments']);
             },
+            'details.unitAssignments.unit',
         ])->latest();
 
         // Ownership scoping: regular users only see their own bookings
@@ -107,6 +112,7 @@ class BookingController extends ApiController
             'details.model' => function ($q) {
                 $q->with(['type', 'prices', 'attachments']);
             },
+            'details.unitAssignments.unit',
         ]);
 
         return $this->success(
@@ -241,6 +247,49 @@ class BookingController extends ApiController
         return $this->success(
             new BookingResource($updated),
             'Tenggat pembayaran berhasil diperpanjang.'
+        );
+    }
+
+    /**
+     * Cancel booking with business-rule guarding (USER pre-payment / ADMIN post-payment).
+     */
+    public function cancel(CancelBookingRequest $request, Booking $booking, CancelBookingAction $action): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $cancelled = $action->execute($user, $booking, $request->validated('reason'));
+
+        return $this->success(
+            new BookingResource($cancelled),
+            'Booking berhasil dibatalkan.'
+        );
+    }
+
+    /**
+     * Request reschedule of booking dates (availability re-checked, admin approval required).
+     */
+    public function reschedule(
+        RescheduleBookingRequest $request,
+        Booking $booking,
+        RescheduleBookingAction $action
+    ): JsonResponse {
+        /** @var User $user */
+        $user = $request->user();
+
+        Gate::authorize('reschedule', $booking);
+
+        $updated = $action->execute(
+            $user,
+            $booking,
+            $request->validated('new_start_date'),
+            $request->validated('new_end_date'),
+            $request->validated('reason')
+        );
+
+        return $this->success(
+            new BookingResource($updated),
+            'Permintaan reschedule diajukan dan menunggu persetujuan Admin.'
         );
     }
 }

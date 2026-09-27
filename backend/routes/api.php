@@ -117,6 +117,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::post('/{booking}/assign-units', [BookingController::class, 'assignUnits'])->name('assign-units');
             Route::post('/{booking}/assignments/{assignment}/replace', [BookingController::class, 'replaceUnit'])->name('replace-unit');
             Route::post('/{booking}/extend-deadline', [BookingController::class, 'extendDeadline'])->name('extend-deadline');
+            Route::post('/{booking}/cancel', [BookingController::class, 'cancel'])->name('cancel');
+            Route::post('/{booking}/reschedule', [BookingController::class, 'reschedule'])->name('reschedule');
         });
 
         // Equipment Master Management (Admin/Owner)

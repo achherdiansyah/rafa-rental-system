@@ -48,4 +48,30 @@ export const bookingService = {
     })
     return response
   },
+
+  async cancelBooking(id: number, reason: string): Promise<ApiResponse<Booking>> {
+    const response = await api.post<Booking, { reason: string }>(`/bookings/${id}/cancel`, { reason })
+    return response
+  },
+
+  async rescheduleBooking(
+    id: number,
+    payload: { new_start_date: string; new_end_date: string; reason: string }
+  ): Promise<ApiResponse<Booking>> {
+    const response = await api.post<Booking, typeof payload>(`/bookings/${id}/reschedule`, payload)
+    return response
+  },
+
+  async replaceUnit(
+    id: number,
+    assignmentId: number,
+    new_equipment_unit_id: number,
+    reason: string
+  ): Promise<ApiResponse<Booking>> {
+    const response = await api.post<
+      Booking,
+      { new_equipment_unit_id: number; reason: string }
+    >(`/bookings/${id}/assignments/${assignmentId}/replace`, { new_equipment_unit_id, reason })
+    return response
+  },
 }

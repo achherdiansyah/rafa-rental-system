@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react'
-import { CalendarCheck, MapPin, Truck, ShieldCheck, Clock, Check } from 'lucide-react'
+import { CalendarCheck, MapPin, Truck, ShieldCheck, Clock, Check, XCircle, CalendarClock } from 'lucide-react'
 import { bookingService } from '../services/bookingService'
 import type { Booking } from '@/types/booking'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
+import { Modal } from '@/components/ui/Modal'
+import { Input } from '@/components/form/Input'
+import { Textarea } from '@/components/form/Textarea'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/feedback/EmptyState'
 import { Alert } from '@/components/feedback/Alert'
@@ -45,6 +48,18 @@ export const UserBookingsPage: React.FC = () => {
   const [submittingId, setSubmittingId] = useState<number | null>(null)
   const [bookingToSubmit, setBookingToSubmit] = useState<Booking | null>(null)
   const [isSubmitConfirmOpen, setIsSubmitConfirmOpen] = useState(false)
+
+  // Cancel
+  const [cancelTarget, setCancelTarget] = useState<Booking | null>(null)
+  const [cancelReason, setCancelReason] = useState('')
+  const [cancelError, setCancelError] = useState('')
+
+  // Reschedule
+  const [rescheduleTarget, setRescheduleTarget] = useState<Booking | null>(null)
+  const [rescheduleStart, setRescheduleStart] = useState('')
+  const [rescheduleEnd, setRescheduleEnd] = useState('')
+  const [rescheduleReason, setRescheduleReason] = useState('')
+  const [rescheduleError, setRescheduleError] = useState('')
 
   const loadBookings = async (page = 1) => {
     setIsLoading(true)
@@ -96,6 +111,72 @@ export const UserBookingsPage: React.FC = () => {
   }
 
   const isEditable = (status: string) => status === 'DRAFT'
+
+  const canCancel = (b: Booking) =>
+    !b.payment_met_at &&
+    ['DRAFT', 'SUBMITTED', 'PENDING_APPROVAL', 'APPROVED', 'PAYMENT_PENDING'].includes(b.status)
+
+  const canReschedule = (b: Booking) =>
+    ['APPROVED', 'PAYMENT_PENDING', 'CONFIRMED'].includes(b.status)
+
+  const handleCancel = async () => {
+    if (!cancelTarget) return
+    if (cancelReason.trim().length < 5) {
+      setCancelError('Alasan pembatalan minimal 5 karakter.')
+      return
+    }
+    setSubmittingId(cancelTarget.id)
+    try {
+      const res = await bookingService.cancelBooking(cancelTarget.id, cancelReason)
+      if (res.success) {
+        showSuccessToast('Booking dibatalkan.')
+        setCancelTarget(null)
+        setCancelReason('')
+        setCancelError('')
+        loadBookings(currentPage)
+      }
+    } catch (err: any) {
+      showErrorToast(err?.message || 'Gagal membatalkan booking.')
+    } finally {
+      setSubmittingId(null)
+    }
+  }
+
+  const handleReschedule = async () => {
+    if (!rescheduleTarget) return
+    const errs: string[] = []
+    if (!rescheduleStart) errs.push('Tanggal mulai baru wajib diisi.')
+    if (!rescheduleEnd) errs.push('Tanggal selesai baru wajib diisi.')
+    if (rescheduleStart && rescheduleEnd && rescheduleEnd < rescheduleStart) {
+      errs.push('Tanggal selesai tidak boleh sebelum tanggal mulai.')
+    }
+    if (rescheduleReason.trim().length < 5) errs.push('Alasan reschedule minimal 5 karakter.')
+    if (errs.length) {
+      setRescheduleError(errs.join(' '))
+      return
+    }
+    setSubmittingId(rescheduleTarget.id)
+    try {
+      const res = await bookingService.rescheduleBooking(rescheduleTarget.id, {
+        new_start_date: rescheduleStart,
+        new_end_date: rescheduleEnd,
+        reason: rescheduleReason,
+      })
+      if (res.success) {
+        showSuccessToast('Permintaan reschedule diajukan ke tim approval.')
+        setRescheduleTarget(null)
+        setRescheduleStart('')
+        setRescheduleEnd('')
+        setRescheduleReason('')
+        setRescheduleError('')
+        loadBookings(currentPage)
+      }
+    } catch (err: any) {
+      showErrorToast(err?.message || 'Gagal mengajukan reschedule.')
+    } finally {
+      setSubmittingId(null)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -210,7 +291,7 @@ export const UserBookingsPage: React.FC = () => {
                 )}
 
                 {/* Actions */}
-                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-2">
+                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-2 flex-wrap">
                   {canSubmit ? (
                     <Button
                       variant="primary"
@@ -225,10 +306,48 @@ export const UserBookingsPage: React.FC = () => {
                       <ShieldCheck size={15} />
                       Ajukan ke Approval
                     </Button>
-                  ) : (
+                  ) : null}
+
+                  {canReschedule(booking) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={submittingId !== null}
+                      onClick={() => {
+                        setRescheduleTarget(booking)
+                        setRescheduleStart('')
+                        setRescheduleEnd('')
+                        setRescheduleReason('')
+                        setRescheduleError('')
+                      }}
+                      className="gap-1.5"
+                    >
+                      <CalendarClock size={15} />
+                      Ajukan Reschedule
+                    </Button>
+                  )}
+
+                  {canCancel(booking) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={submittingId !== null}
+                      className="text-rose-600 hover:bg-rose-50 gap-1.5"
+                      onClick={() => {
+                        setCancelTarget(booking)
+                        setCancelReason('')
+                        setCancelError('')
+                      }}
+                    >
+                      <XCircle size={15} />
+                      Batalkan
+                    </Button>
+                  )}
+
+                  {!canSubmit && !canReschedule(booking) && !canCancel(booking) && (
                     <span className="flex items-center gap-1.5 text-xs text-slate-400">
                       <Check size={14} className="text-emerald-500" />
-                      Booking telah disubmit ke tim operasional.
+                      Booking sedang diproses operasional.
                     </span>
                   )}
                 </div>
@@ -264,6 +383,79 @@ export const UserBookingsPage: React.FC = () => {
         cancelText="Batal"
         isLoading={submittingId !== null}
       />
+
+      {/* Cancel modal */}
+      <Modal
+        isOpen={cancelTarget !== null}
+        onClose={() => setCancelTarget(null)}
+        title={`Batalkan Booking ${cancelTarget?.booking_code ?? ''}`}
+        size="sm"
+      >
+        <div className="space-y-4">
+          <Textarea
+            label="Alasan Pembatalan * (min. 5 karakter)"
+            placeholder="Contoh: Proyek ditunda oleh pemilik gedung."
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+            error={cancelError}
+            rows={3}
+          />
+          <div className="flex justify-end gap-3 pt-2 border-t border-slate-100">
+            <Button variant="outline" onClick={() => setCancelTarget(null)} disabled={submittingId !== null}>
+              Batal
+            </Button>
+            <Button variant="danger" isLoading={submittingId === cancelTarget?.id} onClick={handleCancel} className="gap-1.5">
+              <XCircle size={16} /> Batalkan Booking
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Reschedule modal */}
+      <Modal
+        isOpen={rescheduleTarget !== null}
+        onClose={() => setRescheduleTarget(null)}
+        title={`Reschedule ${rescheduleTarget?.booking_code ?? ''}`}
+        size="md"
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Tanggal Mulai Baru *"
+              type="date"
+              value={rescheduleStart}
+              onChange={(e) => setRescheduleStart(e.target.value)}
+              disabled={submittingId !== null}
+            />
+            <Input
+              label="Tanggal Selesai Baru *"
+              type="date"
+              value={rescheduleEnd}
+              onChange={(e) => setRescheduleEnd(e.target.value)}
+              disabled={submittingId !== null}
+            />
+          </div>
+          <Textarea
+            label="Alasan Reschedule * (min. 5 karakter)"
+            placeholder="Contoh: Penjadwalan proyek mundur satu minggu."
+            value={rescheduleReason}
+            onChange={(e) => setRescheduleReason(e.target.value)}
+            error={rescheduleError}
+            rows={3}
+          />
+          <p className="text-xs text-slate-400">
+            Ketersediaan & buffer jadwal akan divalidasi ulang. Kembali ke PENDING_APPROVAL untuk persetujuan Admin.
+          </p>
+          <div className="flex justify-end gap-3 pt-2 border-t border-slate-100">
+            <Button variant="outline" onClick={() => setRescheduleTarget(null)} disabled={submittingId !== null}>
+              Batal
+            </Button>
+            <Button isLoading={submittingId === rescheduleTarget?.id} onClick={handleReschedule} className="gap-1.5">
+              <CalendarClock size={16} /> Ajukan Reschedule
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }
