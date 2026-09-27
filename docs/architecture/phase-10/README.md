@@ -22,8 +22,9 @@ invoice, dan menangani pembayaran (partial, overpayment, refund manual).
 | **10C** | Payment Submission (PAYMENT_PENDING→SUBMITTED, proof private, anti-duplikat) | Selesai (Aktif) |
 | **10D** | Payment Verification (approve/reject Admin, settlement PAID/PARTIAL/OVERPAID) | Selesai (`451d5ba`) |
 | **10E** | Balance, Overpayment & Deadline (extension manual, anti double counting, refund seam) | Selesai (`7cf81df`) |
-| **10F** | Invoice & Payment UI (User + Admin queue/verification/proof) | Selesai (Aktif) |
-| 10G | Integration Testing & Final Review | Pending |
+| **10F** | Invoice & Payment UI (User + Admin queue/verification/proof) | Selesai (`8079bcb`) |
+| **10G** | Integration Testing & Review (E2E flow, race/pessimistic lock, N+1, security) | Selesai (Aktif) |
+| 10H | Final Review & Git Merge | Pending |
 
 ---
 
@@ -51,3 +52,7 @@ invoice, dan menangani pembayaran (partial, overpayment, refund manual).
   (list/detail, saldo, riwayat, upload bukti, notice overpayment) dan ADMIN
   (payment queue, pratinjau bukti, verifikasi/tolak, indikator overpayment,
   extension deadline); backend `GET /payments` + `GET /payments/{id}/proof`.
+- `07-integration-test-report.md`: Laporan integrasi end-to-end billing,
+  invoice, deadline, payment & verifikasi (374 backend tests); review duplicate
+  balance, race condition (pessimistic lock), N+1, mutasi riwayat keuangan,
+  keamanan upload, dan akses finansial tak sah.

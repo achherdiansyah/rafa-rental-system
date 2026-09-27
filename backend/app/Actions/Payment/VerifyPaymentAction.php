@@ -36,13 +36,17 @@ class VerifyPaymentAction
         Gate::authorize('manage', $payment);
 
         return DB::transaction(function () use ($admin, $payment) {
-            if ($payment->status !== PaymentStatus::SUBMITTED) {
+            // Pessimistic lock guards against concurrent verification (race).
+            /** @var Payment $fresh */
+            $fresh = Payment::whereKey($payment->id)->lockForUpdate()->first() ?? $payment;
+
+            if ($fresh->status !== PaymentStatus::SUBMITTED) {
                 throw new InvalidStateTransitionException(
                     'Hanya payment SUBMITTED yang dapat diverifikasi.'
                 );
             }
 
-            $invoice = $payment->invoice;
+            $invoice = $fresh->invoice;
 
             if ($invoice->status === InvoiceStatus::PAID || $invoice->status === InvoiceStatus::OVERPAID) {
                 throw new BusinessRuleException(
@@ -52,7 +56,7 @@ class VerifyPaymentAction
 
             // Settlement: balance = sum approved payments (single source of
             // truth) => no double counting even across multiple approvals.
-            $submitted = (float) $payment->amount;
+            $submitted = (float) $fresh->amount;
             $approvedTotal = (float) $invoice->payments()
                 ->where('status', PaymentStatus::APPROVED)
                 ->sum('amount');
@@ -62,7 +66,7 @@ class VerifyPaymentAction
             $excess = max(0.0, $totalBooked - $grandTotal);
             $newPaid = min($grandTotal, $totalBooked);
 
-            $payment->update([
+            $fresh->update([
                 'status' => PaymentStatus::APPROVED,
                 'verified_by' => $admin->id,
             ]);
@@ -84,7 +88,7 @@ class VerifyPaymentAction
                 $this->refundBoundary->noteOverpayment($invoice, $excess);
             }
 
-            AuditLogger::log('PAYMENT_APPROVED', $payment, [
+            AuditLogger::log('PAYMENT_APPROVED', $fresh, [
                 'old_status' => PaymentStatus::SUBMITTED->value,
             ], [
                 'new_status' => PaymentStatus::APPROVED->value,
@@ -93,7 +97,7 @@ class VerifyPaymentAction
                 'invoice_status' => $nextStatus->value,
             ]);
 
-            return $payment->fresh()->load([
+            return $fresh->fresh()->load([
                 'attachments',
                 'invoice.booking.projectLocation',
             ]);
@@ -105,7 +109,11 @@ class VerifyPaymentAction
         Gate::authorize('manage', $payment);
 
         return DB::transaction(function () use ($admin, $payment, $reason) {
-            if ($payment->status !== PaymentStatus::SUBMITTED) {
+            // Pessimistic lock guards against concurrent verification (race).
+            /** @var Payment $fresh */
+            $fresh = Payment::whereKey($payment->id)->lockForUpdate()->first() ?? $payment;
+
+            if ($fresh->status !== PaymentStatus::SUBMITTED) {
                 throw new InvalidStateTransitionException(
                     'Hanya payment SUBMITTED yang dapat ditolak.'
                 );
@@ -115,13 +123,13 @@ class VerifyPaymentAction
                 throw new BusinessRuleException('Alasan penolakan wajib diisi minimal 5 karakter.');
             }
 
-            $payment->update([
+            $fresh->update([
                 'status' => PaymentStatus::REJECTED,
                 'rejection_reason' => trim($reason),
                 'verified_by' => $admin->id,
             ]);
 
-            AuditLogger::log('PAYMENT_REJECTED', $payment, [
+            AuditLogger::log('PAYMENT_REJECTED', $fresh, [
                 'old_status' => PaymentStatus::SUBMITTED->value,
             ], [
                 'new_status' => PaymentStatus::REJECTED->value,
@@ -129,7 +137,7 @@ class VerifyPaymentAction
                 'verified_by' => $admin->id,
             ]);
 
-            return $payment->fresh()->load([
+            return $fresh->fresh()->load([
                 'attachments',
                 'invoice.booking.projectLocation',
             ]);
