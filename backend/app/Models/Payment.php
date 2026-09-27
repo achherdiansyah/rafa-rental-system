@@ -6,6 +6,7 @@ use App\Enums\PaymentStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Payment extends Model
 {
@@ -15,6 +16,8 @@ class Payment extends Model
         'invoice_id',
         'bank_account_id',
         'payment_date',
+        'sender_name',
+        'reference',
         'amount',
         'status',
         'rejection_reason',
@@ -43,5 +46,19 @@ class Payment extends Model
     public function verifiedByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'verified_by');
+    }
+
+    public function attachments(): MorphMany
+    {
+        return $this->morphMany(Attachment::class, 'attachable');
+    }
+
+    public function proof(): ?Attachment
+    {
+        /** @var Attachment|null $proof */
+        $proof = $this->attachments
+            ->first(fn ($a) => $a->document_type === 'PAYMENT_PROOF');
+
+        return $proof;
     }
 }

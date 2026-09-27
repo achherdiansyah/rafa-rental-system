@@ -18,9 +18,9 @@ invoice, dan menangani pembayaran (partial, overpayment, refund manual).
 | Subphase | Fokus | Status |
 |---|---|---|
 | **10A** | Billing Engine (actual hours × hourly rate, snapshot, MOB/DEMOB per unit, no rounding) | Selesai (`4a76844`) |
-| **10B** | Invoice Creation & Lifecycle (DRAFT→ISSUED→UNPAID→OVERDUE, snapshot, numbering, PDF) | Selesai (Aktif) |
-| 10C | Invoice UI (User + Admin) | Pending |
-| 10D | Payment & Validation (partial, overpayment) | Pending |
+| **10B** | Invoice Creation & Lifecycle (DRAFT→ISSUED→UNPAID→OVERDUE, snapshot, numbering, PDF) | Selesai (`2bd37ba`) |
+| **10C** | Payment Submission (PAYMENT_PENDING→SUBMITTED, proof private, anti-duplikat) | Selesai (Aktif) |
+| 10D | Payment Validation (approve/reject) | Pending |
 | 10E | Refund & Outstanding | Pending |
 | 10F | Integration Testing & Final Review | Pending |
 
@@ -36,3 +36,6 @@ invoice, dan menangani pembayaran (partial, overpayment, refund manual).
   (`DRAFT → ISSUED → UNPAID → OVERDUE`, void → CANCELLED), snapshot
   `invoice_details`, penomoran `INV/YYYYMM/XXXX`, deadline 24 jam dari
   penerbitan, banyak invoice per booking, dan PDF tanpa dependensi.
+- `03-payment-submission.md`: Spesifikasi pengajuan pembayaran user
+  (`PAYMENT_PENDING → SUBMITTED`), bukti transfer privat sesuai spesifikasi
+  keamanan, anti-duplikat referensi, dan larangan auto-approval.
