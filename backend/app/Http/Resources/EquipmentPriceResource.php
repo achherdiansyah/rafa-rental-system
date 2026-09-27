@@ -26,6 +26,8 @@ class EquipmentPriceResource extends JsonResource
             'base_rate' => (float) $this->base_rate,
             'minimum_hours' => $this->minimum_hours,
             'overtime_rate' => (float) $this->overtime_rate,
+            'mob_cost' => (float) $this->mob_cost,
+            'demob_cost' => (float) $this->demob_cost,
             'effective_date' => $this->effective_date?->format('Y-m-d'),
             'model' => new EquipmentModelResource($this->whenLoaded('model')),
             'versions' => EquipmentPriceVersionResource::collection($this->whenLoaded('versions')),

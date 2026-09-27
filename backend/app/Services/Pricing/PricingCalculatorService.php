@@ -57,9 +57,13 @@ class PricingCalculatorService
         // Rental subtotal = dailyRate * durationDays * physical quantity
         $rentalSubtotal = $dailyRate * $durationDays * $input->quantity;
 
-        // MOB & DEMOB are calculated strictly per physical unit
-        $mobSubtotal = $input->mobRatePerUnit * $input->quantity;
-        $demobSubtotal = $input->demobRatePerUnit * $input->quantity;
+        // MOB & DEMOB are calculated strictly per physical unit.
+        // Source: master price (mob_cost/demob_cost) by default; cart may override per unit.
+        $mobRatePerUnit = $input->mobRatePerUnit > 0 ? $input->mobRatePerUnit : (float) $price->mob_cost;
+        $demobRatePerUnit = $input->demobRatePerUnit > 0 ? $input->demobRatePerUnit : (float) $price->demob_cost;
+
+        $mobSubtotal = $mobRatePerUnit * $input->quantity;
+        $demobSubtotal = $demobRatePerUnit * $input->quantity;
 
         // Total per line item (Zero extra attachment charge, zero tax, zero discount)
         $lineTotal = $rentalSubtotal + $mobSubtotal + $demobSubtotal;
@@ -73,9 +77,9 @@ class PricingCalculatorService
             hourlyRate: $hourlyRate,
             dailyRate: $dailyRate,
             rentalSubtotal: $rentalSubtotal,
-            mobRatePerUnit: $input->mobRatePerUnit,
+            mobRatePerUnit: $mobRatePerUnit,
             mobSubtotal: $mobSubtotal,
-            demobRatePerUnit: $input->demobRatePerUnit,
+            demobRatePerUnit: $demobRatePerUnit,
             demobSubtotal: $demobSubtotal,
             lineTotal: $lineTotal,
         );

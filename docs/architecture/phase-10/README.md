@@ -1,0 +1,34 @@
+# Phase 10: Billing, Invoice & Payment — RAFA Rental System
+
+Dokumentasi arsitektur penagihan sewa berbasis jam aktual, penerbitan invoice,
+dan alur pembayaran.
+
+---
+
+## 1. Tujuan Phase 10
+
+Menutup siklus usaha setelah eksekusi rental (Phase 9): menghitung tagihan dari
+jam kerja aktual + tarif snapshot + MOB/DEMOB per unit fisik, menerbitkan
+invoice, dan menangani pembayaran (partial, overpayment, refund manual).
+
+---
+
+## 2. Struktur Subphase
+
+| Subphase | Fokus | Status |
+|---|---|---|
+| **10A** | Billing Engine (actual hours × hourly rate, snapshot, MOB/DEMOB per unit, no rounding) | Selesai (Aktif) |
+| 10B | Invoice Generation & API | Pending |
+| 10C | Invoice UI (User + Admin) | Pending |
+| 10D | Payment & Validation (partial, overpayment) | Pending |
+| 10E | Refund & Outstanding | Pending |
+| 10F | Integration Testing & Final Review | Pending |
+
+---
+
+## 3. Daftar Dokumen
+
+- `01-billing-engine.md`: Spesifikasi mesin penagihan `RentalBillingService`;
+  aturan jam aktual, tarif snapshot per line, skema All-in/Non All-in, MOB/DEMOB
+  per unit fisik (dapat berbeda), no tax/discount/overtime, no rounding, dan
+  catatan PBD actual hours > 8 tanpa perilaku rekaan.

@@ -18,6 +18,8 @@ class EquipmentPrice extends Model
         'base_rate',
         'minimum_hours',
         'overtime_rate',
+        'mob_cost',
+        'demob_cost',
         'effective_date',
     ];
 
@@ -28,6 +30,8 @@ class EquipmentPrice extends Model
             'base_rate' => 'decimal:2',
             'minimum_hours' => 'integer',
             'overtime_rate' => 'decimal:2',
+            'mob_cost' => 'decimal:2',
+            'demob_cost' => 'decimal:2',
             'effective_date' => 'date',
         ];
     }

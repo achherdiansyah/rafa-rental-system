@@ -24,6 +24,8 @@ class StoreEquipmentPriceRequest extends FormRequest
             'base_rate' => ['required', 'numeric', 'min:0'],
             'minimum_hours' => ['required', 'integer', 'min:0'],
             'overtime_rate' => ['required', 'numeric', 'min:0'],
+            'mob_cost' => ['sometimes', 'numeric', 'min:0'],
+            'demob_cost' => ['sometimes', 'numeric', 'min:0'],
             'effective_date' => ['required', 'date'],
         ];
     }
