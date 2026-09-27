@@ -3,11 +3,13 @@
 namespace App\Providers;
 
 use App\Enums\UserRole;
+use App\Models\Refund;
 use App\Models\User;
+use App\Policies\RefundPolicy;
 use App\Services\Payment\DeferredPaymentStatusProvider;
 use App\Services\Payment\PaymentStatusProvider;
-use App\Services\Refund\DeferredRefundBoundary;
 use App\Services\Refund\RefundBoundary;
+use App\Services\Refund\RefundRegistrationService;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -29,7 +31,7 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->bind(
             RefundBoundary::class,
-            DeferredRefundBoundary::class
+            RefundRegistrationService::class
         );
     }
 
@@ -66,6 +68,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('validate-bast', fn (User $user) => $user->isAdmin());
         Gate::define('validate-timesheet', fn (User $user) => $user->isAdmin());
         Gate::define('process-refund', fn (User $user) => $user->isAdmin());
+
+        // Explicit policy bindings beyond convention (documented in phase docs).
+        Gate::policy(Refund::class, RefundPolicy::class);
 
         // Owner-exclusive capabilities (Financial & Governance)
         Gate::define('view-owner-dashboard', fn (User $user) => $user->isOwner());

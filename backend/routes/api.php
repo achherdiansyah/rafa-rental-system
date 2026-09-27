@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\V1\PricingCalculationController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\ProjectLocationController;
 use App\Http\Controllers\Api\V1\RecommendationController;
+use App\Http\Controllers\Api\V1\RefundController;
 use App\Http\Controllers\Api\V1\RentalController;
 use App\Http\Controllers\Api\V1\TimesheetController;
 use Illuminate\Support\Facades\Route;
@@ -168,6 +169,15 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('/{payment}/proof', [PaymentController::class, 'proof'])->name('proof');
             Route::post('/{payment}/approve', [PaymentController::class, 'approve'])->name('approve');
             Route::post('/{payment}/reject', [PaymentController::class, 'reject'])->name('reject');
+        });
+
+        // Refund Module (manual bank transfer; no gateway; history immutable)
+        Route::prefix('refunds')->name('refunds.')->group(function () {
+            Route::get('/', [RefundController::class, 'index'])->name('index');
+            Route::get('/{refund}', [RefundController::class, 'show'])->name('show');
+            Route::post('/{refund}/process', [RefundController::class, 'process'])->name('process');
+            Route::post('/{refund}/complete', [RefundController::class, 'complete'])->name('complete');
+            Route::post('/{refund}/fail', [RefundController::class, 'fail'])->name('fail');
         });
 
         // Equipment Master Management (Admin/Owner)

@@ -8,6 +8,7 @@ use App\Enums\EquipmentStatus;
 use App\Enums\InvoiceStatus;
 use App\Enums\InvoiceType;
 use App\Enums\PaymentStatus;
+use App\Enums\RefundStatus;
 use App\Enums\UserRole;
 use App\Models\BankAccount;
 use App\Models\Booking;
@@ -18,12 +19,12 @@ use App\Models\EquipmentUnit;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\ProjectLocation;
+use App\Models\Refund;
 use App\Models\Rental;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -183,10 +184,11 @@ class PaymentVerificationTest extends TestCase
         $this->assertEqualsWithDelta(800000.00, (float) $invoice->fresh()->paid_amount, 0.01);
         $this->assertEqualsWithDelta(200000.00, (float) $invoice->fresh()->overpayment_amount, 0.01);
 
-        // Refund is NOT automatic (10E manual flow)
-        if (Schema::hasTable('refunds')) {
-            $this->assertDatabaseCount('refunds', 0);
-        }
+        // Phase 11: overpayment registers a PENDING refund (no auto-settlement).
+        $refund = Refund::where('invoice_id', $invoice->id)->where('source', 'OVERPAYMENT')->first();
+        $this->assertNotNull($refund);
+        $this->assertEquals(RefundStatus::PENDING->value, $refund->status->value);
+        $this->assertEqualsWithDelta(200000.00, (float) $refund->amount, 0.01);
     }
 
     public function test_reject_keeps_row_and_invoice_untouched(): void
