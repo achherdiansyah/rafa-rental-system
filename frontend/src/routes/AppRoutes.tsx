@@ -41,6 +41,12 @@ const AdminTimesheetsPage = lazy(() => import('@/features/timesheet/pages/AdminT
 const UserInvoicesPage = lazy(() => import('@/features/invoice/pages/UserInvoicesPage'))
 const AdminInvoicesPage = lazy(() => import('@/features/invoice/pages/AdminInvoicesPage'))
 const AdminPaymentsPage = lazy(() => import('@/features/invoice/pages/AdminPaymentsPage'))
+const UserRefundsPage = lazy(() => import('@/features/refund/pages/UserRefundsPage'))
+const UserOutstandingPage = lazy(() => import('@/features/refund/pages/UserOutstandingPage'))
+const AdminRefundsPage = lazy(() => import('@/features/refund/pages/AdminRefundsPage'))
+const AdminOutstandingPage = lazy(() => import('@/features/refund/pages/AdminOutstandingPage'))
+const UserNotificationsPage = lazy(() => import('@/features/notification/pages/UserNotificationsPage'))
+const AdminNotificationsPage = lazy(() => import('@/features/notification/pages/AdminNotificationsPage'))
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -79,6 +85,9 @@ export const AppRoutes: React.FC = () => {
               <Route path="rentals" element={<UserRentalsPage />} />
               <Route path="timesheets" element={<UserTimesheetsPage />} />
               <Route path="invoices" element={<UserInvoicesPage />} />
+              <Route path="refunds" element={<UserRefundsPage />} />
+              <Route path="outstanding" element={<UserOutstandingPage />} />
+              <Route path="notifications" element={<UserNotificationsPage />} />
               <Route path="profile" element={<ProfilePage />} />
             </Route>
           </Route>
@@ -95,7 +104,9 @@ export const AppRoutes: React.FC = () => {
               <Route path="timesheets" element={<AdminTimesheetsPage />} />
               <Route path="invoices" element={<AdminInvoicesPage />} />
               <Route path="payments" element={<AdminPaymentsPage />} />
-              <Route path="refunds" element={<AdminPortalPlaceholder />} />
+              <Route path="refunds" element={<AdminRefundsPage />} />
+              <Route path="outstanding" element={<AdminOutstandingPage />} />
+              <Route path="notifications" element={<AdminNotificationsPage />} />
             </Route>
           </Route>
 

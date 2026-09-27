@@ -10,6 +10,7 @@ use App\Models\Booking;
 use App\Models\BookingUnitAssignment;
 use App\Services\Payment\PaymentStatusProvider;
 use App\Support\AuditLogger;
+use App\Support\NotificationService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -20,7 +21,8 @@ use Illuminate\Support\Facades\DB;
 class ExpireBookingAction
 {
     public function __construct(
-        protected PaymentStatusProvider $paymentProvider
+        protected PaymentStatusProvider $paymentProvider,
+        protected NotificationService $notifications
     ) {}
 
     /**
@@ -77,6 +79,14 @@ class ExpireBookingAction
             ], [
                 'new_status' => BookingStatus::EXPIRED->value,
             ]);
+
+            $booking->load('user');
+            $this->notifications->send(
+                $booking->user,
+                'BOOKING_EXPIRED',
+                $booking,
+                "Booking {$booking->booking_code} kedaluwarsa karena belum dibayar."
+            );
 
             return $booking->fresh();
         });

@@ -10,7 +10,9 @@ use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\User;
 use App\Services\Refund\RefundBoundary;
+use App\Services\WhatsApp\WhatsAppNotifier;
 use App\Support\AuditLogger;
+use App\Support\NotificationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
@@ -28,7 +30,9 @@ use Illuminate\Support\Facades\Gate;
 class VerifyPaymentAction
 {
     public function __construct(
-        private readonly RefundBoundary $refundBoundary
+        private readonly RefundBoundary $refundBoundary,
+        private readonly NotificationService $notifications,
+        private readonly WhatsAppNotifier $whatsapp
     ) {}
 
     public function approve(User $admin, Payment $payment): Payment
@@ -97,6 +101,22 @@ class VerifyPaymentAction
                 'invoice_status' => $nextStatus->value,
             ]);
 
+            $invoice->load('booking.user');
+            $this->notifications->send(
+                $invoice->booking?->user,
+                'PAYMENT_APPROVED',
+                $fresh,
+                'Pembayaran '.number_format($submitted, 0, ',', '.').' terverifikasi untuk invoice #'.$invoice->invoice_number.'.'
+            );
+
+            if ($ownerUser = $invoice->booking?->user) {
+                $this->whatsapp->notify(
+                    $ownerUser,
+                    'PAYMENT_APPROVED',
+                    'Pembayaran Anda terverifikasi untuk invoice #'.$invoice->invoice_number.'.'
+                );
+            }
+
             return $fresh->fresh()->load([
                 'attachments',
                 'invoice.booking.projectLocation',
@@ -136,6 +156,22 @@ class VerifyPaymentAction
                 'rejection_reason' => trim($reason),
                 'verified_by' => $admin->id,
             ]);
+
+            $fresh->load(['invoice.booking.user']);
+            $this->notifications->send(
+                $fresh->invoice?->booking?->user,
+                'PAYMENT_REJECTED',
+                $fresh,
+                'Pembayaran untuk invoice #'.$fresh->invoice?->invoice_number.' ditolak: '.trim($reason).'.'
+            );
+
+            if ($ownerUser = $fresh->invoice?->booking?->user) {
+                $this->whatsapp->notify(
+                    $ownerUser,
+                    'PAYMENT_REJECTED',
+                    'Pembayaran Anda untuk invoice #'.$fresh->invoice?->invoice_number.' ditolak: '.trim($reason).'.'
+                );
+            }
 
             return $fresh->fresh()->load([
                 'attachments',

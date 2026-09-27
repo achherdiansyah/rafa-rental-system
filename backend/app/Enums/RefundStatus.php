@@ -4,10 +4,9 @@ namespace App\Enums;
 
 enum RefundStatus: string
 {
-    case REQUESTED = 'REQUESTED';
-    case REVIEWED = 'REVIEWED';
+    case PENDING = 'PENDING';
     case APPROVED = 'APPROVED';
-    case REJECTED = 'REJECTED';
     case PROCESSING = 'PROCESSING';
     case COMPLETED = 'COMPLETED';
+    case FAILED = 'FAILED';
 }

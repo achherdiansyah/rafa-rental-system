@@ -3,11 +3,15 @@
 namespace App\Providers;
 
 use App\Enums\UserRole;
+use App\Models\Refund;
 use App\Models\User;
+use App\Policies\RefundPolicy;
 use App\Services\Payment\DeferredPaymentStatusProvider;
 use App\Services\Payment\PaymentStatusProvider;
-use App\Services\Refund\DeferredRefundBoundary;
 use App\Services\Refund\RefundBoundary;
+use App\Services\Refund\RefundRegistrationService;
+use App\Services\WhatsApp\NullWhatsAppGateway;
+use App\Services\WhatsApp\WhatsAppGateway;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -29,8 +33,16 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->bind(
             RefundBoundary::class,
-            DeferredRefundBoundary::class
+            RefundRegistrationService::class
         );
+
+        // WhatsApp provider seam (Phase 11E): provider selected via config;
+        // unset → Null gateway (honest SKIPPED, system keeps running).
+        $this->app->bind(WhatsAppGateway::class, function ($app) {
+            $provider = config('services.whatsapp.provider');
+
+            return $provider ? $app->make($provider) : new NullWhatsAppGateway;
+        });
     }
 
     /**
@@ -66,6 +78,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('validate-bast', fn (User $user) => $user->isAdmin());
         Gate::define('validate-timesheet', fn (User $user) => $user->isAdmin());
         Gate::define('process-refund', fn (User $user) => $user->isAdmin());
+
+        // Explicit policy bindings beyond convention (documented in phase docs).
+        Gate::policy(Refund::class, RefundPolicy::class);
 
         // Owner-exclusive capabilities (Financial & Governance)
         Gate::define('view-owner-dashboard', fn (User $user) => $user->isOwner());

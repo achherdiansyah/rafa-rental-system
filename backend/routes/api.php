@@ -12,12 +12,15 @@ use App\Http\Controllers\Api\V1\EquipmentTypeController;
 use App\Http\Controllers\Api\V1\EquipmentUnitController;
 use App\Http\Controllers\Api\V1\HealthCheckController;
 use App\Http\Controllers\Api\V1\InvoiceController;
+use App\Http\Controllers\Api\V1\NotificationController;
+use App\Http\Controllers\Api\V1\OutstandingController;
 use App\Http\Controllers\Api\V1\Owner\OwnerUserController;
 use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\PricingCalculationController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\ProjectLocationController;
 use App\Http\Controllers\Api\V1\RecommendationController;
+use App\Http\Controllers\Api\V1\RefundController;
 use App\Http\Controllers\Api\V1\RentalController;
 use App\Http\Controllers\Api\V1\TimesheetController;
 use Illuminate\Support\Facades\Route;
@@ -168,6 +171,31 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('/{payment}/proof', [PaymentController::class, 'proof'])->name('proof');
             Route::post('/{payment}/approve', [PaymentController::class, 'approve'])->name('approve');
             Route::post('/{payment}/reject', [PaymentController::class, 'reject'])->name('reject');
+        });
+
+        // Refund Module (manual bank transfer; no gateway; history immutable)
+        Route::prefix('refunds')->name('refunds.')->group(function () {
+            Route::get('/', [RefundController::class, 'index'])->name('index');
+            Route::get('/{refund}', [RefundController::class, 'show'])->name('show');
+            Route::post('/{refund}/approve', [RefundController::class, 'approve'])->name('approve');
+            Route::post('/{refund}/process', [RefundController::class, 'process'])->name('process');
+            Route::post('/{refund}/complete', [RefundController::class, 'complete'])->name('complete');
+            Route::post('/{refund}/fail', [RefundController::class, 'fail'])->name('fail');
+        });
+
+        // Customer outstanding / credit control
+        Route::prefix('finance')->name('finance.')->group(function () {
+            Route::get('/outstanding/me', [OutstandingController::class, 'mine'])->name('outstanding.mine');
+            Route::get('/outstanding', [OutstandingController::class, 'index'])->name('outstanding.index');
+        });
+
+        // In-app notifications (database channel; scoped to owner)
+        Route::prefix('notifications')->name('notifications.')->group(function () {
+            Route::get('/', [NotificationController::class, 'index'])->name('index');
+            Route::get('/unread-count', [NotificationController::class, 'unreadCount'])->name('unread-count');
+            Route::get('/deliveries', [NotificationController::class, 'deliveries'])->name('deliveries');
+            Route::post('/read-all', [NotificationController::class, 'markAllRead'])->name('read-all');
+            Route::post('/{notification}/read', [NotificationController::class, 'markRead'])->name('read');
         });
 
         // Equipment Master Management (Admin/Owner)

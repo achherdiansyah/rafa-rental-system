@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    // WhatsApp delivery (Phase 11E). Provider stays pluggable; until one is
+    // configured the system keeps running and logs SKIPPED deliveries (never
+    // a fake success). `queue` offloads delivery to the DB queue when true.
+    'whatsapp' => [
+        'provider' => env('WHATSAPP_PROVIDER'),
+        'phone_number' => env('WHATSAPP_PHONE_NUMBER'),
+        'queue' => (bool) env('WHATSAPP_QUEUE', false),
+    ],
+
 ];

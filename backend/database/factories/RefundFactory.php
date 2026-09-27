@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\RefundSource;
 use App\Enums\RefundStatus;
 use App\Models\Invoice;
 use App\Models\Refund;
@@ -18,9 +19,10 @@ class RefundFactory extends Factory
         return [
             'invoice_id' => Invoice::factory(),
             'amount' => 1000000.00,
-            'reason' => 'OVERPAYMENT',
+            'reason' => 'Kelebihan pembayaran invoice',
             'customer_bank_info' => 'BCA 1234567890 a/n Pelanggan',
-            'status' => RefundStatus::REQUESTED->value,
+            'source' => RefundSource::OVERPAYMENT->value,
+            'status' => RefundStatus::PENDING->value,
             'processed_by' => null,
             'processed_at' => null,
         ];

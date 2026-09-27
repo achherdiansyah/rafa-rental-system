@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\Payment\PaymentStatusProvider;
 use App\Services\Refund\RefundBoundary;
 use App\Support\AuditLogger;
+use App\Support\NotificationService;
 use Illuminate\Support\Facades\DB;
 
 class CancelBookingAction
@@ -33,7 +34,8 @@ class CancelBookingAction
 
     public function __construct(
         protected PaymentStatusProvider $paymentProvider,
-        protected RefundBoundary $refundBoundary
+        protected RefundBoundary $refundBoundary,
+        protected NotificationService $notifications
     ) {}
 
     /**
@@ -122,6 +124,14 @@ class CancelBookingAction
                 'cancellation_reason' => $reason,
                 'released_assignments' => $currentAssignments->count(),
             ]);
+
+            $booking->load('user');
+            $this->notifications->send(
+                $booking->user,
+                'BOOKING_CANCELLED',
+                $booking,
+                "Booking {$booking->booking_code} dibatalkan: {$reason}."
+            );
 
             return $booking->fresh();
         });

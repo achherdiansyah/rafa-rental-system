@@ -7,10 +7,15 @@ use App\Exceptions\InvalidStateTransitionException;
 use App\Models\Booking;
 use App\Models\User;
 use App\Support\AuditLogger;
+use App\Support\NotificationService;
 use Illuminate\Support\Facades\DB;
 
 class RejectBookingAction
 {
+    public function __construct(
+        private readonly NotificationService $notifications
+    ) {}
+
     /**
      * Transition PENDING_APPROVAL -> REJECTED with mandatory reason (T-B03).
      *
@@ -39,6 +44,14 @@ class RejectBookingAction
                 'new_status' => BookingStatus::REJECTED->value,
                 'rejection_reason' => $reason,
             ]);
+
+            $booking->load('user');
+            $this->notifications->send(
+                $booking->user,
+                'BOOKING_REJECTED',
+                $booking,
+                "Booking {$booking->booking_code} ditolak: {$reason}."
+            );
 
             $booking->load([
                 'projectLocation',
