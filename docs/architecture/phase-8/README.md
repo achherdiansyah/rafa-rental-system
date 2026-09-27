@@ -24,8 +24,9 @@ Phase 8 bertujuan untuk mengimplementasikan alur pemesanan sewa armada alat bera
 | **8E** | Availability Engine (*Single Source of Truth* + Pessimistic Locking) | Selesai (`e5ecdb5`) |
 | **8F** | Admin Approval, Unit Assignment & Replacement (PENDING_APPROVAL → APPROVED/REJECTED) | Selesai (`4db11c6`) |
 | **8G** | Booking Expiry & Slot Release (Deadline + Scheduler + Manual Extension) | Selesai (`ff4551b`) |
-| **8H** | Cancellation, Reschedule & Unit Replacement | Selesai (Aktif) |
-| **8I** | Final Review & Git Merge | Pending |
+| **8H** | Cancellation, Reschedule & Unit Replacement | Selesai (`b158bfc`) |
+| **8I** | Booking UI & Integration Testing (User→Admin Workflow E2E) | Selesai (Aktif) |
+| **8J** | Final Review & Git Merge | Pending |
 
 ---
 
@@ -39,3 +40,4 @@ Phase 8 bertujuan untuk mengimplementasikan alur pemesanan sewa armada alat bera
 - `06-admin-approval-unit-assignment.md`: Spesifikasi persetujuan/pengtolakan booking, penugasan unit fisik, guard konflik, riwayat assignment, penggantian unit, dan UI antrean Admin.
 - `07-booking-expiry.md`: Spesifikasi kadaluwarsa booking, boundary status pembayaran, scheduler `bookings:expire`, pelepasan slot, dan perpanjangan tenggat Admin.
 - `08-cancellation-reschedule-replacement.md`: Spesifikasi pembatalan bersyarat, reschedule dengan revalidasi availability, riwayat tanggal, dan penggantian unit (dengan boundary refund).
+- `09-booking-integration-test.md`: Laporan pengujian integrasi end-to-end alur booking USER→ADMIN, verifikasi UI state, dan hasil quality gate Phase 8.
