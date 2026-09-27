@@ -1,0 +1,42 @@
+<?php
+
+namespace App\Console\Commands;
+
+use App\Enums\InvoiceStatus;
+use App\Models\Invoice;
+use App\Support\AuditLogger;
+use Illuminate\Console\Command;
+
+class ExpireInvoicesCommand extends Command
+{
+    protected $signature = 'invoices:expire';
+
+    protected $description = 'Mark issued/unpaid invoices OVERDUE when the 24h deadline passes';
+
+    public function handle(): int
+    {
+        $expired = 0;
+
+        Invoice::whereIn('status', [InvoiceStatus::ISSUED, InvoiceStatus::UNPAID])
+            ->whereNotNull('due_at')
+            ->where('due_at', '<=', now())
+            ->each(function (Invoice $invoice) use (&$expired) {
+                $invoice->update(['status' => InvoiceStatus::OVERDUE]);
+
+                AuditLogger::log('INVOICE_OVERDUE', $invoice, [
+                    'old_status' => $invoice->status->value,
+                    'due_at' => $invoice->due_at?->toIso8601String(),
+                ], [
+                    'new_status' => InvoiceStatus::OVERDUE->value,
+                ]);
+
+                $expired++;
+            });
+
+        if ($expired > 0) {
+            $this->info("{$expired} invoice ditandai OVERDUE.");
+        }
+
+        return self::SUCCESS;
+    }
+}

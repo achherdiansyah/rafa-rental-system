@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\InvoiceStatus;
+use App\Enums\InvoiceType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,7 +17,9 @@ class Invoice extends Model
     protected $fillable = [
         'invoice_number',
         'booking_id',
+        'invoice_type',
         'due_at',
+        'issued_at',
         'status',
         'subtotal',
         'tax_total',
@@ -28,7 +31,9 @@ class Invoice extends Model
     protected function casts(): array
     {
         return [
+            'invoice_type' => InvoiceType::class,
             'due_at' => 'datetime',
+            'issued_at' => 'datetime',
             'status' => InvoiceStatus::class,
             'subtotal' => 'decimal:2',
             'tax_total' => 'decimal:2',
@@ -56,5 +61,10 @@ class Invoice extends Model
     public function refunds(): HasMany
     {
         return $this->hasMany(Refund::class);
+    }
+
+    public function balance(): float
+    {
+        return (float) $this->grand_total - (float) $this->paid_amount;
     }
 }

@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\EquipmentPriceController;
 use App\Http\Controllers\Api\V1\EquipmentTypeController;
 use App\Http\Controllers\Api\V1\EquipmentUnitController;
 use App\Http\Controllers\Api\V1\HealthCheckController;
+use App\Http\Controllers\Api\V1\InvoiceController;
 use App\Http\Controllers\Api\V1\Owner\OwnerUserController;
 use App\Http\Controllers\Api\V1\PricingCalculationController;
 use App\Http\Controllers\Api\V1\ProfileController;
@@ -143,6 +144,17 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::post('/{timesheet}/reject', [TimesheetController::class, 'reject'])->name('reject');
             Route::put('/{timesheet}/revise', [TimesheetController::class, 'revise'])->name('revise');
             Route::get('/{timesheet}/revisions', [TimesheetController::class, 'revisions'])->name('revisions');
+        });
+
+        // Invoice Module (creation & lifecycle; payment verification deferred to 10D)
+        Route::prefix('invoices')->name('invoices.')->group(function () {
+            Route::get('/', [InvoiceController::class, 'index'])->name('index');
+            Route::post('/', [InvoiceController::class, 'store'])->name('store');
+            Route::get('/{invoice}', [InvoiceController::class, 'show'])->name('show');
+            Route::get('/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('pdf');
+            Route::post('/{invoice}/issue', [InvoiceController::class, 'issue'])->name('issue');
+            Route::post('/{invoice}/mark-unpaid', [InvoiceController::class, 'markUnpaid'])->name('mark-unpaid');
+            Route::post('/{invoice}/void', [InvoiceController::class, 'void'])->name('void');
         });
 
         // Equipment Master Management (Admin/Owner)

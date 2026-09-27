@@ -17,8 +17,8 @@ invoice, dan menangani pembayaran (partial, overpayment, refund manual).
 
 | Subphase | Fokus | Status |
 |---|---|---|
-| **10A** | Billing Engine (actual hours × hourly rate, snapshot, MOB/DEMOB per unit, no rounding) | Selesai (Aktif) |
-| 10B | Invoice Generation & API | Pending |
+| **10A** | Billing Engine (actual hours × hourly rate, snapshot, MOB/DEMOB per unit, no rounding) | Selesai (`4a76844`) |
+| **10B** | Invoice Creation & Lifecycle (DRAFT→ISSUED→UNPAID→OVERDUE, snapshot, numbering, PDF) | Selesai (Aktif) |
 | 10C | Invoice UI (User + Admin) | Pending |
 | 10D | Payment & Validation (partial, overpayment) | Pending |
 | 10E | Refund & Outstanding | Pending |
@@ -32,3 +32,7 @@ invoice, dan menangani pembayaran (partial, overpayment, refund manual).
   aturan jam aktual, tarif snapshot per line, skema All-in/Non All-in, MOB/DEMOB
   per unit fisik (dapat berbeda), no tax/discount/overtime, no rounding, dan
   catatan PBD actual hours > 8 tanpa perilaku rekaan.
+- `02-invoice-lifecycle.md`: Spesifikasi siklus hidup invoice
+  (`DRAFT → ISSUED → UNPAID → OVERDUE`, void → CANCELLED), snapshot
+  `invoice_details`, penomoran `INV/YYYYMM/XXXX`, deadline 24 jam dari
+  penerbitan, banyak invoice per booking, dan PDF tanpa dependensi.
