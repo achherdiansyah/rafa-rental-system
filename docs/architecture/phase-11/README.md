@@ -22,8 +22,34 @@ layanan notifikasi.
 | **11D** | In-App Notification (database channel, event + related entity, read state, API) | Selesai |
 | **11E** | WhatsApp Notification Integration (pluggable provider, delivery audit, no fake success) | Selesai |
 | **11F** | Refund, Outstanding & Notification UI (User + Admin/Owner, role-gated) | Selesai (`d4f033f`) |
-| **11G** | Integration Testing & Review (E2E refund/outstanding/notifikasi, race & idempotency) | Selesai (Aktif) |
-| 11H | Final Review & Git Merge | Pending |
+| **11G** | Integration Testing & Review (E2E refund/outstanding/notifikasi, race & idempotency) | Selesai (`58ad3f0`) |
+| **11H** | Final Review, Quality Gate & Git Merge ke `main` | Selesai (merge), READY FOR PHASE 12 |
+
+---
+
+## 4. Final Review 11A–11G (Phase 11H)
+
+| Checklist | Status | Bukti |
+|---|---|---|
+| Refund manual via transfer bank (tanpa payment gateway) | ✔ | `RefundLifecycleService` + dok; tanpa integrasi gateway |
+| Tidak ada threshold outstanding baru yang belum disepakati | ✔ | `CustomerOutstandingService` melaporkan fakta; `eligible` = balance 0; komentar `ponytail:` PBD |
+| Payment / rejection / deadline tetap sesuai Phase 10 | ✔ | reject tidak ubah `due_at`; settlement PAID/PARTIAL/OVERPAID; extension manual + audit |
+| Refund tidak melebihi dasar refund valid | ✔ | `validBase()` (overpayment/cancellation), approve & process menolak amount > base |
+| Tidak ada silent overwrite/hapus histori finansial | ✔ | tanpa endpoint delete; status transisi append; `payment.amount`/`grand_total` immutable (diuji) |
+| WhatsApp tidak dianggap sukses tanpa provider | ✔ | `NullWhatsAppGateway` → `SKIPPED` + reason; delivery log jujur (`SENT/FAILED/SKIPPED`) |
+| Clean code / DRY / reusable service, tanpa abstraksi tak perlu | ✔ | service terpusat (Refund/Outstanding/Notification/WhatsApp/Outstanding); controller tipis; `RefundBoundary` real (deferred tidak lagi ada) |
+| Audit & keamanan | ✔ | `AuditLogger` tiap transisi; policy per role; scoping API; file security |
+| Financial history immutable | ✔ | integrasi 11G memverifikasi paid_amount/total tak berubah off-book |
+
+### Quality Gate 11H
+
+| Command | Hasil |
+|---|---|
+| `php artisan test` | **405 passed (2153 assertions)** |
+| `./vendor/bin/pint --test` | passed |
+| `npm run test` (vitest) | **110 passed (27 files)** |
+| `npm run build` (tsc -b + vite) | sukses |
+| Static analysis (larastan/phpstan) | tidak tersedia di repo |
 
 ---
 
