@@ -26,4 +26,26 @@ export const bookingService = {
     const response = await api.post<Booking>(`/bookings/${id}/submit`, {})
     return response
   },
+
+  async approveBooking(id: number): Promise<ApiResponse<Booking>> {
+    const response = await api.post<Booking>(`/bookings/${id}/approve`, {})
+    return response
+  },
+
+  async rejectBooking(id: number, reason: string): Promise<ApiResponse<Booking>> {
+    const response = await api.post<Booking, { rejection_reason: string }>(`/bookings/${id}/reject`, {
+      rejection_reason: reason,
+    })
+    return response
+  },
+
+  async assignUnits(
+    id: number,
+    assignments: { booking_detail_id: number; equipment_unit_id: number }[]
+  ): Promise<ApiResponse<Booking>> {
+    const response = await api.post<Booking, { assignments: typeof assignments }>(`/bookings/${id}/assign-units`, {
+      assignments,
+    })
+    return response
+  },
 }

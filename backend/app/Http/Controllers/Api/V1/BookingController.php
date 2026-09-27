@@ -2,12 +2,20 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Actions\Booking\ApproveBookingAction;
+use App\Actions\Booking\AssignBookingUnitsAction;
 use App\Actions\Booking\CreateBookingFromCartAction;
+use App\Actions\Booking\RejectBookingAction;
+use App\Actions\Booking\ReplaceUnitAssignmentAction;
 use App\Actions\Booking\SubmitBookingAction;
 use App\Actions\Cart\GetOrCreateUserCartAction;
 use App\Http\Controllers\Api\ApiController;
+use App\Http\Requests\Booking\AssignBookingUnitsRequest;
+use App\Http\Requests\Booking\RejectBookingRequest;
+use App\Http\Requests\Booking\ReplaceUnitRequest;
 use App\Http\Resources\BookingResource;
 use App\Models\Booking;
+use App\Models\BookingUnitAssignment;
 use App\Models\Cart;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -120,6 +128,91 @@ class BookingController extends ApiController
         return $this->success(
             new BookingResource($submitted),
             'Booking berhasil disubmit dan menunggu persetujuan.'
+        );
+    }
+
+    /**
+     * Approve a PENDING_APPROVAL booking (admin/owner).
+     */
+    public function approve(Request $request, Booking $booking, ApproveBookingAction $action): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        Gate::authorize('approve', Booking::class);
+
+        $approved = $action->execute($user, $booking);
+
+        return $this->success(
+            new BookingResource($approved),
+            'Booking berhasil disetujui.'
+        );
+    }
+
+    /**
+     * Reject a PENDING_APPROVAL booking with reason (admin/owner).
+     */
+    public function reject(RejectBookingRequest $request, Booking $booking, RejectBookingAction $action): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        Gate::authorize('reject', Booking::class);
+
+        $rejected = $action->execute($user, $booking, $request->validated('rejection_reason'));
+
+        return $this->success(
+            new BookingResource($rejected),
+            'Booking berhasil ditolak.'
+        );
+    }
+
+    /**
+     * Assign physical units to booking details (admin-exclusive).
+     */
+    public function assignUnits(
+        AssignBookingUnitsRequest $request,
+        Booking $booking,
+        AssignBookingUnitsAction $action
+    ): JsonResponse {
+        /** @var User $user */
+        $user = $request->user();
+
+        Gate::authorize('assignUnits', Booking::class);
+
+        $updated = $action->execute($user, $booking, $request->validated('assignments'));
+
+        return $this->success(
+            new BookingResource($updated),
+            'Unit fisik berhasil ditugaskan ke booking.'
+        );
+    }
+
+    /**
+     * Replace a unit assignment with an AVAILABLE unit of the same model (admin).
+     */
+    public function replaceUnit(
+        ReplaceUnitRequest $request,
+        Booking $booking,
+        BookingUnitAssignment $assignment,
+        ReplaceUnitAssignmentAction $action
+    ): JsonResponse {
+        /** @var User $user */
+        $user = $request->user();
+
+        Gate::authorize('replaceUnit', Booking::class);
+
+        $updated = $action->execute(
+            $user,
+            $booking,
+            $assignment,
+            (int) $request->validated('new_equipment_unit_id'),
+            $request->validated('reason')
+        );
+
+        return $this->success(
+            new BookingResource($updated),
+            'Unit fisik berhasil diganti.'
         );
     }
 }

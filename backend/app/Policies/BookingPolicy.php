@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\UserRole;
 use App\Models\Booking;
 use App\Models\User;
 
@@ -41,5 +42,37 @@ class BookingPolicy
     public function submit(User $user, Booking $booking): bool
     {
         return (int) $user->id === (int) $booking->user_id;
+    }
+
+    /**
+     * Determine whether the user can approve the booking (PENDING_APPROVAL -> APPROVED).
+     */
+    public function approve(User $user): bool
+    {
+        return $user->hasRole(UserRole::ADMIN, UserRole::OWNER);
+    }
+
+    /**
+     * Determine whether the user can reject the booking (PENDING_APPROVAL -> REJECTED).
+     */
+    public function reject(User $user): bool
+    {
+        return $user->hasRole(UserRole::ADMIN, UserRole::OWNER);
+    }
+
+    /**
+     * Determine whether the user can assign physical units (admin-exclusive).
+     */
+    public function assignUnits(User $user): bool
+    {
+        return $user->isAdmin();
+    }
+
+    /**
+     * Determine whether the user can replace a unit assignment (admin-exclusive).
+     */
+    public function replaceUnit(User $user): bool
+    {
+        return $user->isAdmin();
     }
 }
