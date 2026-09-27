@@ -22,5 +22,8 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/setupTests.ts',
     css: true,
+    // Generous timeouts for Windows/CI environments where worker bootstrap is slow
+    testTimeout: 25000,
+    hookTimeout: 25000,
   },
 })

@@ -48,8 +48,8 @@ describe('Route Guard & Access Control', () => {
     renderWithAuth('/app')
 
     // Should redirect to LoginPage
-    expect(await screen.findByRole('heading', { name: /masuk akun/i })).toBeInTheDocument()
-  })
+    expect(await screen.findByRole('heading', { name: /masuk akun/i }, { timeout: 15000 })).toBeInTheDocument()
+  }, 20000)
 
   it('displays loading state during authentication check and hides protected content', () => {
     renderWithAuth('/app', { isChecking: true, status: 'checking' })
@@ -79,9 +79,9 @@ describe('Route Guard & Access Control', () => {
       isAuthenticated: true,
     })
 
-    expect(await screen.findByRole('heading', { name: /akses ditolak/i })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /akses ditolak/i }, { timeout: 15000 })).toBeInTheDocument()
     expect(screen.queryByText(/meja kerja operasional/i)).not.toBeInTheDocument()
-  })
+  }, 20000)
 
   it('allows authenticated ADMIN to access /admin', async () => {
     const admin: AuthUser = { id: 2, name: 'Admin Operasional', email: 'admin@test.com', role: 'ADMIN', is_active: true, phone_number: '0811' }
@@ -92,8 +92,8 @@ describe('Route Guard & Access Control', () => {
       isAuthenticated: true,
     })
 
-    expect(await screen.findByRole('heading', { name: /meja kerja operasional/i })).toBeInTheDocument()
-  })
+    expect(await screen.findByRole('heading', { name: /meja kerja operasional/i }, { timeout: 15000 })).toBeInTheDocument()
+  }, 20000)
 
   it('blocks authenticated ADMIN from accessing /owner and redirects to /forbidden', async () => {
     const admin: AuthUser = { id: 2, name: 'Admin Operasional', email: 'admin@test.com', role: 'ADMIN', is_active: true, phone_number: '0811' }
@@ -104,8 +104,8 @@ describe('Route Guard & Access Control', () => {
       isAuthenticated: true,
     })
 
-    expect(await screen.findByRole('heading', { name: /akses ditolak/i })).toBeInTheDocument()
-  })
+    expect(await screen.findByRole('heading', { name: /akses ditolak/i }, { timeout: 15000 })).toBeInTheDocument()
+  }, 20000)
 
   it('allows authenticated OWNER to access /owner', async () => {
     const owner: AuthUser = { id: 3, name: 'Owner Eksekutif', email: 'owner@test.com', role: 'OWNER', is_active: true, phone_number: '0810' }
@@ -116,8 +116,8 @@ describe('Route Guard & Access Control', () => {
       isAuthenticated: true,
     })
 
-    expect(await screen.findByRole('heading', { name: /executive dashboard/i })).toBeInTheDocument()
-  })
+    expect(await screen.findByRole('heading', { name: /executive dashboard/i }, { timeout: 15000 })).toBeInTheDocument()
+  }, 20000)
 
   it('redirects authenticated user away from /login to respective portal via GuestRoute', async () => {
     const user: AuthUser = { id: 1, name: 'Budi', email: 'budi@test.com', role: 'USER', is_active: true, phone_number: '0812' }

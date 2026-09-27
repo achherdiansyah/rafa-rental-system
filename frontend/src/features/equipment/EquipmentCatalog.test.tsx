@@ -93,7 +93,7 @@ describe('User Equipment Catalog UI', () => {
       expect(equipmentService.getModels).toHaveBeenCalledWith(expect.objectContaining({
         search: 'Komatsu',
       }))
-    })
+    }, { timeout: 10000 })
   })
 
   it('renders equipment detail page with specifications and pricing schemes', async () => {

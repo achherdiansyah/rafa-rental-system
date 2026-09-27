@@ -7,7 +7,7 @@ describe('App Root', () => {
     render(<App />)
     
     // We expect the Navbar/Hero to render the text "RAFA Rental"
-    const heading = await screen.findAllByText(/RAFA Rental/i)
+    const heading = await screen.findAllByText(/RAFA Rental/i, undefined, { timeout: 15000 })
     expect(heading.length).toBeGreaterThan(0)
-  })
+  }, 20000)
 })

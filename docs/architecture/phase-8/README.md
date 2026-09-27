@@ -25,12 +25,26 @@ Phase 8 bertujuan untuk mengimplementasikan alur pemesanan sewa armada alat bera
 | **8F** | Admin Approval, Unit Assignment & Replacement (PENDING_APPROVAL → APPROVED/REJECTED) | Selesai (`4db11c6`) |
 | **8G** | Booking Expiry & Slot Release (Deadline + Scheduler + Manual Extension) | Selesai (`ff4551b`) |
 | **8H** | Cancellation, Reschedule & Unit Replacement | Selesai (`b158bfc`) |
-| **8I** | Booking UI & Integration Testing (User→Admin Workflow E2E) | Selesai (Aktif) |
-| **8J** | Final Review & Git Merge | Pending |
+| **8I** | Booking UI & Integration Testing (User→Admin Workflow E2E) | Selesai (`b682603`) |
+| **8J** | Final Review, Quality Gate & Git Merge | Selesai (Aktif) |
 
 ---
 
-## 3. Daftar Dokumen
+## 3. Verifikasi Final (Phase 8J)
+
+| Aspek | Status |
+|---|---|
+| Backend tests (`php artisan test`) | **291 passed (1038 assertions)** |
+| Backend style (`./vendor/bin/pint --test`) | **100% clean** |
+| Frontend tests (`npm run test`) | **76 passed (19 files)** |
+| Frontend build (`npm run build`) | **Clean** |
+| N+1 / duplicate availability logic | Single `EquipmentAvailabilityService` (bulk query); cart/booking reuse it |
+| Security / authorization | RBAC policy per modul; ownership isolation; `403`/`409` guards |
+| Fake invoice/payment/refund | **Tidak ada** — hanya integration boundary (`PaymentStatusProvider`, `RefundBoundary`) |
+
+Bukti aturan bisnis: 1 booking = 1 lokasi; user tidak pilih unit fisik; Admin assignment; DB sebagai source-of-truth; pessimistic lock anti double-booking; buffer 5 hari; expiry melepas slot; deadline berbasis boundary approval+24 jam; rejection tidak mereset deadline; cancellation rule matrix; reschedule revalidasi availability+buffer + history; replacement menyimpan riwayat.
+
+## 4. Daftar Dokumen
 
 - `01-project-location.md`: Spesifikasi entitas lokasi proyek (`project_locations`), aturan relasi booking, pembatasan otorisasi RBAC, REST API, dan antarmuka web pelanggan.
 - `02-cart-backend.md`: Spesifikasi keranjang belanja (`carts`, `cart_items`), validasi model aktif, kepemilikan user, REST API, dan pengujian.
