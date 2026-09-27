@@ -139,8 +139,8 @@ class NotificationTest extends TestCase
         Sanctum::actingAs($admin);
         app(VerifyPaymentAction::class)->approve($admin, $payment);
 
-        $event = $user->notifications()->latest()->first()?->data['event'];
-        $this->assertEquals('PAYMENT_APPROVED', $event);
+        $events = $user->notifications()->get()->pluck('data.event')->all();
+        $this->assertContains('PAYMENT_APPROVED', $events);
     }
 
     public function test_refund_status_notifies_customer(): void

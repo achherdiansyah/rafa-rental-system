@@ -10,6 +10,8 @@ use App\Services\Payment\DeferredPaymentStatusProvider;
 use App\Services\Payment\PaymentStatusProvider;
 use App\Services\Refund\RefundBoundary;
 use App\Services\Refund\RefundRegistrationService;
+use App\Services\WhatsApp\NullWhatsAppGateway;
+use App\Services\WhatsApp\WhatsAppGateway;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -33,6 +35,14 @@ class AppServiceProvider extends ServiceProvider
             RefundBoundary::class,
             RefundRegistrationService::class
         );
+
+        // WhatsApp provider seam (Phase 11E): provider selected via config;
+        // unset → Null gateway (honest SKIPPED, system keeps running).
+        $this->app->bind(WhatsAppGateway::class, function ($app) {
+            $provider = config('services.whatsapp.provider');
+
+            return $provider ? $app->make($provider) : new NullWhatsAppGateway;
+        });
     }
 
     /**

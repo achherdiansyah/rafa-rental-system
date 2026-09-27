@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Enums\InvoiceStatus;
 use App\Models\Invoice;
+use App\Services\WhatsApp\WhatsAppNotifier;
 use App\Support\AuditLogger;
 use App\Support\NotificationService;
 use Illuminate\Console\Command;
@@ -15,7 +16,8 @@ class ExpireInvoicesCommand extends Command
     protected $description = 'Mark issued/unpaid invoices OVERDUE when the 24h deadline passes';
 
     public function __construct(
-        private readonly NotificationService $notifications
+        private readonly NotificationService $notifications,
+        private readonly WhatsAppNotifier $whatsapp
     ) {
         parent::__construct();
     }
@@ -44,6 +46,14 @@ class ExpireInvoicesCommand extends Command
                     $invoice,
                     "Invoice {$invoice->invoice_number} melewati jatuh tempo."
                 );
+
+                if ($ownerUser = $invoice->booking?->user) {
+                    $this->whatsapp->notify(
+                        $ownerUser,
+                        'INVOICE_DEADLINE',
+                        "Invoice {$invoice->invoice_number} melewati jatuh tempo pembayaran."
+                    );
+                }
 
                 $expired++;
             });

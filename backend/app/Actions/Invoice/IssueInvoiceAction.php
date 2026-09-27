@@ -6,6 +6,7 @@ use App\Enums\InvoiceStatus;
 use App\Exceptions\InvalidStateTransitionException;
 use App\Models\Invoice;
 use App\Models\User;
+use App\Services\WhatsApp\WhatsAppNotifier;
 use App\Support\AuditLogger;
 use App\Support\NotificationService;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +19,8 @@ use Illuminate\Support\Facades\Gate;
 class IssueInvoiceAction
 {
     public function __construct(
-        private readonly NotificationService $notifications
+        private readonly NotificationService $notifications,
+        private readonly WhatsAppNotifier $whatsapp
     ) {}
 
     public function execute(User $actor, Invoice $invoice): Invoice
@@ -55,6 +57,14 @@ class IssueInvoiceAction
                 $invoice,
                 "Invoice {$invoice->invoice_number} diterbitkan; jatuh tempo 24 jam."
             );
+
+            if ($ownerUser = $invoice->booking?->user) {
+                $this->whatsapp->notify(
+                    $ownerUser,
+                    'INVOICE_ISSUED',
+                    "Invoice {$invoice->invoice_number} diterbitkan; batas bayar 24 jam."
+                );
+            }
 
             return $invoice->fresh()->load(['booking.projectLocation', 'details']);
         });

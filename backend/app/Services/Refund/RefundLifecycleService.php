@@ -9,6 +9,7 @@ use App\Exceptions\BusinessRuleException;
 use App\Exceptions\InvalidStateTransitionException;
 use App\Models\Refund;
 use App\Models\User;
+use App\Services\WhatsApp\WhatsAppNotifier;
 use App\Support\AuditLogger;
 use App\Support\FileSecurity;
 use App\Support\NotificationService;
@@ -27,7 +28,8 @@ use Illuminate\Support\Facades\Gate;
 class RefundLifecycleService
 {
     public function __construct(
-        private readonly NotificationService $notifications
+        private readonly NotificationService $notifications,
+        private readonly WhatsAppNotifier $whatsapp
     ) {}
 
     /**
@@ -120,6 +122,15 @@ class RefundLifecycleService
 
             $this->audit('REFUND_COMPLETED', $refund, $staff);
             $this->notifyCustomer('REFUND_COMPLETED', $refund, 'Refund Anda telah ditransfer dan selesai.');
+
+            $refund->loadMissing(['invoice.booking.user']);
+            if ($customer = $refund->invoice?->booking?->user) {
+                $this->whatsapp->notify(
+                    $customer,
+                    'REFUND_COMPLETED',
+                    'Refund Anda telah dikirim dan selesai (invoice #'.$refund->invoice?->invoice_number.').'
+                );
+            }
 
             return $refund->fresh()->load(['invoice.booking.projectLocation', 'attachments']);
         });
