@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\ProjectLocationController;
 use App\Http\Controllers\Api\V1\RecommendationController;
 use App\Http\Controllers\Api\V1\RentalController;
+use App\Http\Controllers\Api\V1\TimesheetController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -128,6 +129,14 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::post('/', [RentalController::class, 'store'])->name('store');
             Route::get('/{rental}', [RentalController::class, 'show'])->name('show');
             Route::post('/{rental}/{target}', [RentalController::class, 'transition'])->name('transition');
+        });
+
+        // Daily Operational Timesheet
+        Route::prefix('timesheets')->name('timesheets.')->group(function () {
+            Route::get('/', [TimesheetController::class, 'index'])->name('index');
+            Route::post('/', [TimesheetController::class, 'store'])->name('store');
+            Route::get('/{timesheet}', [TimesheetController::class, 'show'])->name('show');
+            Route::post('/{timesheet}/submit', [TimesheetController::class, 'submit'])->name('submit');
         });
 
         // Equipment Master Management (Admin/Owner)
