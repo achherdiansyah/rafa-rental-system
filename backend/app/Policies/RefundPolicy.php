@@ -22,6 +22,14 @@ class RefundPolicy
     }
 
     /**
+     * Refund approval is OWNER-only per Phase 1 permission matrix.
+     */
+    public function approve(User $user, ?Refund $refund = null): bool
+    {
+        return $user->isOwner();
+    }
+
+    /**
      * Refund execution is admin (staff finance). History is never deleted —
      * there is deliberately no delete ability here.
      */

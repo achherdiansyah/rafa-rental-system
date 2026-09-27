@@ -19,6 +19,8 @@ class RefundResource extends JsonResource
             'source' => $this->source instanceof \BackedEnum ? $this->source->value : $this->source,
             'amount' => (float) $this->amount,
             'reason' => $this->reason,
+            'approval_reason' => $this->approval_reason,
+            'approved_at' => $this->approved_at?->toIso8601String(),
             'customer_bank_info' => $this->customer_bank_info,
             'transfer_reference' => $this->transfer_reference,
             'status' => $this->status instanceof \BackedEnum ? $this->status->value : $this->status,

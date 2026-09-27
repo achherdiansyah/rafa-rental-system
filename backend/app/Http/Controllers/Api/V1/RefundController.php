@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Api\ApiController;
+use App\Http\Requests\Refund\ApproveRefundRequest;
 use App\Http\Requests\Refund\CompleteRefundRequest;
 use App\Http\Requests\Refund\FailRefundRequest;
 use App\Http\Requests\Refund\ProcessRefundRequest;
@@ -58,6 +59,19 @@ class RefundController extends ApiController
         return $this->success(
             new RefundResource($refund),
             'Detail refund berhasil dimuat.'
+        );
+    }
+
+    public function approve(ApproveRefundRequest $request, Refund $refund, RefundLifecycleService $service): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $updated = $service->approve($user, $refund, $request->validated());
+
+        return $this->success(
+            new RefundResource($updated),
+            'Refund disetujui oleh Owner.'
         );
     }
 

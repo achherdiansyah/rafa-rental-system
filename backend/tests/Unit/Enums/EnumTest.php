@@ -69,7 +69,7 @@ class EnumTest extends TestCase
 
     public function test_refund_status_values_match_phase1_state_machine(): void
     {
-        $expected = ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED'];
+        $expected = ['PENDING', 'APPROVED', 'PROCESSING', 'COMPLETED', 'FAILED'];
 
         $actual = array_column(RefundStatus::cases(), 'value');
 

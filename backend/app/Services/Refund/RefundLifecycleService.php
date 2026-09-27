@@ -2,6 +2,8 @@
 
 namespace App\Services\Refund;
 
+use App\Enums\PaymentStatus;
+use App\Enums\RefundSource;
 use App\Enums\RefundStatus;
 use App\Exceptions\BusinessRuleException;
 use App\Exceptions\InvalidStateTransitionException;
@@ -14,12 +16,42 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * Manual refund lifecycle: PENDING -> PROCESSING -> COMPLETED / FAILED.
- * Transfers are executed by staff via bank transfer; no payment gateway.
- * Every transition is audited; history is never deleted.
+ * Manual refund lifecycle with approval:
+ * PENDING --approve(OWNER)--> APPROVED --process(ADMIN)--> PROCESSING
+ *          --complete--> COMPLETED | --fail--> FAILED.
+ *
+ * The nominal is validated against the refund base (source-derived); it is
+ * NEVER mutated by any transition. Every change is audited; history is kept.
  */
 class RefundLifecycleService
 {
+    /**
+     * OWNER approval (Phase 1 permission matrix: approve-refund).
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function approve(User $owner, Refund $refund, array $data): Refund
+    {
+        Gate::forUser($owner)->authorize('approve', $refund);
+
+        return DB::transaction(function () use ($owner, $refund, $data) {
+            $this->assertStatus($refund, [RefundStatus::PENDING]);
+
+            $this->assertWithinBase($refund);
+
+            $refund->update([
+                'status' => RefundStatus::APPROVED,
+                'approval_reason' => $data['approval_reason'] ?? null,
+                'approved_by' => $owner->id,
+                'approved_at' => now(),
+            ]);
+
+            $this->audit('REFUND_APPROVED', $refund, $owner);
+
+            return $refund->fresh()->load(['invoice.booking.projectLocation', 'attachments']);
+        });
+    }
+
     /**
      * @param  array<string, mixed>  $data
      */
@@ -28,7 +60,8 @@ class RefundLifecycleService
         Gate::forUser($staff)->authorize('manage', $refund);
 
         return DB::transaction(function () use ($staff, $refund, $data) {
-            $this->assertStatus($refund, [RefundStatus::PENDING]);
+            $this->assertStatus($refund, [RefundStatus::APPROVED]);
+            $this->assertWithinBase($refund);
 
             $refund->update([
                 'status' => RefundStatus::PROCESSING,
@@ -89,7 +122,7 @@ class RefundLifecycleService
         Gate::forUser($staff)->authorize('manage', $refund);
 
         return DB::transaction(function () use ($staff, $refund, $failureReason) {
-            $this->assertStatus($refund, [RefundStatus::PENDING, RefundStatus::PROCESSING]);
+            $this->assertStatus($refund, [RefundStatus::PENDING, RefundStatus::APPROVED, RefundStatus::PROCESSING]);
 
             $refund->update([
                 'status' => RefundStatus::FAILED,
@@ -100,6 +133,48 @@ class RefundLifecycleService
 
             return $refund->fresh()->load(['invoice.booking.projectLocation', 'attachments']);
         });
+    }
+
+    /**
+     * Valid refund base for a source: overpayment = parked excess on invoice;
+     * cancellation = sum of APPROVED payments on the invoice.
+     */
+    public function validBase(Refund $refund): float
+    {
+        $invoice = $refund->invoice;
+
+        if ($refund->source === RefundSource::OVERPAYMENT) {
+            return max(0.0, (float) $invoice?->overpayment_amount);
+        }
+
+        if ($refund->source === RefundSource::CANCELLATION) {
+            if (! $invoice) {
+                return 0.0;
+            }
+
+            return (float) $invoice->payments()
+                ->where('status', PaymentStatus::APPROVED)
+                ->sum('amount');
+        }
+
+        return 0.0;
+    }
+
+    /**
+     * A refund can never exceed its valid base.
+     */
+    private function assertWithinBase(Refund $refund): void
+    {
+        $base = $this->validBase($refund);
+        if ($base <= 0) {
+            throw new BusinessRuleException('Dasar refund tidak valid: tidak ada nilai yang dapat dikembalikan.');
+        }
+
+        if ((float) $refund->amount > $base) {
+            throw new BusinessRuleException(
+                'Nominal refund melebihi dasar refund yang valid ('.number_format($base, 2).').'
+            );
+        }
     }
 
     /**

@@ -18,6 +18,9 @@ class Refund extends Model
         'source',
         'amount',
         'reason',
+        'approval_reason',
+        'approved_by',
+        'approved_at',
         'customer_bank_info',
         'transfer_reference',
         'status',
@@ -33,6 +36,7 @@ class Refund extends Model
             'source' => RefundSource::class,
             'amount' => 'decimal:2',
             'status' => RefundStatus::class,
+            'approved_at' => 'datetime',
             'processed_at' => 'datetime',
             'completed_at' => 'datetime',
         ];
@@ -41,6 +45,11 @@ class Refund extends Model
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class);
+    }
+
+    public function approvedByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 
     public function processedByUser(): BelongsTo

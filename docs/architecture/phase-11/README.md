@@ -16,17 +16,19 @@ layanan notifikasi.
 
 | Subphase | Fokus | Status |
 |---|---|---|
-| **11A** | Refund Core (domain, sumber cancellation/overpayment, lifecycle PENDING→PROCESSING→COMPLETED/FAILED, audit) | Selesai (Aktif) |
-| 11B | Refund UI (User + Admin) | Pending |
-| 11C | Outstanding | Pending |
-| 11D | Notification | Pending |
-| 11E | Integration Testing & Final Review | Pending |
+| **11A** | Refund Core (domain, sumber cancellation/overpayment, lifecycle PENDING→PROCESSING→COMPLETED/FAILED, audit) | Selesai |
+| **11B** | Refund Approval & Settlement (OWNER approve, base validation, actor/reason/proof, audit) | Selesai |
+| 11C | Refund UI (User + Admin) | Pending |
+| 11D | Outstanding | Pending |
+| 11E | Notification | Pending |
+| 11F | Integration Testing & Final Review | Pending |
 
 ---
 
 ## 3. Daftar Dokumen
 
 - `01-refund-core.md`: Spesifikasi domain refund — sumber (pembatalan setelah
-  pembayaran, overpayment), state `PENDING → PROCESSING → COMPLETED / FAILED`,
-  transfer manual via bank, bukti privat, actor & timestamp, audit, larangan
-  hapus histori. Notifikasi/WhatsApp ditunda.
+  pembayaran, overpayment), state `PENDING → APPROVED (OWNER) → PROCESSING →
+  COMPLETED / FAILED`, validasi nominal terhadap dasar refund, transfer manual
+  via bank, bukti privat, actor & timestamp, audit, larangan hapus histori.
+  Notifikasi/WhatsApp ditunda.
