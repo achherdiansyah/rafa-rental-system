@@ -1,0 +1,57 @@
+# Phase 8: Cart & Booking Engine — RAFA Rental System
+
+Dokumentasi arsitektur, implementasi sistem pemesanan sewa armada (*Booking Engine*), manajemen keranjang belanja (*Cart*), manajemen lokasi proyek (*Project Location*), dan validasi ketersediaan armada (*Availability Guards*).
+
+---
+
+## 1. Tujuan Phase 8
+
+Phase 8 bertujuan untuk mengimplementasikan alur pemesanan sewa armada alat berat komprehensif pada RAFA Rental System:
+- **Project Location Management:** Pendaftaran alamat pengiriman alat berat per pelanggan dengan informasi kontak PIC lapangan.
+- **Cart & Reservation Draft:** Penambahan armada sewa ke keranjang belanja dengan skema All-in/Non All-in, estimasi durasi, dan biaya MOB/DEMOB.
+- **Booking Creation & State Machine:** Pembuatan kode booking unik (`RFA-BKG-XXXX`), validasi bentrok jadwal (*overlap prevention*), dan penetapan snapshot harga.
+
+---
+
+## 2. Struktur Subphase
+
+| Subphase | Fokus Modul | Status |
+|---|---|---|
+| **8A** | Manajemen Lokasi Proyek Pelanggan (*Project Location Management*) | Selesai (`e625c86`) |
+| **8B** | Keranjang Belanja Pelanggan (*Cart Management*) | Selesai (`2b36d62`) |
+| **8C** | Antarmuka Pengguna Keranjang Sewa (*Cart UI & Add-to-Cart Flow*) | Selesai (`e674b6f`) |
+| **8D** | Booking Core & Submission (Cart → Booking → PENDING_APPROVAL) | Selesai (`f8543c9`) |
+| **8E** | Availability Engine (*Single Source of Truth* + Pessimistic Locking) | Selesai (`e5ecdb5`) |
+| **8F** | Admin Approval, Unit Assignment & Replacement (PENDING_APPROVAL → APPROVED/REJECTED) | Selesai (`4db11c6`) |
+| **8G** | Booking Expiry & Slot Release (Deadline + Scheduler + Manual Extension) | Selesai (`ff4551b`) |
+| **8H** | Cancellation, Reschedule & Unit Replacement | Selesai (`b158bfc`) |
+| **8I** | Booking UI & Integration Testing (User→Admin Workflow E2E) | Selesai (`b682603`) |
+| **8J** | Final Review, Quality Gate & Git Merge | Selesai (Aktif) |
+
+---
+
+## 3. Verifikasi Final (Phase 8J)
+
+| Aspek | Status |
+|---|---|
+| Backend tests (`php artisan test`) | **291 passed (1038 assertions)** |
+| Backend style (`./vendor/bin/pint --test`) | **100% clean** |
+| Frontend tests (`npm run test`) | **76 passed (19 files)** |
+| Frontend build (`npm run build`) | **Clean** |
+| N+1 / duplicate availability logic | Single `EquipmentAvailabilityService` (bulk query); cart/booking reuse it |
+| Security / authorization | RBAC policy per modul; ownership isolation; `403`/`409` guards |
+| Fake invoice/payment/refund | **Tidak ada** — hanya integration boundary (`PaymentStatusProvider`, `RefundBoundary`) |
+
+Bukti aturan bisnis: 1 booking = 1 lokasi; user tidak pilih unit fisik; Admin assignment; DB sebagai source-of-truth; pessimistic lock anti double-booking; buffer 5 hari; expiry melepas slot; deadline berbasis boundary approval+24 jam; rejection tidak mereset deadline; cancellation rule matrix; reschedule revalidasi availability+buffer + history; replacement menyimpan riwayat.
+
+## 4. Daftar Dokumen
+
+- `01-project-location.md`: Spesifikasi entitas lokasi proyek (`project_locations`), aturan relasi booking, pembatasan otorisasi RBAC, REST API, dan antarmuka web pelanggan.
+- `02-cart-backend.md`: Spesifikasi keranjang belanja (`carts`, `cart_items`), validasi model aktif, kepemilikan user, REST API, dan pengujian.
+- `03-cart-ui.md`: Spesifikasi antarmuka keranjang sewa (`/app/cart`), alur `Add-to-Cart`, validasi form, dan penanganan state UX.
+- `04-booking-core.md`: Spesifikasi inti pemesanan (`bookings`, `booking_details`), transisi DRAFT → PENDING_APPROVAL, pre-check ketersediaan, dan UI pengajuan sewa.
+- `05-availability-engine.md`: Spesifikasi mesin ketersediaan sebagai *single source of truth*, buffer operasional, deteksi overlap, dan pessimistic locking anti double-booking.
+- `06-admin-approval-unit-assignment.md`: Spesifikasi persetujuan/pengtolakan booking, penugasan unit fisik, guard konflik, riwayat assignment, penggantian unit, dan UI antrean Admin.
+- `07-booking-expiry.md`: Spesifikasi kadaluwarsa booking, boundary status pembayaran, scheduler `bookings:expire`, pelepasan slot, dan perpanjangan tenggat Admin.
+- `08-cancellation-reschedule-replacement.md`: Spesifikasi pembatalan bersyarat, reschedule dengan revalidasi availability, riwayat tanggal, dan penggantian unit (dengan boundary refund).
+- `09-booking-integration-test.md`: Laporan pengujian integrasi end-to-end alur booking USER→ADMIN, verifikasi UI state, dan hasil quality gate Phase 8.

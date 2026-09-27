@@ -3,6 +3,8 @@
 use App\Http\Controllers\Api\V1\Admin\AdminUserController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BankAccountController;
+use App\Http\Controllers\Api\V1\BookingController;
+use App\Http\Controllers\Api\V1\CartController;
 use App\Http\Controllers\Api\V1\EquipmentMediaController;
 use App\Http\Controllers\Api\V1\EquipmentModelController;
 use App\Http\Controllers\Api\V1\EquipmentPriceController;
@@ -12,6 +14,7 @@ use App\Http\Controllers\Api\V1\HealthCheckController;
 use App\Http\Controllers\Api\V1\Owner\OwnerUserController;
 use App\Http\Controllers\Api\V1\PricingCalculationController;
 use App\Http\Controllers\Api\V1\ProfileController;
+use App\Http\Controllers\Api\V1\ProjectLocationController;
 use App\Http\Controllers\Api\V1\RecommendationController;
 use Illuminate\Support\Facades\Route;
 
@@ -74,12 +77,48 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::put('/{bankAccount}', [BankAccountController::class, 'update'])->name('update');
         });
 
+        // Project Locations (Customer project delivery destinations)
+        Route::prefix('project-locations')->name('project-locations.')->group(function () {
+            Route::get('/', [ProjectLocationController::class, 'index'])->name('index');
+            Route::post('/', [ProjectLocationController::class, 'store'])->name('store');
+            Route::get('/{projectLocation}', [ProjectLocationController::class, 'show'])->name('show');
+            Route::put('/{projectLocation}', [ProjectLocationController::class, 'update'])->name('update');
+            Route::patch('/{projectLocation}', [ProjectLocationController::class, 'update'])->name('update.patch');
+            Route::delete('/{projectLocation}', [ProjectLocationController::class, 'destroy'])->name('destroy');
+        });
+
         // Recommendation System (Decision support for equipment selection)
         Route::prefix('recommendations')->name('recommendations.')->group(function () {
             Route::get('/', [RecommendationController::class, 'index'])->name('index');
             Route::post('/request', [RecommendationController::class, 'requestRecommendation'])->name('request');
             Route::post('/', [RecommendationController::class, 'requestRecommendation'])->name('store');
             Route::get('/{recommendationRequest}', [RecommendationController::class, 'show'])->name('show');
+        });
+
+        // Shopping Cart for Rental Bookings
+        Route::prefix('cart')->name('cart.')->group(function () {
+            Route::get('/', [CartController::class, 'getCart'])->name('get');
+            Route::delete('/', [CartController::class, 'clear'])->name('clear');
+            Route::put('/location', [CartController::class, 'updateLocation'])->name('location.update');
+            Route::post('/items', [CartController::class, 'addItem'])->name('items.add');
+            Route::put('/items/{cartItem}', [CartController::class, 'updateItem'])->name('items.update');
+            Route::patch('/items/{cartItem}', [CartController::class, 'updateItem'])->name('items.update.patch');
+            Route::delete('/items/{cartItem}', [CartController::class, 'removeItem'])->name('items.remove');
+        });
+
+        // Booking Module (Draft -> Submission -> Approval)
+        Route::prefix('bookings')->name('bookings.')->group(function () {
+            Route::get('/', [BookingController::class, 'index'])->name('index');
+            Route::post('/', [BookingController::class, 'store'])->name('store');
+            Route::get('/{booking}', [BookingController::class, 'show'])->name('show');
+            Route::post('/{booking}/submit', [BookingController::class, 'submit'])->name('submit');
+            Route::post('/{booking}/approve', [BookingController::class, 'approve'])->name('approve');
+            Route::post('/{booking}/reject', [BookingController::class, 'reject'])->name('reject');
+            Route::post('/{booking}/assign-units', [BookingController::class, 'assignUnits'])->name('assign-units');
+            Route::post('/{booking}/assignments/{assignment}/replace', [BookingController::class, 'replaceUnit'])->name('replace-unit');
+            Route::post('/{booking}/extend-deadline', [BookingController::class, 'extendDeadline'])->name('extend-deadline');
+            Route::post('/{booking}/cancel', [BookingController::class, 'cancel'])->name('cancel');
+            Route::post('/{booking}/reschedule', [BookingController::class, 'reschedule'])->name('reschedule');
         });
 
         // Equipment Master Management (Admin/Owner)

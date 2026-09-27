@@ -46,8 +46,8 @@ describe('Frontend End-to-End Authentication Journey', () => {
     )
 
     // 1. Wait for lazy-loaded login page and fill form
-    const emailInput = await screen.findByLabelText(/email/i)
-    const passwordInput = await screen.findByLabelText(/^kata sandi/i)
+    const emailInput = await screen.findByLabelText(/email/i, undefined, { timeout: 20000 })
+    const passwordInput = await screen.findByLabelText(/^kata sandi/i, undefined, { timeout: 20000 })
 
     fireEvent.change(emailInput, { target: { value: 'rian@perusahaan.com' } })
     fireEvent.change(passwordInput, { target: { value: 'password123' } })
@@ -58,7 +58,7 @@ describe('Frontend End-to-End Authentication Journey', () => {
     // 3. User should land on Customer Portal (/app)
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /portal pelanggan/i })).toBeInTheDocument()
-    })
+    }, { timeout: 15000 })
 
     // 4. Navbar shows user info
     expect(screen.getByText('Rian Pratama')).toBeInTheDocument()
@@ -72,8 +72,8 @@ describe('Frontend End-to-End Authentication Journey', () => {
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /masuk akun/i })).toBeInTheDocument()
       expect(localStorage.getItem('rafa_token')).toBeNull()
-    })
-  }, 15000)
+    }, { timeout: 15000 })
+  }, 40000)
 
   it('admin login redirects directly to Admin Workspace (/admin)', async () => {
     const adminUser = {

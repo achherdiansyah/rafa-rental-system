@@ -4,6 +4,10 @@ namespace App\Providers;
 
 use App\Enums\UserRole;
 use App\Models\User;
+use App\Services\Payment\DeferredPaymentStatusProvider;
+use App\Services\Payment\PaymentStatusProvider;
+use App\Services\Refund\DeferredRefundBoundary;
+use App\Services\Refund\RefundBoundary;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -18,7 +22,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(
+            PaymentStatusProvider::class,
+            DeferredPaymentStatusProvider::class
+        );
+
+        $this->app->bind(
+            RefundBoundary::class,
+            DeferredRefundBoundary::class
+        );
     }
 
     /**
