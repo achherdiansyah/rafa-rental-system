@@ -3,10 +3,18 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Timesheet\CreateTimesheetAction;
+use App\Actions\Timesheet\ReviseTimesheetAction;
+use App\Actions\Timesheet\SignTimesheetAction;
 use App\Actions\Timesheet\SubmitTimesheetAction;
+use App\Actions\Timesheet\ValidateTimesheetAction;
 use App\Http\Controllers\Api\ApiController;
+use App\Http\Requests\Timesheet\RejectTimesheetRequest;
+use App\Http\Requests\Timesheet\ReviseTimesheetRequest;
 use App\Http\Requests\Timesheet\StoreTimesheetRequest;
+use App\Http\Requests\Timesheet\UploadTimesheetSignatureRequest;
+use App\Http\Resources\AttachmentResource;
 use App\Http\Resources\TimesheetResource;
+use App\Http\Resources\TimesheetRevisionResource;
 use App\Models\Timesheet;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -104,6 +112,99 @@ class TimesheetController extends ApiController
         return $this->success(
             new TimesheetResource($updated),
             'Timesheet berhasil disubmit untuk validasi Admin.'
+        );
+    }
+
+    /**
+     * Stakeholder (PIC/operator) signature upload on private storage.
+     */
+    public function sign(UploadTimesheetSignatureRequest $request, Timesheet $timesheet, SignTimesheetAction $action): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        Gate::authorize('sign', $timesheet);
+
+        $attachment = $action->execute($timesheet, $request->file('signature'), $user);
+
+        return $this->success(
+            new AttachmentResource($attachment),
+            'Tanda tangan timesheet berhasil dilampirkan.'
+        );
+    }
+
+    /**
+     * Admin validates (approve) a SUBMITTED timesheet.
+     */
+    public function approve(Request $request, Timesheet $timesheet, ValidateTimesheetAction $action): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        Gate::authorize('validate', Timesheet::class);
+
+        $updated = $action->approve($user, $timesheet);
+
+        return $this->success(
+            new TimesheetResource($updated),
+            'Timesheet berhasil divalidasi (APPROVED).'
+        );
+    }
+
+    /**
+     * Admin rejects a SUBMITTED timesheet with revision note.
+     */
+    public function reject(RejectTimesheetRequest $request, Timesheet $timesheet, ValidateTimesheetAction $action): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        Gate::authorize('validate', Timesheet::class);
+
+        $updated = $action->reject($user, $timesheet, $request->validated('reason'));
+
+        return $this->success(
+            new TimesheetResource($updated),
+            'Timesheet ditolak dan memerlukan koreksi.'
+        );
+    }
+
+    /**
+     * Admin corrects an APPROVED timesheet (append-only revision history).
+     */
+    public function revise(ReviseTimesheetRequest $request, Timesheet $timesheet, ReviseTimesheetAction $action): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        Gate::authorize('validate', Timesheet::class);
+
+        $updated = $action->execute($user, $timesheet, $request->validated(), $request->validated('reason'));
+
+        return $this->success(
+            new TimesheetResource($updated),
+            'Timesheet berhasil dikoreksi; kembali menunggu validasi.'
+        );
+    }
+
+    /**
+     * Revision (immutable) history of a timesheet.
+     */
+    public function revisions(Request $request, Timesheet $timesheet): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        Gate::authorize('view', $timesheet);
+
+        $revisions = $timesheet->revisions()
+            ->with('revisedByUser')
+            ->orderByDesc('version')
+            ->get();
+
+        return $this->success(
+            TimesheetRevisionResource::collection($revisions),
+            'Riwayat revisi timesheet berhasil dimuat.'
         );
     }
 }

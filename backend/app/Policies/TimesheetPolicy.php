@@ -40,4 +40,24 @@ class TimesheetPolicy
 
         return (int) $user->id === (int) $timesheet->rentalDetail?->rental?->booking?->user_id;
     }
+
+    /**
+     * PIC/operator signature: owner of the rental or staff.
+     */
+    public function sign(User $user, Timesheet $timesheet): bool
+    {
+        if ($user->isAdmin() || $user->isOwner()) {
+            return true;
+        }
+
+        return (int) $user->id === (int) $timesheet->rentalDetail?->rental?->booking?->user_id;
+    }
+
+    /**
+     * Admin validation (approve/reject) and correction (revise).
+     */
+    public function validate(User $user): bool
+    {
+        return $user->isAdmin();
+    }
 }

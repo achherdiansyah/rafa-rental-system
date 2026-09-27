@@ -137,6 +137,11 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::post('/', [TimesheetController::class, 'store'])->name('store');
             Route::get('/{timesheet}', [TimesheetController::class, 'show'])->name('show');
             Route::post('/{timesheet}/submit', [TimesheetController::class, 'submit'])->name('submit');
+            Route::post('/{timesheet}/signature', [TimesheetController::class, 'sign'])->name('signature');
+            Route::post('/{timesheet}/approve', [TimesheetController::class, 'approve'])->name('approve');
+            Route::post('/{timesheet}/reject', [TimesheetController::class, 'reject'])->name('reject');
+            Route::put('/{timesheet}/revise', [TimesheetController::class, 'revise'])->name('revise');
+            Route::get('/{timesheet}/revisions', [TimesheetController::class, 'revisions'])->name('revisions');
         });
 
         // Equipment Master Management (Admin/Owner)

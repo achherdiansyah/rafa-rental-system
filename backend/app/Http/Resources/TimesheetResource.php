@@ -27,6 +27,12 @@ class TimesheetResource extends JsonResource
             'notes' => $this->notes,
             'signature_reference' => $this->signature_reference,
             'status' => $this->status instanceof \BackedEnum ? $this->status->value : $this->status,
+            'signature' => $this->whenLoaded('attachments', function () {
+                $sig = $this->attachments
+                    ->first(fn ($a) => $a->document_type === 'TIMESHEET_SIGNATURE');
+
+                return $sig ? new AttachmentResource($sig) : null;
+            }),
             'rental' => $this->whenLoaded('rentalDetail', function () {
                 $rental = $this->rentalDetail?->rental;
                 $unit = $this->rentalDetail?->assignment?->unit;
