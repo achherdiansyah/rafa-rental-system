@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { type ReactNode } from 'react'
 import { AlertTriangle } from 'lucide-react'
 import { Button } from './Button'
 import { Modal } from './Modal'
@@ -13,6 +13,7 @@ export interface ConfirmDialogProps {
   cancelText?: string
   variant?: 'danger' | 'primary'
   isLoading?: boolean
+  children?: ReactNode
 }
 
 export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
@@ -25,6 +26,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   cancelText = 'Cancel',
   variant = 'danger',
   isLoading = false,
+  children,
 }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="sm">
@@ -37,6 +39,8 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           <h4 className="text-base font-semibold text-slate-900">{title}</h4>
           <p className="text-sm text-slate-500">{message}</p>
         </div>
+
+        {children}
 
         <div className="flex items-center justify-end gap-3 w-full pt-4 border-t border-slate-100">
           <Button variant="outline" size="sm" onClick={onClose} disabled={isLoading} className="flex-1">

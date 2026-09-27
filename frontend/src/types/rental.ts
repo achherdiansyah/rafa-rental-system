@@ -18,6 +18,8 @@ export interface RentalDetail {
   check_in_hm: number | null
   check_out_hm: number | null
   condition_notes: string | null
+  inspection_result: 'READY' | 'MAINTENANCE' | 'DAMAGED' | null
+  checked_out_at: string | null
   unit?: {
     id: number
     serial_number: string

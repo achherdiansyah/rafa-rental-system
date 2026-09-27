@@ -21,6 +21,8 @@ class RentalDetailResource extends JsonResource
             'check_in_hm' => $this->check_in_hm !== null ? (float) $this->check_in_hm : null,
             'check_out_hm' => $this->check_out_hm !== null ? (float) $this->check_out_hm : null,
             'condition_notes' => $this->condition_notes,
+            'inspection_result' => $this->inspection_result,
+            'checked_out_at' => $this->checked_out_at?->toISOString(),
             'unit' => $this->whenLoaded('assignment', function () {
                 $unit = $this->assignment?->unit;
 

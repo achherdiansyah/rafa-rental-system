@@ -17,9 +17,9 @@ use Illuminate\Support\Facades\DB;
  *   ASSIGNED -> DISPATCHED
  *   DISPATCHED -> ARRIVED
  *   ARRIVED -> ONGOING          (BAST check-in: started_at set)
- *   ONGOING -> DEMOBILIZING
- *   DEMOBILIZING -> RETURN_INSPECTED
- *   RETURN_INSPECTED -> COMPLETED (BAST check-out: completed_at set)
+ *   ONGOING -> DEMOBILIZING     (return to pool)
+ *   DEMOBILIZING -> RETURN_INSPECTED  (unit arrives into inspection; NOT available yet)
+ * Final readiness is decided separately by InspectRentalAction (READY/MAINTENANCE/DAMAGED).
  */
 class TransitionRentalAction
 {
@@ -29,7 +29,6 @@ class TransitionRentalAction
         RentalStatus::ARRIVED->value => [RentalStatus::ONGOING->value],
         RentalStatus::ONGOING->value => [RentalStatus::DEMOBILIZING->value],
         RentalStatus::DEMOBILIZING->value => [RentalStatus::RETURN_INSPECTED->value],
-        RentalStatus::RETURN_INSPECTED->value => [RentalStatus::COMPLETED->value],
     ];
 
     public function execute(User $admin, Rental $rental, string $targetStatus): Rental
@@ -70,17 +69,12 @@ class TransitionRentalAction
                     RentalStatus::ARRIVED, RentalStatus::ONGOING => EquipmentStatus::ON_SITE,
                     RentalStatus::DEMOBILIZING => EquipmentStatus::DEMOBILIZING,
                     RentalStatus::RETURN_INSPECTED => EquipmentStatus::RETURN_INSPECTION,
-                    RentalStatus::COMPLETED => EquipmentStatus::AVAILABLE,
                     default => $unit->status,
                 };
 
                 if ($unitStatus) {
                     $unit->update(['status' => $unitStatus]);
                 }
-            }
-
-            if ($target === RentalStatus::COMPLETED) {
-                $rental->details()->update(['status' => RentalStatus::COMPLETED]);
             }
 
             AuditLogger::log('RENTAL_'.$targetStatus, $rental, [

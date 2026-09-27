@@ -128,6 +128,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('/', [RentalController::class, 'index'])->name('index');
             Route::post('/', [RentalController::class, 'store'])->name('store');
             Route::get('/{rental}', [RentalController::class, 'show'])->name('show');
+            Route::post('/{rental}/ready', [RentalController::class, 'ready'])->name('ready');
             Route::post('/{rental}/{target}', [RentalController::class, 'transition'])->name('transition');
         });
 

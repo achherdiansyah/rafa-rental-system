@@ -18,8 +18,23 @@ export const rentalService = {
     return response
   },
 
-  async transition(id: number, target: 'dispatch' | 'arrive' | 'start'): Promise<ApiResponse<Rental>> {
+  async transition(
+    id: number,
+    target: 'dispatch' | 'arrive' | 'start' | 'return' | 'inspect',
+  ): Promise<ApiResponse<Rental>> {
     const response = await api.post<Rental>(`/rentals/${id}/${target}`, {})
+    return response
+  },
+
+  async markReady(
+    id: number,
+    result: 'READY' | 'MAINTENANCE' | 'DAMAGED',
+    conditionNotes?: string,
+  ): Promise<ApiResponse<Rental>> {
+    const response = await api.post<Rental, { result: string; condition_notes?: string }>(`/rentals/${id}/ready`, {
+      result,
+      condition_notes: conditionNotes,
+    })
     return response
   },
 }

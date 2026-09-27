@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Rental\CreateRentalFromBookingAction;
+use App\Actions\Rental\InspectRentalAction;
 use App\Actions\Rental\TransitionRentalAction;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Requests\Rental\CreateRentalRequest;
+use App\Http\Requests\Rental\ReadyRentalRequest;
 use App\Http\Resources\RentalResource;
 use App\Models\Booking;
 use App\Models\Rental;
@@ -22,7 +24,6 @@ class RentalController extends ApiController
         'start' => 'ONGOING',
         'return' => 'DEMOBILIZING',
         'inspect' => 'RETURN_INSPECTED',
-        'complete' => 'COMPLETED',
     ];
 
     public function index(Request $request): JsonResponse
@@ -124,6 +125,36 @@ class RentalController extends ApiController
         return $this->success(
             new RentalResource($updated),
             "Rental berhasil transisi ke {$targetStatus}."
+        );
+    }
+
+    /**
+     * Admin inspection result: mark returned units READY, MAINTENANCE or DAMAGED.
+     * Completes the rental; only READY releases units back to AVAILABLE.
+     */
+    public function ready(ReadyRentalRequest $request, Rental $rental, InspectRentalAction $action): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        Gate::authorize('operate', Rental::class);
+
+        $inspected = $action->execute(
+            $user,
+            $rental,
+            (string) $request->validated('result'),
+            $request->validated('condition_notes')
+        );
+
+        $message = match ($request->validated('result')) {
+            'READY' => 'Inspeksi selesai: unit dinyatakan siap pakai kembali.',
+            'MAINTENANCE' => 'Inspeksi selesai: unit masuk maintenance.',
+            default => 'Inspeksi selesai: unit tercatat damaged (tanpa tagihan otomatis).',
+        };
+
+        return $this->success(
+            new RentalResource($inspected),
+            $message
         );
     }
 }

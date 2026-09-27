@@ -172,8 +172,8 @@ class RentalCoreTest extends TestCase
         $this->postJson("/api/v1/rentals/{$rentalId}/inspect")->assertStatus(200);
         $this->assertEquals(EquipmentStatus::RETURN_INSPECTION, $unit->fresh()->status);
 
-        // COMPLETE -> unit AVAILABLE, completed_at set
-        $completeRes = $this->postJson("/api/v1/rentals/{$rentalId}/complete");
+        // MARK READY (inspection result READY) -> unit AVAILABLE, completed_at set
+        $completeRes = $this->postJson("/api/v1/rentals/{$rentalId}/ready", ['result' => 'READY']);
         $completeRes->assertStatus(200)->assertJson(['data' => ['status' => RentalStatus::COMPLETED->value]]);
         $this->assertNotNull($completeRes->json('data.completed_at'));
         $this->assertEquals(EquipmentStatus::AVAILABLE, $unit->fresh()->status);
