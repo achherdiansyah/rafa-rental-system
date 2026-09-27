@@ -19,6 +19,8 @@ class BookingDetail extends Model
         'end_date',
         'is_all_in',
         'rental_rate_snapshot',
+        'mob_cost_snapshot',
+        'demob_cost_snapshot',
         'subtotal',
     ];
 
@@ -30,6 +32,8 @@ class BookingDetail extends Model
             'end_date' => 'date',
             'is_all_in' => 'boolean',
             'rental_rate_snapshot' => 'decimal:2',
+            'mob_cost_snapshot' => 'decimal:2',
+            'demob_cost_snapshot' => 'decimal:2',
             'subtotal' => 'decimal:2',
         ];
     }

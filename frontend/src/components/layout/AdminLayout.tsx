@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Outlet } from 'react-router-dom'
-import { LayoutDashboard, CheckSquare, Layers, Truck, Clock, CreditCard, RefreshCw, Building2, ClipboardCheck } from 'lucide-react'
+import { LayoutDashboard, CheckSquare, Layers, Truck, Clock, CreditCard, RefreshCw, Building2, ClipboardCheck, Receipt } from 'lucide-react'
 import { Navbar } from './Navbar'
 import { Sidebar } from './Sidebar'
 import type { SidebarItem } from './Sidebar'
@@ -16,6 +16,7 @@ export const AdminLayout: React.FC = () => {
     { label: 'Approval Booking', href: '/admin/bookings', icon: <CheckSquare size={18} /> },
     { label: 'Ekskusi Rental', href: '/admin/rentals', icon: <ClipboardCheck size={18} /> },
     { label: 'Validasi Timesheet', href: '/admin/timesheets', icon: <Clock size={18} /> },
+{ label: 'Invoice', href: '/admin/invoices', icon: <Receipt size={18} /> },
     { label: 'Verifikasi Pembayaran', href: '/admin/payments', icon: <CreditCard size={18} /> },
     { label: 'Eksekusi Refund', href: '/admin/refunds', icon: <RefreshCw size={18} /> },
   ]
@@ -37,3 +38,4 @@ export const AdminLayout: React.FC = () => {
     </div>
   )
 }
+

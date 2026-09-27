@@ -11,7 +11,9 @@ use App\Http\Controllers\Api\V1\EquipmentPriceController;
 use App\Http\Controllers\Api\V1\EquipmentTypeController;
 use App\Http\Controllers\Api\V1\EquipmentUnitController;
 use App\Http\Controllers\Api\V1\HealthCheckController;
+use App\Http\Controllers\Api\V1\InvoiceController;
 use App\Http\Controllers\Api\V1\Owner\OwnerUserController;
+use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\PricingCalculationController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\ProjectLocationController;
@@ -143,6 +145,29 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::post('/{timesheet}/reject', [TimesheetController::class, 'reject'])->name('reject');
             Route::put('/{timesheet}/revise', [TimesheetController::class, 'revise'])->name('revise');
             Route::get('/{timesheet}/revisions', [TimesheetController::class, 'revisions'])->name('revisions');
+        });
+
+        // Invoice Module (creation & lifecycle; payment verification deferred to 10D)
+        Route::prefix('invoices')->name('invoices.')->group(function () {
+            Route::get('/', [InvoiceController::class, 'index'])->name('index');
+            Route::post('/', [InvoiceController::class, 'store'])->name('store');
+            Route::get('/{invoice}', [InvoiceController::class, 'show'])->name('show');
+            Route::get('/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('pdf');
+            Route::post('/{invoice}/issue', [InvoiceController::class, 'issue'])->name('issue');
+            Route::post('/{invoice}/mark-unpaid', [InvoiceController::class, 'markUnpaid'])->name('mark-unpaid');
+            Route::post('/{invoice}/void', [InvoiceController::class, 'void'])->name('void');
+            Route::post('/{invoice}/extend-deadline', [InvoiceController::class, 'extendDeadline'])->name('extend-deadline');
+            Route::get('/{invoice}/payments', [PaymentController::class, 'index'])->name('payments.index');
+            Route::post('/{invoice}/payments', [PaymentController::class, 'store'])->name('payments.store');
+        });
+
+        // Payment detail & admin verification (single-param binding)
+        Route::prefix('payments')->name('payments.')->group(function () {
+            Route::get('/', [PaymentController::class, 'queue'])->name('queue');
+            Route::get('/{payment}', [PaymentController::class, 'show'])->name('show');
+            Route::get('/{payment}/proof', [PaymentController::class, 'proof'])->name('proof');
+            Route::post('/{payment}/approve', [PaymentController::class, 'approve'])->name('approve');
+            Route::post('/{payment}/reject', [PaymentController::class, 'reject'])->name('reject');
         });
 
         // Equipment Master Management (Admin/Owner)

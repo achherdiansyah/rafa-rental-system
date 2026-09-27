@@ -51,7 +51,7 @@ class EnumTest extends TestCase
 
     public function test_invoice_status_values_match_phase1_state_machine(): void
     {
-        $expected = ['DRAFT', 'UNPAID', 'PARTIALLY_PAID', 'PAID', 'OVERPAID', 'EXPIRED', 'CANCELLED'];
+        $expected = ['DRAFT', 'ISSUED', 'UNPAID', 'PARTIALLY_PAID', 'PAID', 'OVERPAID', 'OVERDUE', 'CANCELLED'];
 
         $actual = array_column(InvoiceStatus::cases(), 'value');
 

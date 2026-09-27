@@ -24,6 +24,8 @@ class CreateEquipmentPriceAction
                 'base_rate' => $data['base_rate'],
                 'minimum_hours' => $data['minimum_hours'] ?? 0,
                 'overtime_rate' => $data['overtime_rate'] ?? 0.00,
+                'mob_cost' => $data['mob_cost'] ?? 0.00,
+                'demob_cost' => $data['demob_cost'] ?? 0.00,
                 'effective_date' => $data['effective_date'],
             ]);
 
