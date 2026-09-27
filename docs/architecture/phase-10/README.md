@@ -23,8 +23,43 @@ invoice, dan menangani pembayaran (partial, overpayment, refund manual).
 | **10D** | Payment Verification (approve/reject Admin, settlement PAID/PARTIAL/OVERPAID) | Selesai (`451d5ba`) |
 | **10E** | Balance, Overpayment & Deadline (extension manual, anti double counting, refund seam) | Selesai (`7cf81df`) |
 | **10F** | Invoice & Payment UI (User + Admin queue/verification/proof) | Selesai (`8079bcb`) |
-| **10G** | Integration Testing & Review (E2E flow, race/pessimistic lock, N+1, security) | Selesai (Aktif) |
-| 10H | Final Review & Git Merge | Pending |
+| **10G** | Integration Testing & Review (E2E flow, race/pessimistic lock, N+1, security) | Selesai (`1088c50`) |
+| **10H** | Final Review, Quality Gate & Git Merge ke `main` | Selesai (merge), READY FOR PHASE 11 |
+
+---
+
+## 4. Final Review 10A–10G (Phase 10H)
+
+| Checklist PRD | Status | Bukti |
+|---|---|---|
+| Hourly billing benar (jam aktual × tarif) | ✔ | `RentalBillingService` + `BillingEngineTest` |
+| Actual hours dari timesheet APPROVED | ✔ | `actualWorkingHours()` (DRAFT/REJECTED dikecualikan) |
+| No rounding | ✔ | `round()` dihapus; presisi ke `DECIMAL` |
+| No tax / discount / overtime | ✔ | engine tidak menambah/mengurangi apa pun; PBD >8h tidak direka |
+| All-in / Non All-in benar per line | ✔ | flag + rate terpisah per `booking_detail` snapshot |
+| MOB/DEMOB berbasis physical unit | ✔ | per `rental_detail` (1:1 unit), MOB ≠ DEMOB |
+| Price snapshot aman | ✔ | `rental_rate_snapshot`/`mob_cost_snapshot`/`demob_cost_snapshot`; kebal master change (diuji) |
+| Invoice lifecycle benar | ✔ | DRAFT→ISSUED→UNPAID→OVERDUE→(void→CANCELLED); numbering INV/YYYYMM/XXXX; PDF |
+| 1 invoice → many payments; 1 payment → 1 invoice | ✔ | FK invoice_id; integrasi multi-payment + invariant |
+| Partial payment benar | ✔ | PARTIALLY_PAID → PAID; saldo = Σ approved (anti double counting) |
+| Overpayment tidak auto-refund | ✔ | OVERPAID + `overpayment_amount`, seam refund Phase 11 (no-op) |
+| Rejected payment dapat upload ulang | ✔ | anti-duplikat mengabaikan REJECTED |
+| Deadline = issued_at + 24 jam | ✔ | `IssueInvoiceAction` set `due_at` |
+| Rejection tidak reset deadline | ✔ | verifikasi tak pernah mutasi `due_at` (diuji) |
+| Financial records tidak dihapus | ✔ | tanpa delete endpoint; void → CANCELLED; rejected disimpan |
+| Audit tersedia | ✔ | INVOICE_*, PAYMENT_APPROVED/REJECTED, DEADLINE_EXTENDED |
+| Refund settlement penuh TIDAK diimplementasi | ✔ | Phase 11; seam `RefundBoundary` no-op |
+
+### Quality Gate 10H
+
+| Command | Hasil |
+|---|---|
+| `php artisan test` | **374 passed (1991 assertions)** |
+| `./vendor/bin/pint --test` | passed |
+| `npm run test` | **102 passed (25 files)** |
+| `npm run build` (tsc -b + vite) | sukses |
+| `npm run lint` | tanpa error |
+| Static analysis (larastan/phpstan) | tidak tersedia di repo |
 
 ---
 
