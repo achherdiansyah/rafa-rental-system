@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Outlet } from 'react-router-dom'
-import { LayoutDashboard, Truck, Sparkles, CalendarCheck, Receipt, User, MapPin, ShoppingCart, ClipboardList, Clock } from 'lucide-react'
+import { LayoutDashboard, Truck, Sparkles, CalendarCheck, Receipt, User, MapPin, ShoppingCart, ClipboardList, Clock, Wallet, RotateCcw, Bell } from 'lucide-react'
 import { Navbar } from './Navbar'
 import { Sidebar } from './Sidebar'
 import type { SidebarItem } from './Sidebar'
@@ -18,6 +18,9 @@ export const UserLayout: React.FC = () => {
     { label: 'Rental Saya', href: '/app/rentals', icon: <ClipboardList size={18} /> },
     { label: 'Timesheet Harian', href: '/app/timesheets', icon: <Clock size={18} /> },
     { label: 'Tagihan & Bayar', href: '/app/invoices', icon: <Receipt size={18} /> },
+    { label: 'Refund Saya', href: '/app/refunds', icon: <RotateCcw size={18} /> },
+    { label: 'Outstanding', href: '/app/outstanding', icon: <Wallet size={18} /> },
+    { label: 'Notifikasi', href: '/app/notifications', icon: <Bell size={18} /> },
     { label: 'Profil Saya', href: '/app/profile', icon: <User size={18} /> },
   ]
 

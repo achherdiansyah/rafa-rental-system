@@ -20,8 +20,8 @@ layanan notifikasi.
 | **11B** | Refund Approval & Settlement (OWNER approve, base validation, actor/reason/proof, audit) | Selesai |
 | **11C** | Outstanding & Customer Credit Control (per-customer, invoice-based, approved-payment, no N+1) | Selesai |
 | **11D** | In-App Notification (database channel, event + related entity, read state, API) | Selesai |
-| **11E** | WhatsApp Notification Integration (pluggable provider, delivery audit, no fake success) | Selesai (Aktif) |
-| 11F | Refund & Outstanding UI (User + Admin) | Pending |
+| **11E** | WhatsApp Notification Integration (pluggable provider, delivery audit, no fake success) | Selesai |
+| **11F** | Refund, Outstanding & Notification UI (User + Admin/Owner, role-gated) | Selesai (Aktif) |
 | 11G | Integration Testing & Final Review | Pending |
 
 ---
@@ -43,3 +43,7 @@ layanan notifikasi.
   pluggable (`WhatsAppGateway`), pemisahan business event vs channel, log
   delivery `SENT/FAILED/SKIPPED`, queue database opsional, tanpa fake success,
   sistem normal bila provider belum dikonfigurasi; reminder outstanding.
+- `05-refund-outstanding-notification-ui.md`: Spesifikasi UI refund, outstanding
+  & notification — user (status/history, saldo, pusat notifikasi), admin/owner
+  (antrean & verifikasi refund, rekap pelanggan, monitor delivery), guard
+  finansial & role, komponen reusable, tanpa duplicate request.

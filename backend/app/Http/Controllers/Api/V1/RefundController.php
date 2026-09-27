@@ -27,6 +27,7 @@ class RefundController extends ApiController
             'attachments',
         ])->latest();
 
+        // Owner & admin : monitoring semua refund; USER : hanya refund booking-nya sendiri.
         if (! $user->isAdmin() && ! $user->isOwner()) {
             $query->whereHas('invoice.booking', fn ($q) => $q->where('user_id', $user->id));
         }
