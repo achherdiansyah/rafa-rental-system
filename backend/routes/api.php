@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\EquipmentTypeController;
 use App\Http\Controllers\Api\V1\EquipmentUnitController;
 use App\Http\Controllers\Api\V1\HealthCheckController;
 use App\Http\Controllers\Api\V1\InvoiceController;
+use App\Http\Controllers\Api\V1\OutstandingController;
 use App\Http\Controllers\Api\V1\Owner\OwnerUserController;
 use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\PricingCalculationController;
@@ -179,6 +180,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::post('/{refund}/process', [RefundController::class, 'process'])->name('process');
             Route::post('/{refund}/complete', [RefundController::class, 'complete'])->name('complete');
             Route::post('/{refund}/fail', [RefundController::class, 'fail'])->name('fail');
+        });
+
+        // Customer outstanding / credit control
+        Route::prefix('finance')->name('finance.')->group(function () {
+            Route::get('/outstanding/me', [OutstandingController::class, 'mine'])->name('outstanding.mine');
+            Route::get('/outstanding', [OutstandingController::class, 'index'])->name('outstanding.index');
         });
 
         // Equipment Master Management (Admin/Owner)

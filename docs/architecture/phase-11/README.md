@@ -18,8 +18,8 @@ layanan notifikasi.
 |---|---|---|
 | **11A** | Refund Core (domain, sumber cancellation/overpayment, lifecycle PENDING→PROCESSING→COMPLETED/FAILED, audit) | Selesai |
 | **11B** | Refund Approval & Settlement (OWNER approve, base validation, actor/reason/proof, audit) | Selesai |
-| 11C | Refund UI (User + Admin) | Pending |
-| 11D | Outstanding | Pending |
+| **11C** | Outstanding & Customer Credit Control (per-customer, invoice-based, approved-payment, no N+1) | Selesai (Aktif) |
+| 11D | Refund UI (User + Admin) | Pending |
 | 11E | Notification | Pending |
 | 11F | Integration Testing & Final Review | Pending |
 
@@ -32,3 +32,6 @@ layanan notifikasi.
   COMPLETED / FAILED`, validasi nominal terhadap dasar refund, transfer manual
   via bank, bukti privat, actor & timestamp, audit, larangan hapus histori.
   Notifikasi/WhatsApp ditunda.
+- `02-outstanding-credit-control.md`: Spesifikasi outstanding per customer dari
+  invoice `ISSUED/UNPAID/PARTIALLY_PAID/OVERDUE`, basis approved payment,
+  independen status booking, tanpa threshold rekaan, dan guard N+1.
