@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Payment\SubmitPaymentAction;
+use App\Actions\Payment\VerifyPaymentAction;
 use App\Http\Controllers\Api\ApiController;
+use App\Http\Requests\Payment\RejectPaymentRequest;
 use App\Http\Requests\Payment\SubmitPaymentRequest;
 use App\Http\Resources\PaymentResource;
 use App\Models\Invoice;
@@ -58,6 +60,38 @@ class PaymentController extends ApiController
         return $this->success(
             new PaymentResource($payment),
             'Detail pembayaran berhasil dimuat.'
+        );
+    }
+
+    /**
+     * Admin approves a SUBMITTED payment (settlement against invoice balance).
+     */
+    public function approve(Request $request, Payment $payment, VerifyPaymentAction $action): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $updated = $action->approve($user, $payment);
+
+        return $this->success(
+            new PaymentResource($updated),
+            'Pembayaran diverifikasi (settlement diterapkan).'
+        );
+    }
+
+    /**
+     * Admin rejects a SUBMITTED payment with a mandatory reason. Row is kept.
+     */
+    public function reject(RejectPaymentRequest $request, Payment $payment, VerifyPaymentAction $action): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $updated = $action->reject($user, $payment, (string) $request->validated('reason'));
+
+        return $this->success(
+            new PaymentResource($updated),
+            'Pembayaran ditolak; riwayat tetap tersimpan.'
         );
     }
 }

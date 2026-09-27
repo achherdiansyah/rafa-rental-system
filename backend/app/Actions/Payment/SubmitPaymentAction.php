@@ -50,9 +50,12 @@ class SubmitPaymentAction
             }
 
             $reference = trim((string) ($data['reference'] ?? ''));
+            // Anti-duplikat: referensi sama dilarang KECUALI payment sebelumnya ditolak
+            // (user wajib diberi kesempatan upload bukti baru setelah penolakan).
             $duplicate = Payment::where('invoice_id', $invoice->id)
                 ->where('reference', $reference)
                 ->where('reference', '!=', '')
+                ->where('status', '!=', PaymentStatus::REJECTED)
                 ->exists();
 
             if ($duplicate) {

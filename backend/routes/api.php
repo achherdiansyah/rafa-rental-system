@@ -158,7 +158,13 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::post('/{invoice}/void', [InvoiceController::class, 'void'])->name('void');
             Route::get('/{invoice}/payments', [PaymentController::class, 'index'])->name('payments.index');
             Route::post('/{invoice}/payments', [PaymentController::class, 'store'])->name('payments.store');
-            Route::get('/{invoice}/payments/{payment}', [PaymentController::class, 'show'])->name('payments.show');
+        });
+
+        // Payment detail & admin verification (single-param binding)
+        Route::prefix('payments')->name('payments.')->group(function () {
+            Route::get('/{payment}', [PaymentController::class, 'show'])->name('show');
+            Route::post('/{payment}/approve', [PaymentController::class, 'approve'])->name('approve');
+            Route::post('/{payment}/reject', [PaymentController::class, 'reject'])->name('reject');
         });
 
         // Equipment Master Management (Admin/Owner)
