@@ -103,6 +103,7 @@ class CreateTimesheetAction
         $timesheet->load([
             'rentalDetail.assignment.unit',
             'rentalDetail.rental.booking.projectLocation',
+            'attachments',
         ]);
 
         return $timesheet;

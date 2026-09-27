@@ -42,6 +42,7 @@ class ValidateTimesheetAction
             return $timesheet->fresh()->load([
                 'rentalDetail.assignment.unit',
                 'rentalDetail.rental.booking.projectLocation',
+                'attachments',
             ]);
         });
     }
@@ -87,6 +88,7 @@ class ValidateTimesheetAction
             return $timesheet->fresh()->load([
                 'rentalDetail.assignment.unit',
                 'rentalDetail.rental.booking.projectLocation',
+                'attachments',
             ]);
         });
     }

@@ -40,6 +40,7 @@ class SubmitTimesheetAction
             return $timesheet->fresh()->load([
                 'rentalDetail.assignment.unit',
                 'rentalDetail.rental.booking.projectLocation',
+                'attachments',
             ]);
         });
     }

@@ -31,6 +31,7 @@ class TimesheetController extends ApiController
         $query = Timesheet::with([
             'rentalDetail.assignment.unit',
             'rentalDetail.rental.booking.projectLocation',
+            'attachments',
         ])->latest('report_date');
 
         if (! $user->isAdmin() && ! $user->isOwner()) {
@@ -89,6 +90,7 @@ class TimesheetController extends ApiController
         $timesheet->load([
             'rentalDetail.assignment.unit',
             'rentalDetail.rental.booking.projectLocation',
+            'attachments',
         ]);
 
         return $this->success(

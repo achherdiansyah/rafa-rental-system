@@ -87,7 +87,6 @@ class TransitionRentalAction
             return $rental->fresh()->load([
                 'booking.projectLocation',
                 'details.assignment.unit.model',
-                'details.assignment.unit.model',
             ]);
         });
     }
