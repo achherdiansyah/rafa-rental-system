@@ -160,6 +160,24 @@ class TimesheetValidationTest extends TestCase
         $this->assertEquals($admin->id, $revision->revised_by);
     }
 
+    public function test_rejected_timesheet_can_be_resubmitted_by_owner(): void
+    {
+        [$admin, $owner, $timesheet] = $this->submittedTimesheet();
+
+        Sanctum::actingAs($admin);
+        $this->postJson("/api/v1/timesheets/{$timesheet->id}/reject", [
+            'reason' => 'Perlu konfirmasi jam operator.',
+        ])->assertStatus(200);
+
+        Sanctum::actingAs($owner);
+        $res = $this->postJson("/api/v1/timesheets/{$timesheet->id}/submit");
+        $res->assertStatus(200)
+            ->assertJsonPath('data.status', TimesheetStatus::SUBMITTED->value);
+
+        // Rejection reason remains in append-only history
+        $this->assertStringContainsString('REJECTED: Perlu konfirmasi jam operator.', $timesheet->revisions()->first()->revision_reason);
+    }
+
     public function test_admin_correction_snapshots_old_values_and_recalculates(): void
     {
         [$admin, $owner, $timesheet] = $this->submittedTimesheet();

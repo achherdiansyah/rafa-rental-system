@@ -21,7 +21,8 @@ Mengoperasionalkan armada yang telah disetujui & di-assign pada Phase 8 menjadi 
 | **9C** | Timesheet Backend (jam kerja harian, kalkulasi, submit) | Selesai (`4db278c`) |
 | **9D** | Signature, Validasi Admin & Revisi Timesheet (append-only) | Selesai (`16a469c`) |
 | **9E** | Return & Inspection (pengembalian unit, keputusan kondisi, mark ready) | Selesai (Aktif) |
-| 9F | BAST Check-in / Check-out | Pending |
+| **9F** | Rental & Timesheet UI (portal USER + ADMIN, validasi, revisi, inspeksi) | Selesai (Aktif) |
+| 9G | BAST Check-in / Check-out | Pending |
 
 ---
 
@@ -32,3 +33,4 @@ Mengoperasionalkan armada yang telah disetujui & di-assign pada Phase 8 menjadi 
 - `03-timesheet-backend.md`: Spesifikasi pencatatan timesheet harian, kalkulasi jam kerja aktual, validasi, dan pengajuan validasi Admin.
 - `04-timesheet-validation-revision.md`: Spesifikasi tanda tangan (private storage), validasi/penolakan Admin, koreksi dengan riwayat revisi append-only.
 - `05-return-inspection.md`: Spesifikasi pengembalian unit, inspeksi Admin, keputusan kondisi unit (READY/MAINTENANCE/DAMAGED), dan larangan unit AVAILABLE langsung setelah return.
+- `06-rental-timesheet-ui.md`: Spesifikasi antarmuka USER & ADMIN untuk rental/timesheet: pencatatan, tanda tangan, validasi, koreksi/revisi, inspeksi, dan komponen UI wajib.

@@ -12,16 +12,17 @@ use Illuminate\Support\Facades\DB;
 class SubmitTimesheetAction
 {
     /**
-     * DRAFT -> SUBMITTED (operator/PIC marks entry ready for Admin validation).
+     * DRAFT -> SUBMITTED and REJECTED -> SUBMITTED (operator/PIC marks entry
+     * ready for Admin validation; resubmission after rejection is allowed).
      *
      * @throws InvalidStateTransitionException
      */
     public function execute(User $actor, Timesheet $timesheet): Timesheet
     {
         return DB::transaction(function () use ($actor, $timesheet) {
-            if ($timesheet->status !== TimesheetStatus::DRAFT) {
+            if (! in_array($timesheet->status, [TimesheetStatus::DRAFT, TimesheetStatus::REJECTED], true)) {
                 throw new InvalidStateTransitionException(
-                    'Transisi tidak valid: hanya timesheet DRAFT yang dapat disubmit.'
+                    'Transisi tidak valid: hanya timesheet DRAFT/REJECTED yang dapat disubmit.'
                 );
             }
 
