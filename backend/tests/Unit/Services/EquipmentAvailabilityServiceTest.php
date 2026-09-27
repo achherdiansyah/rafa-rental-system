@@ -108,11 +108,20 @@ class EquipmentAvailabilityServiceTest extends TestCase
         // 3 total units - 2 booked = 1 available
         $this->assertEquals(1, $mapOverlapping->get($model->id));
 
-        // Check availability for Oct 20 to Oct 25 (NO OVERLAP)
+        // Buffer conflict: start falls inside the 3-day extension + 2-day inspection
+        // buffer after the committed end (Oct 15 + 5 = unit free from Oct 21).
+        $mapBufferConflict = $this->service->getAvailabilityMap(
+            [$model->id],
+            Carbon::parse('2026-10-17'),
+            Carbon::parse('2026-10-18')
+        );
+        $this->assertEquals(1, $mapBufferConflict->get($model->id));
+
+        // Check availability after the full buffer window (Oct 22 onwards = NO OVERLAP)
         $mapNotOverlapping = $this->service->getAvailabilityMap(
             [$model->id],
-            Carbon::parse('2026-10-20'),
-            Carbon::parse('2026-10-25')
+            Carbon::parse('2026-10-22'),
+            Carbon::parse('2026-10-27')
         );
 
         // 3 total units - 0 booked = 3 available
