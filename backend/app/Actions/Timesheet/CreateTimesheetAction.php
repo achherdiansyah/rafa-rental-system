@@ -14,8 +14,8 @@ class CreateTimesheetAction
 {
     /**
      * Create a timesheet entry (operator-filled). Actual working hours are
-     * computed server-side: (end_hm - start_hm) minus break => DECIMAL(8,2),
-     * no arbitrary rounding beyond the 2-decimal storage step.
+     * computed server-side: (end_hm - start_hm) minus break, no rounding —
+     * precision is owned by the DECIMAL(8,2) storage column.
      *
      * @param  array<string, mixed>  $data
      *
@@ -64,7 +64,8 @@ class CreateTimesheetAction
         $elapsed = $endHm - $startHm;
         $breakHours = $breakMinutes / 60;
 
-        $workHours = round($elapsed - $breakHours, 2);
+        // Dihitung apa adanya (tanpa pembulatan buatan); presisi 2 desimal ditangani kolom DECIMAL(8,2).
+        $workHours = $elapsed - $breakHours;
         if ($workHours < 0) {
             throw new BusinessRuleException('Durasi kerja tidak konsisten: melebihi selisih jam meter setelah break.');
         }

@@ -21,9 +21,41 @@ Mengoperasionalkan armada yang telah disetujui & di-assign pada Phase 8 menjadi 
 | **9C** | Timesheet Backend (jam kerja harian, kalkulasi, submit) | Selesai (`4db278c`) |
 | **9D** | Signature, Validasi Admin & Revisi Timesheet (append-only) | Selesai (`16a469c`) |
 | **9E** | Return & Inspection (pengembalian unit, keputusan kondisi, mark ready) | Selesai (Aktif) |
-| **9F** | Rental & Timesheet UI (portal USER + ADMIN, validasi, revisi, inspeksi) | Selesai (Aktif) |
-| **9G** | Integration Testing & Review (E2E lifecycle, audit, N+1, revision) | Selesai (Aktif) |
-| 9H | BAST Check-in / Check-out | Pending |
+| **9F** | Rental & Timesheet UI (portal USER + ADMIN, validasi, revisi, inspeksi) | Selesai (`625336e`) |
+| **9G** | Integration Testing & Review (E2E lifecycle, audit, N+1, revision) | Selesai (`ca6b56d`) |
+| **9H** | Final Review, Quality Gate & Git Merge ke `main` | Selesai (merge), READY FOR PHASE 10 |
+
+---
+
+## 4. Final Review 9A–9G (Phase 9H)
+
+| Checklist PRD | Status | Bukti |
+|---|---|---|
+| `CONFIRMED → DISPATCHED → ARRIVED → ONGOING` | ✔ | Transition map + `RentalTimesheetIntegrationTest` |
+| `DISPATCHED` ≠ `ONGOING` | ✔ | Enum `RentalStatus` terpisah; transisi opersional per-langkah (lompat ditolak 409) |
+| Admin mengonfirmasi operational start | ✔ | `/rentals/{id}/start` hanya `RentalPolicy::operate` (ADMIN); USER 403 |
+| Timesheet berdasarkan actual hours | ✔ | `total_work_hours = (end_hm - start_hm) - break` dihitung server-side |
+| Break berupa duration | ✔ | `break_minutes` (menit) |
+| No rounding | ✔ | `round()` dihapus; presisi diserahkan ke kolom `DECIMAL(8,2)` (Create & Revise) |
+| Historis revisi tidak hilang | ✔ | append-only `timesheet_revisions`; snapshot lama utuh pasca koreksi/re-submit (dicek di 9G) |
+| User/PIC signature | ✔ | `POST /timesheets/{id}/signature` → private storage; `url:null` |
+| Admin validation | ✔ | approve/reject (reason wajib) di bawah `validate` (ADMIN) |
+| return → inspection | ✔ | `ONGOING → DEMOBILIZING → RETURN_INSPECTED`; unit tidak AVAILABLE |
+| Unit hanya AVAILABLE setelah inspection | ✔ | hanya hasil `READY` yang melepas unit ke `AVAILABLE` |
+| Damage tidak jadi charge otomatis | ✔ | `DAMAGED` hanya tercatat + unit → MAINTENANCE; tanpa invoice/charge |
+| Audit tersedia | ✔ | `AuditLogger` di seluruh aksi lifecycle; diverifikasi spy di 9G |
+| Invoice / payment / refund TIDAK diimplementasi | ✔ | halaman frontend placeholder; tidak ada endpoint/halaman baru |
+
+### Quality Gate 9H
+
+| Command | Hasil |
+|---|---|
+| `php artisan test` | **334 passed (1362 assertions)** |
+| `./vendor/bin/pint --test` | passed |
+| `npm run test` | **94 passed (22 files)** |
+| `npm run build` (tsc -b + vite) | sukses |
+| `npm run lint` | tanpa error (warning pola lama) |
+| Static analysis (larastan/phpstan) | tidak tersedia di repo |
 
 ---
 

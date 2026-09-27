@@ -40,7 +40,8 @@ class ReviseTimesheetAction
                 throw new BusinessRuleException('Durasi tidak valid: end_hm harus lebih besar dari start_hm.');
             }
 
-            $workHours = round(($endHm - $startHm) - ($breakMinutes / 60), 2);
+            // Dihitung apa adanya (tanpa pembulatan buatan); presisi 2 desimal ditangani kolom DECIMAL(8,2).
+            $workHours = ($endHm - $startHm) - ($breakMinutes / 60);
             if ($workHours < 0 || $workHours < ($breakdown + $standby)) {
                 throw new BusinessRuleException('Jam kerja aktual tidak konsisten dengan total breakdown + standby.');
             }
