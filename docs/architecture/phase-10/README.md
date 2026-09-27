@@ -21,8 +21,9 @@ invoice, dan menangani pembayaran (partial, overpayment, refund manual).
 | **10B** | Invoice Creation & Lifecycle (DRAFT→ISSUED→UNPAID→OVERDUE, snapshot, numbering, PDF) | Selesai (`2bd37ba`) |
 | **10C** | Payment Submission (PAYMENT_PENDING→SUBMITTED, proof private, anti-duplikat) | Selesai (Aktif) |
 | **10D** | Payment Verification (approve/reject Admin, settlement PAID/PARTIAL/OVERPAID) | Selesai (`451d5ba`) |
-| **10E** | Balance, Overpayment & Deadline (extension manual, anti double counting, refund seam) | Selesai (Aktif) |
-| 10F | Integration Testing & Final Review | Pending |
+| **10E** | Balance, Overpayment & Deadline (extension manual, anti double counting, refund seam) | Selesai (`7cf81df`) |
+| **10F** | Invoice & Payment UI (User + Admin queue/verification/proof) | Selesai (Aktif) |
+| 10G | Integration Testing & Final Review | Pending |
 
 ---
 
@@ -46,3 +47,7 @@ invoice, dan menangani pembayaran (partial, overpayment, refund manual).
   payment (anti double counting), cadangan overpayment + seam refund Phase 11,
   deadline `issued_at + 24 jam`, extension manual wajib audit, reject tidak
   mereset deadline.
+- `06-invoice-payment-ui.md`: Spesifikasi UI invoice & pembayaran — portal USER
+  (list/detail, saldo, riwayat, upload bukti, notice overpayment) dan ADMIN
+  (payment queue, pratinjau bukti, verifikasi/tolak, indikator overpayment,
+  extension deadline); backend `GET /payments` + `GET /payments/{id}/proof`.

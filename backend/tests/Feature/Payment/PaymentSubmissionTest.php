@@ -228,4 +228,33 @@ class PaymentSubmissionTest extends TestCase
         $this->assertNull($payment->verified_by);
         $this->assertNull($payment->rejection_reason);
     }
+
+    public function test_queue_lists_submitted_payments_and_proof_is_streamed_to_admin(): void
+    {
+        [$owner, $invoice] = $this->issuedInvoice();
+        [$submit] = $this->submitPayment($owner, $invoice);
+        $payment = Payment::findOrFail($submit->json('data.id'));
+        $admin = User::factory()->admin()->create();
+
+        // User cannot open the global queue
+        Sanctum::actingAs($owner);
+        $this->getJson('/api/v1/payments')->assertStatus(403);
+
+        // Admin sees the submitted payment in queue
+        Sanctum::actingAs($admin);
+        $queue = $this->getJson('/api/v1/payments');
+        $queue->assertOk()
+            ->assertJsonPath('data.0.id', $payment->id)
+            ->assertJsonPath('data.0.status', PaymentStatus::SUBMITTED->value)
+            ->assertJsonPath('meta.total', 1);
+
+        // Admin streams the private proof
+        $proof = $this->getJson("/api/v1/payments/{$payment->id}/proof", ['Accept' => 'image/png']);
+        $proof->assertOk();
+        $this->assertStringContainsString('image/png', $proof->headers->get('content-type'));
+
+        // Owner cannot stream someone else's proof? (owner may view own payment proof)
+        Sanctum::actingAs($owner);
+        $this->getJson("/api/v1/payments/{$payment->id}/proof")->assertOk();
+    }
 }

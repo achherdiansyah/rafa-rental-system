@@ -163,7 +163,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
         // Payment detail & admin verification (single-param binding)
         Route::prefix('payments')->name('payments.')->group(function () {
+            Route::get('/', [PaymentController::class, 'queue'])->name('queue');
             Route::get('/{payment}', [PaymentController::class, 'show'])->name('show');
+            Route::get('/{payment}/proof', [PaymentController::class, 'proof'])->name('proof');
             Route::post('/{payment}/approve', [PaymentController::class, 'approve'])->name('approve');
             Route::post('/{payment}/reject', [PaymentController::class, 'reject'])->name('reject');
         });

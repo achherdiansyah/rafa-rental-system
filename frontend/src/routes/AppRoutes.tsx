@@ -38,6 +38,9 @@ const AdminRentalsPage = lazy(() => import('@/features/rental/pages/AdminRentals
 const UserRentalsPage = lazy(() => import('@/features/rental/pages/UserRentalsPage'))
 const UserTimesheetsPage = lazy(() => import('@/features/timesheet/pages/UserTimesheetsPage'))
 const AdminTimesheetsPage = lazy(() => import('@/features/timesheet/pages/AdminTimesheetsPage'))
+const UserInvoicesPage = lazy(() => import('@/features/invoice/pages/UserInvoicesPage'))
+const AdminInvoicesPage = lazy(() => import('@/features/invoice/pages/AdminInvoicesPage'))
+const AdminPaymentsPage = lazy(() => import('@/features/invoice/pages/AdminPaymentsPage'))
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -75,7 +78,7 @@ export const AppRoutes: React.FC = () => {
               <Route path="bookings" element={<UserBookingsPage />} />
               <Route path="rentals" element={<UserRentalsPage />} />
               <Route path="timesheets" element={<UserTimesheetsPage />} />
-              <Route path="invoices" element={<UserPortalPlaceholder />} />
+              <Route path="invoices" element={<UserInvoicesPage />} />
               <Route path="profile" element={<ProfilePage />} />
             </Route>
           </Route>
@@ -90,7 +93,8 @@ export const AppRoutes: React.FC = () => {
               <Route path="bookings" element={<AdminBookingsPage />} />
               <Route path="rentals" element={<AdminRentalsPage />} />
               <Route path="timesheets" element={<AdminTimesheetsPage />} />
-              <Route path="payments" element={<AdminPortalPlaceholder />} />
+              <Route path="invoices" element={<AdminInvoicesPage />} />
+              <Route path="payments" element={<AdminPaymentsPage />} />
               <Route path="refunds" element={<AdminPortalPlaceholder />} />
             </Route>
           </Route>
