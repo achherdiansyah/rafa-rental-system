@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Invoice\CreateInvoiceAction;
+use App\Actions\Invoice\ExtendInvoiceDeadlineAction;
 use App\Actions\Invoice\IssueInvoiceAction;
 use App\Actions\Invoice\MarkUnpaidInvoiceAction;
 use App\Actions\Invoice\VoidInvoiceAction;
 use App\Enums\InvoiceType;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Requests\Invoice\CreateInvoiceRequest;
+use App\Http\Requests\Invoice\ExtendInvoiceDeadlineRequest;
 use App\Http\Resources\InvoiceResource;
 use App\Models\Booking;
 use App\Models\Invoice;
@@ -118,6 +120,19 @@ class InvoiceController extends ApiController
         return $this->success(
             new InvoiceResource($cancelled),
             'Invoice dibatalkan (riwayat keuangan tetap tersimpan).'
+        );
+    }
+
+    public function extendDeadline(ExtendInvoiceDeadlineRequest $request, Invoice $invoice, ExtendInvoiceDeadlineAction $action): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $extended = $action->execute($user, $invoice, (int) $request->validated('hours', 24));
+
+        return $this->success(
+            new InvoiceResource($extended),
+            'Deadline pembayaran invoice diperpanjang.'
         );
     }
 

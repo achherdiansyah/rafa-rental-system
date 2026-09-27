@@ -9,6 +9,7 @@ use App\Exceptions\InvalidStateTransitionException;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\User;
+use App\Services\Refund\RefundBoundary;
 use App\Support\AuditLogger;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -19,13 +20,17 @@ use Illuminate\Support\Facades\Gate;
  * - APPROVED: verifies the submitted amount against the invoice balance. The
  *   submitted nominal is NEVER mutated; the invoice books what was transferred.
  *   Exact payment -> PAID; partial -> PARTIALLY_PAID; overpayment -> OVERPAID
- *   (excess parked in overpayment_amount; refund stays manual, 10E).
+ *   (excess parked in overpayment_amount; refund stays manual via RefundBoundary).
  * - REJECTED: requires a reason; the payment row is kept for history.
  *
  * The invoice deadline (due_at) is never recomputed by verification.
  */
 class VerifyPaymentAction
 {
+    public function __construct(
+        private readonly RefundBoundary $refundBoundary
+    ) {}
+
     public function approve(User $admin, Payment $payment): Payment
     {
         Gate::authorize('manage', $payment);
@@ -45,12 +50,15 @@ class VerifyPaymentAction
                 );
             }
 
-            // Settlement: book submitted amount (frozen), split excess into overpayment.
+            // Settlement: balance = sum approved payments (single source of
+            // truth) => no double counting even across multiple approvals.
             $submitted = (float) $payment->amount;
-            $paid = (float) $invoice->paid_amount;
+            $approvedTotal = (float) $invoice->payments()
+                ->where('status', PaymentStatus::APPROVED)
+                ->sum('amount');
             $grandTotal = (float) $invoice->grand_total;
 
-            $totalBooked = $paid + $submitted;
+            $totalBooked = $approvedTotal + $submitted;
             $excess = max(0.0, $totalBooked - $grandTotal);
             $newPaid = min($grandTotal, $totalBooked);
 
@@ -70,6 +78,11 @@ class VerifyPaymentAction
                 'overpayment_amount' => (float) $invoice->overpayment_amount + $excess,
                 'status' => $nextStatus,
             ]);
+
+            if ($excess > 0) {
+                // Seam for Phase 11 refund engine (no-op until then).
+                $this->refundBoundary->noteOverpayment($invoice, $excess);
+            }
 
             AuditLogger::log('PAYMENT_APPROVED', $payment, [
                 'old_status' => PaymentStatus::SUBMITTED->value,

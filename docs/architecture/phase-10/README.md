@@ -20,8 +20,8 @@ invoice, dan menangani pembayaran (partial, overpayment, refund manual).
 | **10A** | Billing Engine (actual hours × hourly rate, snapshot, MOB/DEMOB per unit, no rounding) | Selesai (`4a76844`) |
 | **10B** | Invoice Creation & Lifecycle (DRAFT→ISSUED→UNPAID→OVERDUE, snapshot, numbering, PDF) | Selesai (`2bd37ba`) |
 | **10C** | Payment Submission (PAYMENT_PENDING→SUBMITTED, proof private, anti-duplikat) | Selesai (Aktif) |
-| **10D** | Payment Verification (approve/reject Admin, settlement PAID/PARTIAL/OVERPAID) | Selesai (Aktif) |
-| 10E | Refund & Outstanding | Pending |
+| **10D** | Payment Verification (approve/reject Admin, settlement PAID/PARTIAL/OVERPAID) | Selesai (`451d5ba`) |
+| **10E** | Balance, Overpayment & Deadline (extension manual, anti double counting, refund seam) | Selesai (Aktif) |
 | 10F | Integration Testing & Final Review | Pending |
 
 ---
@@ -42,3 +42,7 @@ invoice, dan menangani pembayaran (partial, overpayment, refund manual).
 - `04-payment-verification.md`: Spesifikasi verifikasi Admin (`SUBMITTED →
   APPROVED | REJECTED`), settlement exact → PAID / partial → PARTIALLY_PAID /
   overpayment → OVERPAID, rejection wajib reason, deadline tidak pernah direset.
+- `05-payment-balance-deadline.md`: Spesifikasi saldo berbasis total approved
+  payment (anti double counting), cadangan overpayment + seam refund Phase 11,
+  deadline `issued_at + 24 jam`, extension manual wajib audit, reject tidak
+  mereset deadline.

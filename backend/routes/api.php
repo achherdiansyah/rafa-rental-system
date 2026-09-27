@@ -156,6 +156,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::post('/{invoice}/issue', [InvoiceController::class, 'issue'])->name('issue');
             Route::post('/{invoice}/mark-unpaid', [InvoiceController::class, 'markUnpaid'])->name('mark-unpaid');
             Route::post('/{invoice}/void', [InvoiceController::class, 'void'])->name('void');
+            Route::post('/{invoice}/extend-deadline', [InvoiceController::class, 'extendDeadline'])->name('extend-deadline');
             Route::get('/{invoice}/payments', [PaymentController::class, 'index'])->name('payments.index');
             Route::post('/{invoice}/payments', [PaymentController::class, 'store'])->name('payments.store');
         });
