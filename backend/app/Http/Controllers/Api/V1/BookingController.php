@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Api\V1;
 use App\Actions\Booking\ApproveBookingAction;
 use App\Actions\Booking\AssignBookingUnitsAction;
 use App\Actions\Booking\CreateBookingFromCartAction;
+use App\Actions\Booking\ExtendPaymentDeadlineAction;
 use App\Actions\Booking\RejectBookingAction;
 use App\Actions\Booking\ReplaceUnitAssignmentAction;
 use App\Actions\Booking\SubmitBookingAction;
 use App\Actions\Cart\GetOrCreateUserCartAction;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Requests\Booking\AssignBookingUnitsRequest;
+use App\Http\Requests\Booking\ExtendDeadlineRequest;
 use App\Http\Requests\Booking\RejectBookingRequest;
 use App\Http\Requests\Booking\ReplaceUnitRequest;
 use App\Http\Resources\BookingResource;
@@ -213,6 +215,32 @@ class BookingController extends ApiController
         return $this->success(
             new BookingResource($updated),
             'Unit fisik berhasil diganti.'
+        );
+    }
+
+    /**
+     * Manually extend the payment deadline (admin/owner, audited).
+     */
+    public function extendDeadline(
+        ExtendDeadlineRequest $request,
+        Booking $booking,
+        ExtendPaymentDeadlineAction $action
+    ): JsonResponse {
+        /** @var User $user */
+        $user = $request->user();
+
+        Gate::authorize('extendDeadline', Booking::class);
+
+        $updated = $action->execute(
+            $user,
+            $booking,
+            (int) $request->validated('additional_hours'),
+            $request->validated('reason')
+        );
+
+        return $this->success(
+            new BookingResource($updated),
+            'Tenggat pembayaran berhasil diperpanjang.'
         );
     }
 }

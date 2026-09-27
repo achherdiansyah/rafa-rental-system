@@ -22,8 +22,9 @@ Phase 8 bertujuan untuk mengimplementasikan alur pemesanan sewa armada alat bera
 | **8C** | Antarmuka Pengguna Keranjang Sewa (*Cart UI & Add-to-Cart Flow*) | Selesai (`e674b6f`) |
 | **8D** | Booking Core & Submission (Cart → Booking → PENDING_APPROVAL) | Selesai (`f8543c9`) |
 | **8E** | Availability Engine (*Single Source of Truth* + Pessimistic Locking) | Selesai (`e5ecdb5`) |
-| **8F** | Admin Approval, Unit Assignment & Replacement (PENDING_APPROVAL → APPROVED/REJECTED) | Selesai (Aktif) |
-| **8G** | Invoice & Payment Engine | Pending |
+| **8F** | Admin Approval, Unit Assignment & Replacement (PENDING_APPROVAL → APPROVED/REJECTED) | Selesai (`4db11c6`) |
+| **8G** | Booking Expiry & Slot Release (Deadline + Scheduler + Manual Extension) | Selesai (Aktif) |
+| **8H** | Final Review & Git Merge | Pending |
 
 ---
 
@@ -35,3 +36,4 @@ Phase 8 bertujuan untuk mengimplementasikan alur pemesanan sewa armada alat bera
 - `04-booking-core.md`: Spesifikasi inti pemesanan (`bookings`, `booking_details`), transisi DRAFT → PENDING_APPROVAL, pre-check ketersediaan, dan UI pengajuan sewa.
 - `05-availability-engine.md`: Spesifikasi mesin ketersediaan sebagai *single source of truth*, buffer operasional, deteksi overlap, dan pessimistic locking anti double-booking.
 - `06-admin-approval-unit-assignment.md`: Spesifikasi persetujuan/pengtolakan booking, penugasan unit fisik, guard konflik, riwayat assignment, penggantian unit, dan UI antrean Admin.
+- `07-booking-expiry.md`: Spesifikasi kadaluwarsa booking, boundary status pembayaran, scheduler `bookings:expire`, pelepasan slot, dan perpanjangan tenggat Admin.

@@ -75,4 +75,12 @@ class BookingPolicy
     {
         return $user->isAdmin();
     }
+
+    /**
+     * Determine whether the user can extend a payment deadline (admin/owner).
+     */
+    public function extendDeadline(User $user): bool
+    {
+        return $user->hasRole(UserRole::ADMIN, UserRole::OWNER);
+    }
 }

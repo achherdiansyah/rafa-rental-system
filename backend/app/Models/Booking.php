@@ -21,6 +21,9 @@ class Booking extends Model
         'status',
         'rejection_reason',
         'total_amount',
+        'approved_at',
+        'payment_deadline_at',
+        'payment_met_at',
     ];
 
     protected function casts(): array
@@ -28,6 +31,9 @@ class Booking extends Model
         return [
             'status' => BookingStatus::class,
             'total_amount' => 'decimal:2',
+            'approved_at' => 'datetime',
+            'payment_deadline_at' => 'datetime',
+            'payment_met_at' => 'datetime',
         ];
     }
 

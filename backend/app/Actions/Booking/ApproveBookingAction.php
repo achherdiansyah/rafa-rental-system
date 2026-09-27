@@ -28,8 +28,13 @@ class ApproveBookingAction
 
             $oldStatus = $booking->status->value;
 
+            $approvedAt = now();
+            $deadline = $approvedAt->copy()->addHours((int) config('availability.payment_grace_hours', 24));
+
             $booking->update([
                 'status' => BookingStatus::APPROVED,
+                'approved_at' => $approvedAt,
+                'payment_deadline_at' => $deadline,
             ]);
 
             AuditLogger::log('BOOKING_APPROVED', $booking, [
@@ -37,6 +42,7 @@ class ApproveBookingAction
                 'approved_by' => $admin->id,
             ], [
                 'new_status' => BookingStatus::APPROVED->value,
+                'payment_deadline_at' => $deadline->toIso8601String(),
             ]);
 
             $booking->load([

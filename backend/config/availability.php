@@ -42,6 +42,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Expiry & Payment Deadline
+    |--------------------------------------------------------------------------
+    | payment_deadline = approval time (invoice issued_at boundary) + grace hours.
+    | invoice/payment engine lands in Phase 10; this is the integration seam.
+    */
+    'payment_grace_hours' => 24,
+
+    'payment_pending_statuses' => [
+        'APPROVED',
+        'PAYMENT_PENDING',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Unavailable Physical Unit Statuses
     |--------------------------------------------------------------------------
     | Units in these states can never be allocated to a new rental.
