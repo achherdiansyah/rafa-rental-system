@@ -21,8 +21,9 @@ layanan notifikasi.
 | **11C** | Outstanding & Customer Credit Control (per-customer, invoice-based, approved-payment, no N+1) | Selesai |
 | **11D** | In-App Notification (database channel, event + related entity, read state, API) | Selesai |
 | **11E** | WhatsApp Notification Integration (pluggable provider, delivery audit, no fake success) | Selesai |
-| **11F** | Refund, Outstanding & Notification UI (User + Admin/Owner, role-gated) | Selesai (Aktif) |
-| 11G | Integration Testing & Final Review | Pending |
+| **11F** | Refund, Outstanding & Notification UI (User + Admin/Owner, role-gated) | Selesai (`d4f033f`) |
+| **11G** | Integration Testing & Review (E2E refund/outstanding/notifikasi, race & idempotency) | Selesai (Aktif) |
+| 11H | Final Review & Git Merge | Pending |
 
 ---
 
@@ -47,3 +48,7 @@ layanan notifikasi.
   & notification — user (status/history, saldo, pusat notifikasi), admin/owner
   (antrean & verifikasi refund, rekap pelanggan, monitor delivery), guard
   finansial & role, komponen reusable, tanpa duplicate request.
+- `06-integration-test-report.md`: Laporan integrasi end-to-end refund,
+  outstanding & notifikasi (405 backend tests); duplikat-guard, deadline
+  invariance, race/idempotensi verifikasi, audit & immutabilitas riwayat
+  finansial, otorisasi User/Admin/Owner.
