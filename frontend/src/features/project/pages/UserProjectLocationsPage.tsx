@@ -14,9 +14,11 @@ import { EmptyState } from '@/components/feedback/EmptyState'
 import { Pagination } from '@/components/data-display/Pagination'
 import { useToast } from '@/hooks/useToast'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useLatestCall } from '@/hooks/useLatestCall'
 
 export const UserProjectLocationsPage: React.FC = () => {
   const { success: showSuccessToast, error: showErrorToast } = useToast()
+  const { run } = useLatestCall()
 
   const [locations, setLocations] = useState<ProjectLocation[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -49,28 +51,31 @@ export const UserProjectLocationsPage: React.FC = () => {
   const loadLocations = async (page = currentPage, search = debouncedSearch) => {
     setIsLoading(true)
     try {
-      const res = await projectLocationService.getLocations(page, 9, search)
-      if (res.success && res.data) {
-        setLocations(res.data)
-        if (res.meta) {
-          setTotalPages(res.meta.last_page)
-          setCurrentPage(res.meta.current_page)
+      const out = await run(async () => {
+        const res = await projectLocationService.getLocations(page, 9, search)
+        if (res.success && res.data) {
+          setLocations(res.data)
+          if (res.meta) {
+            setTotalPages(res.meta.last_page)
+            setCurrentPage(res.meta.current_page)
+          }
         }
-      }
-    } catch {
-      showErrorToast('Gagal memuat daftar lokasi proyek.')
-    } finally {
+      })
+      if (out === null) return // stale response — a newer call owns the list state
       setIsLoading(false)
+    } catch {
+      setIsLoading(false)
+      showErrorToast('Gagal memuat daftar lokasi proyek.')
     }
   }
 
+  // Single effect for every list trigger (search/page change).
+  // Previously two parallel effects duplicated the mount request, and a slow
+  // in-flight response could overwrite the fresh list after a create/edit.
   useEffect(() => {
-    loadLocations(1, debouncedSearch)
-  }, [debouncedSearch])
-
-  useEffect(() => {
-    loadLocations(currentPage, debouncedSearch)
-  }, [currentPage])
+    loadLocations()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, currentPage])
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}

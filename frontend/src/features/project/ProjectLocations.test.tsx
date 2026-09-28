@@ -127,4 +127,51 @@ describe('Project Locations UI Suite', () => {
       expect(screen.getByText(/belum ada lokasi proyek/i)).toBeInTheDocument()
     })
   })
+
+  it('fetches the list exactly once on mount (no duplicate request)', async () => {
+    renderComponent()
+
+    await waitFor(() => expect(screen.queryByRole('heading')).toBeTruthy())
+
+    // Single source-of-truth effect → exactly one list request on mount
+    expect(projectLocationService.getLocations).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows the newly created location right away (list refreshed after create)', async () => {
+    vi.mocked(projectLocationService.createLocation).mockResolvedValue({
+      success: true,
+      message: 'Created',
+      data: { ...mockLocations[0], id: 2, project_name: 'Site Baru Karawang' },
+    } as any)
+
+    renderComponent()
+
+    const addBtn = await screen.findByRole('button', { name: /tambah lokasi baru/i })
+    fireEvent.click(addBtn)
+
+    fireEvent.change(screen.getByLabelText(/nama proyek \/ area/i), { target: { value: 'Site Baru Karawang' } })
+    fireEvent.change(screen.getByLabelText(/nama pic lapangan/i), { target: { value: 'Agus' } })
+    fireEvent.change(screen.getByLabelText(/nomor telepon pic/i), { target: { value: '0811112222' } })
+    fireEvent.change(screen.getByLabelText(/kota \/ kabupaten/i), { target: { value: 'Karawang' } })
+    fireEvent.change(screen.getByLabelText(/alamat lengkap proyek/i), { target: { value: 'MM2100' } })
+
+    // After create, the list refresh returns BOTH existing + new location
+    vi.mocked(projectLocationService.getLocations).mockResolvedValueOnce({
+      success: true,
+      message: 'OK',
+      data: [{ ...mockLocations[0], id: 2, project_name: 'Site Baru Karawang' }, mockLocations[0]],
+      meta: { current_page: 1, per_page: 9, total: 2, last_page: 1 },
+    } as any)
+
+    fireEvent.click(screen.getByRole('button', { name: /daftarkan lokasi/i }))
+
+    await waitFor(() => {
+      expect(projectLocationService.createLocation).toHaveBeenCalled()
+    })
+
+    // The fresh list — not a stale one — must be rendered
+    await waitFor(() => {
+      expect(screen.getByText('Site Baru Karawang')).toBeInTheDocument()
+    })
+  })
 })

@@ -256,7 +256,9 @@ export const RecommendationPage: React.FC = () => {
                 <Input
                   label="Estimasi Durasi (Hari)"
                   type="number"
-                  placeholder="Contoh: 14"
+                  min={1}
+                  placeholder="Contoh: 14 hari"
+                  hint="Masukkan estimasi durasi pekerjaan dalam jumlah hari."
                   value={formData.duration_days ?? ''}
                   onChange={(e) => setFormData({ ...formData, duration_days: e.target.value ? parseInt(e.target.value, 10) : undefined })}
                   error={errors.duration_days}
