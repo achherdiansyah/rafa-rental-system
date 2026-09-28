@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Api\ApiController;
 use App\Models\User;
+use App\Services\Reports\FinancialReportService;
 use App\Services\Reports\OperationalReportService;
 use App\Services\Reports\ReportingQueryService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -18,7 +19,8 @@ class ReportingController extends ApiController
 {
     public function __construct(
         private readonly ReportingQueryService $service,
-        private readonly OperationalReportService $operational
+        private readonly OperationalReportService $operational,
+        private readonly FinancialReportService $financial
     ) {}
 
     public function bookings(Request $request): JsonResponse
@@ -141,6 +143,58 @@ class ReportingController extends ApiController
         );
     }
 
+    // ------------------------------------------------------------------
+    // Financial row-level reports (approved-payment basis)
+    // ------------------------------------------------------------------
+
+    public function financialInvoices(Request $request): JsonResponse
+    {
+        return $this->paginated(
+            $this->financial->invoiceReport($this->filters($request), $this->scopeFor($request)),
+            'Laporan invoice berhasil dimuat.'
+        );
+    }
+
+    public function financialPayments(Request $request): JsonResponse
+    {
+        return $this->paginated(
+            $this->financial->paymentReport($this->filters($request), $this->scopeFor($request)),
+            'Laporan pembayaran berhasil dimuat.'
+        );
+    }
+
+    public function financialPartials(Request $request): JsonResponse
+    {
+        return $this->paginated(
+            $this->financial->partialReport($this->filters($request), $this->scopeFor($request)),
+            'Laporan pembayaran sebagian berhasil dimuat.'
+        );
+    }
+
+    public function financialOutstanding(Request $request): JsonResponse
+    {
+        return $this->paginated(
+            $this->financial->outstandingReport($this->filters($request), $this->scopeFor($request)),
+            'Laporan outstanding berhasil dimuat.'
+        );
+    }
+
+    public function financialOverpayments(Request $request): JsonResponse
+    {
+        return $this->paginated(
+            $this->financial->overpaymentReport($this->filters($request), $this->scopeFor($request)),
+            'Laporan kelebihan bayar berhasil dimuat.'
+        );
+    }
+
+    public function financialRefunds(Request $request): JsonResponse
+    {
+        return $this->paginated(
+            $this->financial->refundReport($this->filters($request), $this->scopeFor($request)),
+            'Laporan refund berhasil dimuat.'
+        );
+    }
+
     public function equipmentUtilization(Request $request): JsonResponse
     {
         /** @var User $user */
@@ -160,7 +214,7 @@ class ReportingController extends ApiController
      */
     private function filters(Request $request): array
     {
-        $allowed = ['from', 'to', 'status', 'customer_id', 'project_id', 'model_id', 'rental_id'];
+        $allowed = ['from', 'to', 'status', 'source', 'customer_id', 'project_id', 'model_id', 'rental_id', 'unit_id', 'invoice_id'];
 
         return collect($allowed)->mapWithKeys(fn ($key) => [
             $key => $request->query($key),

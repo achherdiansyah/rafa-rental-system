@@ -18,9 +18,10 @@ efisien dan otorisasi per role.
 |---|---|---|
 | **12A** | Reporting & Query Services (agregat SQL, filter, scoping, no N+1) | Selesai (`ba767d8`) |
 | **12B** | Admin Dashboard (KPI bundle 1-request, filter periode, read-only) | Selesai (`c31e66d`) |
-| **12C** | Operational Reports (drillable rows, filter/paginate/sort, ARMADA admin-only) | Selesai (Aktif) |
-| 12D | Exports (CSV/PDF) | Pending |
-| 12E | Integration Testing & Final Review | Pending |
+| **12C** | Operational Reports (drillable rows, filter/paginate/sort, ARMADA admin-only) | Selesai (`cb58579`) |
+| **12D** | Financial Reports (invoice/payment/partial/outstanding/overpayment/refund, approved basis) | Selesai (Aktif) |
+| 12E | Exports (CSV/PDF) | Pending |
+| 12F | Integration Testing & Final Review | Pending |
 
 ---
 
@@ -37,3 +38,7 @@ efisien dan otorisasi per role.
   (booking, timesheet jam aktual, utilasi rental, status armada, aktivitas
   proyek/pelanggan) — filter/paginasi/sorting + id sumber utk penelusuran;
   read-only dan ARMADA admin-only.
+- `04-financial-reports.md`: Spesifikasi laporan keuangan berbasis approved
+  payment — invoice (total/paid/balance), payment, partial, outstanding,
+  overpayment (+refund snapshot), refund; immutable & tanpa aturan finansial
+  baru.

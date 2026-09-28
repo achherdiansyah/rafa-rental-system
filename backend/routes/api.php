@@ -212,6 +212,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('/operational/rentals', [ReportingController::class, 'operationalRentals'])->name('operational.rentals');
             Route::get('/operational/activity', [ReportingController::class, 'operationalActivity'])->name('operational.activity');
             Route::get('/operational/equipment', [ReportingController::class, 'operationalEquipment'])->name('operational.equipment');
+            Route::get('/financial/invoices', [ReportingController::class, 'financialInvoices'])->name('financial.invoices');
+            Route::get('/financial/payments', [ReportingController::class, 'financialPayments'])->name('financial.payments');
+            Route::get('/financial/partials', [ReportingController::class, 'financialPartials'])->name('financial.partials');
+            Route::get('/financial/outstanding', [ReportingController::class, 'financialOutstanding'])->name('financial.outstanding');
+            Route::get('/financial/overpayments', [ReportingController::class, 'financialOverpayments'])->name('financial.overpayments');
+            Route::get('/financial/refunds', [ReportingController::class, 'financialRefunds'])->name('financial.refunds');
         });
 
         // Equipment Master Management (Admin/Owner)

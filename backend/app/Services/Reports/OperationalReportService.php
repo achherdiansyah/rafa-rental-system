@@ -3,9 +3,8 @@
 namespace App\Services\Reports;
 
 use App\Enums\TimesheetStatus;
-use Carbon\Carbon;
+use App\Services\Reports\Concerns\FiltersAndPagination;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -15,6 +14,8 @@ use Illuminate\Support\Facades\DB;
  */
 class OperationalReportService
 {
+    use FiltersAndPagination;
+
     /**
      * Booking listing.
      *
@@ -42,23 +43,19 @@ class OperationalReportService
             $query->where('b.user_id', $scopedUser);
         }
 
-        return $this->paginate($query, $filters, 'booking', [
-            'id desc' => 'b.id',
-            'booking_code' => 'b.booking_code',
-            'created_at' => 'b.created_at',
-            'status' => 'b.status',
-        ])->through(fn ($row) => [
-            'id' => (int) $row->id,
-            'booking_code' => $row->booking_code,
-            'status' => $this->enumValue($row->status),
-            'customer_name' => $row->customer_name,
-            'project_name' => $row->project_name,
-            'city' => $row->city,
-            'total_amount' => (float) $row->total_amount,
-            'created_at' => $row->created_at,
-            'customer_id' => (int) $row->user_id,
-            'project_location_id' => (int) ($row->project_location_id ?? 0),
-        ]);
+        return $this->paginate($query, $filters, ['id desc' => 'b.id', 'booking_code' => 'b.booking_code', 'created_at' => 'b.created_at', 'status' => 'b.status'])
+            ->through(fn ($row) => [
+                'id' => (int) $row->id,
+                'booking_code' => $row->booking_code,
+                'status' => $this->enumValue($row->status),
+                'customer_name' => $row->customer_name,
+                'project_name' => $row->project_name,
+                'city' => $row->city,
+                'total_amount' => (float) $row->total_amount,
+                'created_at' => $row->created_at,
+                'customer_id' => (int) $row->user_id,
+                'project_location_id' => (int) ($row->project_location_id ?? 0),
+            ]);
     }
 
     /**
@@ -97,27 +94,25 @@ class OperationalReportService
             $query->where('b.user_id', $scopedUser);
         }
 
-        return $this->paginate($query, $filters, 'timesheet', [
-            'report_date desc' => 't.report_date',
-            'total_work_hours' => 't.total_work_hours',
-        ])->through(fn ($row) => [
-            'id' => (int) $row->id,
-            'report_date' => (string) $row->report_date,
-            'status' => $this->enumValue($row->status),
-            'start_hm' => (float) $row->start_hm,
-            'end_hm' => (float) $row->end_hm,
-            'break_minutes' => (int) $row->break_minutes,
-            'total_work_hours' => (float) $row->total_work_hours,
-            'standby_hours' => (float) $row->standby_hours,
-            'breakdown_hours' => (float) $row->breakdown_hours,
-            'operator_name' => $row->operator_name,
-            'unit_serial' => $row->serial_number,
-            'model' => trim(($row->brand ?? '').' '.($row->model_name ?? '')),
-            'project_name' => $row->project_name,
-            'booking_code' => $row->booking_code,
-            'rental_detail_id' => (int) $row->rental_detail_id,
-            'unit_id' => (int) ($row->unit_id ?? 0),
-        ]);
+        return $this->paginate($query, $filters, ['report_date desc' => 't.report_date', 'total_work_hours' => 't.total_work_hours'])
+            ->through(fn ($row) => [
+                'id' => (int) $row->id,
+                'report_date' => (string) $row->report_date,
+                'status' => $this->enumValue($row->status),
+                'start_hm' => (float) $row->start_hm,
+                'end_hm' => (float) $row->end_hm,
+                'break_minutes' => (int) $row->break_minutes,
+                'total_work_hours' => (float) $row->total_work_hours,
+                'standby_hours' => (float) $row->standby_hours,
+                'breakdown_hours' => (float) $row->breakdown_hours,
+                'operator_name' => $row->operator_name,
+                'unit_serial' => $row->serial_number,
+                'model' => trim(($row->brand ?? '').' '.($row->model_name ?? '')),
+                'project_name' => $row->project_name,
+                'booking_code' => $row->booking_code,
+                'rental_detail_id' => (int) $row->rental_detail_id,
+                'unit_id' => (int) ($row->unit_id ?? 0),
+            ]);
     }
 
     /**
@@ -160,24 +155,21 @@ class OperationalReportService
             $query->where('b.user_id', $scopedUser);
         }
 
-        return $this->paginate($query, $filters, 'rental-util', [
-            'rental_id desc' => 'rl.id',
-            'total_hours' => 'h.total_hours',
-            'status' => 'rl.status',
-        ])->through(fn ($row) => [
-            'rental_id' => (int) $row->rental_id,
-            'booking_code' => $row->booking_code,
-            'rental_status' => $this->enumValue($row->rental_status),
-            'started_at' => $row->started_at,
-            'completed_at' => $row->completed_at,
-            'project_name' => $row->project_name,
-            'city' => $row->city,
-            'unit_serial' => $row->serial_number,
-            'model' => trim(($row->brand ?? '').' '.($row->model_name ?? '')),
-            'total_work_hours' => (float) ($row->total_hours ?? 0),
-            'rental_detail_id' => (int) $row->rental_detail_id,
-            'unit_id' => (int) ($row->unit_id ?? 0),
-        ]);
+        return $this->paginate($query, $filters, ['rental_id desc' => 'rl.id', 'total_hours' => 'h.total_hours', 'status' => 'rl.status'])
+            ->through(fn ($row) => [
+                'rental_id' => (int) $row->rental_id,
+                'booking_code' => $row->booking_code,
+                'rental_status' => $this->enumValue($row->rental_status),
+                'started_at' => $row->started_at,
+                'completed_at' => $row->completed_at,
+                'project_name' => $row->project_name,
+                'city' => $row->city,
+                'unit_serial' => $row->serial_number,
+                'model' => trim(($row->brand ?? '').' '.($row->model_name ?? '')),
+                'total_work_hours' => (float) ($row->total_hours ?? 0),
+                'rental_detail_id' => (int) $row->rental_detail_id,
+                'unit_id' => (int) ($row->unit_id ?? 0),
+            ]);
     }
 
     /**
@@ -206,19 +198,16 @@ class OperationalReportService
             'unit_id' => ['eu.id', 'eq'],
         ]);
 
-        return $this->paginate($query, $filters, 'equipment', [
-            'id asc' => 'eu.id',
-            'status' => 'eu.status',
-            'total_hours' => 'h.total_hours',
-        ])->through(fn ($row) => [
-            'id' => (int) $row->id,
-            'serial_number' => $row->serial_number,
-            'plate_number' => $row->plate_number,
-            'status' => $this->enumValue($row->status),
-            'model' => trim(($row->brand ?? '').' '.($row->model_name ?? '')),
-            'model_id' => (int) $row->equipment_model_id,
-            'total_work_hours' => (float) ($row->total_hours ?? 0),
-        ]);
+        return $this->paginate($query, $filters, ['id asc' => 'eu.id', 'status' => 'eu.status', 'total_hours' => 'h.total_hours'])
+            ->through(fn ($row) => [
+                'id' => (int) $row->id,
+                'serial_number' => $row->serial_number,
+                'plate_number' => $row->plate_number,
+                'status' => $this->enumValue($row->status),
+                'model' => trim(($row->brand ?? '').' '.($row->model_name ?? '')),
+                'model_id' => (int) $row->equipment_model_id,
+                'total_work_hours' => (float) ($row->total_hours ?? 0),
+            ]);
     }
 
     /**
@@ -262,71 +251,20 @@ class OperationalReportService
             $query->where('b.user_id', $scopedUser);
         }
 
-        return $this->paginate($query, $filters, 'activity', [
-            'rental_id desc' => 'rl.id',
-            'total_hours' => 'h.total_hours',
-            'paid_total' => 'p.paid_total',
-        ])->through(fn ($row) => [
-            'rental_id' => (int) $row->rental_id,
-            'booking_code' => $row->booking_code,
-            'status' => $this->enumValue($row->status),
-            'customer_name' => $row->customer_name,
-            'project_name' => $row->project_name,
-            'city' => $row->city,
-            'started_at' => $row->started_at,
-            'completed_at' => $row->completed_at,
-            'total_hours' => (float) ($row->total_hours ?? 0),
-            'paid_total' => (float) ($row->paid_total ?? 0),
-            'customer_id' => (int) ($row->customer_id ?? 0),
-            'project_location_id' => (int) ($row->project_location_id ?? 0),
-        ]);
-    }
-
-    /**
-     * @param  Builder  $query
-     * @param  array<string, mixed>  $filters
-     * @param  array<string, array{0: string, 1: string}>  $map  filterKey => [column, op]
-     */
-    private function applyPlain($query, array $filters, array $map): void
-    {
-        foreach ($map as $key => [$column, $op]) {
-            if (empty($filters[$key])) {
-                continue;
-            }
-            if ($op === 'eq') {
-                $query->where($column, $filters[$key]);
-            } elseif ($op === 'date_min') {
-                $query->where($column, '>=', Carbon::parse($filters[$key])->toDateString());
-            } elseif ($op === 'date_max') {
-                $query->where($column, '<=', Carbon::parse($filters[$key])->toDateString());
-            }
-        }
-    }
-
-    private function enumValue(mixed $value): string
-    {
-        return $value === null ? '' : (string) $value;
-    }
-
-    /**
-     * @param  Builder  $query
-     * @param  array<string, mixed>  $filters
-     * @param  array<string, string>  $sortable  sortKey => column (whitelist)
-     */
-    private function paginate($query, array $filters, string $scope, array $sortable): LengthAwarePaginator
-    {
-        $sortBy = $filters['sort_by'] ?? null;
-        $sortDir = strtolower((string) ($filters['sort_dir'] ?? 'desc'));
-
-        $column = $sortBy ? ($sortable[$sortBy] ?? null) : null;
-        if ($column) {
-            $query->orderBy($column, $sortDir === 'asc' ? 'asc' : 'desc');
-        } elseif ($defaultKey = $sortable['id desc'] ?? $sortable[array_key_first($sortable)] ?? null) {
-            $query->orderBy($defaultKey, 'desc');
-        }
-
-        $perPage = min(max((int) ($filters['per_page'] ?? 15), 1), 100);
-
-        return $query->paginate($perPage)->withQueryString();
+        return $this->paginate($query, $filters, ['rental_id desc' => 'rl.id', 'total_hours' => 'h.total_hours', 'paid_total' => 'p.paid_total'])
+            ->through(fn ($row) => [
+                'rental_id' => (int) $row->rental_id,
+                'booking_code' => $row->booking_code,
+                'status' => $this->enumValue($row->status),
+                'customer_name' => $row->customer_name,
+                'project_name' => $row->project_name,
+                'city' => $row->city,
+                'started_at' => $row->started_at,
+                'completed_at' => $row->completed_at,
+                'total_hours' => (float) ($row->total_hours ?? 0),
+                'paid_total' => (float) ($row->paid_total ?? 0),
+                'customer_id' => (int) ($row->customer_id ?? 0),
+                'project_location_id' => (int) ($row->project_location_id ?? 0),
+            ]);
     }
 }
