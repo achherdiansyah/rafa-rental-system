@@ -47,6 +47,8 @@ const AdminOutstandingPage = lazy(() => import('@/features/refund/pages/AdminOut
 const UserNotificationsPage = lazy(() => import('@/features/notification/pages/UserNotificationsPage'))
 const AdminNotificationsPage = lazy(() => import('@/features/notification/pages/AdminNotificationsPage'))
 const AdminDashboardPage = lazy(() => import('@/features/reporting/pages/AdminDashboardPage'))
+const AdminOperationalReportsPage = lazy(() => import('@/features/reporting/pages/AdminOperationalReportsPage'))
+const AdminFinancialReportsPage = lazy(() => import('@/features/reporting/pages/AdminFinancialReportsPage'))
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -96,6 +98,8 @@ export const AppRoutes: React.FC = () => {
           <Route element={<RoleRoute allowedRoles={['ADMIN', 'OWNER']} />}>
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboardPage />} />
+              <Route path="reports/operational" element={<AdminOperationalReportsPage />} />
+              <Route path="reports/financial" element={<AdminFinancialReportsPage />} />
               <Route path="equipment" element={<AdminEquipmentMasterPage />} />
               <Route path="units" element={<AdminEquipmentUnitsPage />} />
               <Route path="banks" element={<AdminBankAccountsPage />} />

@@ -20,8 +20,9 @@ efisien dan otorisasi per role.
 | **12B** | Admin Dashboard (KPI bundle 1-request, filter periode, read-only) | Selesai (`c31e66d`) |
 | **12C** | Operational Reports (drillable rows, filter/paginate/sort, ARMADA admin-only) | Selesai (`cb58579`) |
 | **12D** | Financial Reports (invoice/payment/partial/outstanding/overpayment/refund, approved basis) | Selesai (`7257d06`) |
-| **12E** | Report Export (CSV streaming, filter-aware, scoped, chunked) | Selesai (Aktif) |
-| 12F | Integration Testing & Final Review | Pending |
+| **12E** | Report Export (CSV streaming, filter-aware, scoped, chunked) | Selesai (`eba5154`) |
+| **12F** | Dashboard & Report UI (reusable explorer: filter/search/sort/pagi/detail/export) | Selesai (Aktif) |
+| 12G | Integration Testing & Final Review | Pending |
 
 ---
 
@@ -45,3 +46,7 @@ efisien dan otorisasi per role.
 - `05-report-export.md`: Spesifikasi ekspor laporan ke CSV — mengikuti filter
   aktif, scoping otorisasi, streaming/chunking paginasi, nama file konsisten,
   tanpa data sensitif, tanpa mutasi sumber.
+- `06-dashboard-report-ui.md`: Spesifikasi UI dashboard & laporan operasional/
+  finansial — komponen reusable `ReportExplorer` (tabs, filter, search, sort,
+  pagination, detail, export CSV), tanpa waterfall/duplicate request,
+  loading/empty/error, responsive & accessible.
