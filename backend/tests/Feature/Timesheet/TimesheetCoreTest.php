@@ -21,6 +21,10 @@ use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
+/**
+ * Timesheet input is an ADMIN operational task (recorded from the field
+ * operator report). User/PIC reads + confirms/signs only; Owner read-only.
+ */
 class TimesheetCoreTest extends TestCase
 {
     use RefreshDatabase;
@@ -76,13 +80,13 @@ class TimesheetCoreTest extends TestCase
         ], $overrides);
     }
 
-    public function test_operator_creates_timesheet_with_computed_hours(): void
+    public function test_admin_inputs_timesheet_with_computed_hours(): void
     {
         $admin = User::factory()->admin()->create();
         $owner = User::factory()->create(['role' => UserRole::USER]);
         [$rentalDetail] = $this->ongoingRental($admin, $owner);
 
-        Sanctum::actingAs($owner);
+        Sanctum::actingAs($admin);
 
         $response = $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id));
 
@@ -101,7 +105,7 @@ class TimesheetCoreTest extends TestCase
         $owner = User::factory()->create(['role' => UserRole::USER]);
         [$rentalDetail] = $this->ongoingRental($admin, $owner);
 
-        Sanctum::actingAs($owner);
+        Sanctum::actingAs($admin);
 
         $res = $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id, ['break_minutes' => 0]));
         $res->assertStatus(201);
@@ -115,7 +119,7 @@ class TimesheetCoreTest extends TestCase
         [$rentalDetail] = $this->ongoingRental($admin, $owner);
         $rentalDetail->rental()->update(['status' => RentalStatus::ARRIVED]);
 
-        Sanctum::actingAs($owner);
+        Sanctum::actingAs($admin);
 
         $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id))
             ->assertStatus(409)
@@ -129,7 +133,7 @@ class TimesheetCoreTest extends TestCase
         $owner = User::factory()->create(['role' => UserRole::USER]);
         [$rentalDetail] = $this->ongoingRental($admin, $owner);
 
-        Sanctum::actingAs($owner);
+        Sanctum::actingAs($admin);
 
         // end_hm <= start_hm
         $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id, ['end_hm' => 95]))
@@ -153,7 +157,7 @@ class TimesheetCoreTest extends TestCase
         $owner = User::factory()->create(['role' => UserRole::USER]);
         [$rentalDetail] = $this->ongoingRental($admin, $owner);
 
-        Sanctum::actingAs($owner);
+        Sanctum::actingAs($admin);
 
         // work (11) < breakdown (8) + standby (4)
         $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id, [
@@ -170,7 +174,7 @@ class TimesheetCoreTest extends TestCase
         $owner = User::factory()->create(['role' => UserRole::USER]);
         [$rentalDetail] = $this->ongoingRental($admin, $owner);
 
-        Sanctum::actingAs($owner);
+        Sanctum::actingAs($admin);
 
         $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id))->assertStatus(201);
 
@@ -179,18 +183,30 @@ class TimesheetCoreTest extends TestCase
             ->assertJson(['code' => 'BUSINESS_RULE_VIOLATION']);
     }
 
-    public function test_ownership_cannot_create_for_other_rental(): void
+    public function test_user_cannot_create_timesheet(): void
     {
         $admin = User::factory()->admin()->create();
         $ownerA = User::factory()->create(['role' => UserRole::USER]);
-        $intruder = User::factory()->create(['role' => UserRole::USER]);
+        $user = User::factory()->create(['role' => UserRole::USER]);
 
         [$rentalDetail] = $this->ongoingRental($admin, $ownerA);
 
-        Sanctum::actingAs($intruder);
+        // USER (any) can never create — role model: admin inputs timesheets
+        Sanctum::actingAs($user);
         $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id))
-            ->assertStatus(409)
-            ->assertJson(['code' => 'BUSINESS_RULE_VIOLATION']);
+            ->assertStatus(403);
+    }
+
+    public function test_owner_cannot_create_timesheet(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $owner = User::factory()->owner()->create();
+
+        [$rentalDetail] = $this->ongoingRental($admin, $owner);
+
+        Sanctum::actingAs($owner);
+        $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id))
+            ->assertStatus(403);
     }
 
     public function test_user_cannot_view_foreign_timesheet(): void
@@ -201,7 +217,7 @@ class TimesheetCoreTest extends TestCase
 
         [$rentalDetail] = $this->ongoingRental($admin, $ownerA);
 
-        Sanctum::actingAs($ownerA);
+        Sanctum::actingAs($admin);
         $timesheetId = $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id))->json('data.id');
 
         Sanctum::actingAs($intruder);
@@ -214,7 +230,7 @@ class TimesheetCoreTest extends TestCase
         $owner = User::factory()->create(['role' => UserRole::USER]);
         [$rentalDetail] = $this->ongoingRental($admin, $owner);
 
-        Sanctum::actingAs($owner);
+        Sanctum::actingAs($admin);
         $timesheetId = $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id))->json('data.id');
 
         $submit = $this->postJson("/api/v1/timesheets/{$timesheetId}/submit");
@@ -225,5 +241,19 @@ class TimesheetCoreTest extends TestCase
         $this->postJson("/api/v1/timesheets/{$timesheetId}/submit")
             ->assertStatus(409)
             ->assertJson(['code' => 'INVALID_STATE_TRANSITION']);
+    }
+
+    public function test_user_cannot_submit_timesheet(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $owner = User::factory()->create(['role' => UserRole::USER]);
+        [$rentalDetail] = $this->ongoingRental($admin, $owner);
+
+        Sanctum::actingAs($admin);
+        $timesheetId = $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id))->json('data.id');
+
+        Sanctum::actingAs($owner);
+        $this->postJson("/api/v1/timesheets/{$timesheetId}/submit")
+            ->assertStatus(403);
     }
 }

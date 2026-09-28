@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react'
-import { Clock, CheckCircle2, XCircle, PenLine, History, Search } from 'lucide-react'
+import { Clock, CheckCircle2, XCircle, PenLine, History, Search, Plus } from 'lucide-react'
 import { timesheetService } from '../services/timesheetService'
+import { rentalService } from '@/features/rental/services/rentalService'
 import type { Timesheet, TimesheetRevision } from '@/types/timesheet'
+import type { Rental } from '@/types/rental'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Input } from '@/components/form/Input'
 import { Select } from '@/components/form/Select'
 import { Textarea } from '@/components/form/Textarea'
+import { Modal } from '@/components/ui/Modal'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/feedback/EmptyState'
 import { Alert } from '@/components/feedback/Alert'
@@ -55,6 +58,83 @@ export const AdminTimesheetsPage: React.FC = () => {
 
   const [expandedRevision, setExpandedRevision] = useState<number | null>(null)
   const [revisions, setRevisions] = useState<Record<number, TimesheetRevision[]>>({})
+
+  // Input Timesheet (admin records the field/operator daily report)
+  const [createOpen, setCreateOpen] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [rentals, setRentals] = useState<Rental[]>([])
+  const [createForm, setCreateForm] = useState({
+    rental_detail_id: '',
+    report_date: new Date().toISOString().slice(0, 10),
+    start_hm: '',
+    end_hm: '',
+    break_minutes: '0',
+    standby_hours: '0',
+    breakdown_hours: '0',
+    operator_name: '',
+    notes: '',
+  })
+  const [createErrors, setCreateErrors] = useState<Record<string, string>>({})
+
+  const ongoingDetails = rentals
+    .filter((r) => r.status === 'ONGOING')
+    .flatMap((r) =>
+      (r.details ?? []).map((d) => ({
+        value: String(d.id),
+        label: `${r.booking?.booking_code ?? `Rental #${r.id}`} · ${d.unit?.serial_number ?? 'unit'} · ${r.booking?.project_location?.project_name ?? ''}`,
+      })),
+    )
+
+  const openCreate = async () => {
+    setCreateErrors({})
+    setCreateForm((prev) => ({ ...prev, report_date: new Date().toISOString().slice(0, 10) }))
+    setCreateOpen(true)
+    try {
+      const res = await rentalService.getRentals({ per_page: 50 })
+      if (res.success && res.data) setRentals(res.data)
+    } catch {
+      // Rental list stays empty; the dropdown will show no selectable units
+    }
+  }
+
+  const handleCreate = async () => {
+    const errors: Record<string, string> = {}
+    if (!createForm.rental_detail_id) errors.rental_detail_id = 'Pilih unit rental ONGOING.'
+    if (!createForm.report_date) errors.report_date = 'Tanggal wajib diisi.'
+    if (!createForm.start_hm || !createForm.end_hm || Number(createForm.end_hm) <= Number(createForm.start_hm)) {
+      errors.end_hm = 'Jam akhir harus lebih besar dari jam awal.'
+    }
+    setCreateErrors(errors)
+    if (Object.keys(errors).length > 0) return
+
+    setCreating(true)
+    try {
+      const res = await timesheetService.create({
+        rental_detail_id: Number(createForm.rental_detail_id),
+        report_date: createForm.report_date,
+        start_hm: Number(createForm.start_hm),
+        end_hm: Number(createForm.end_hm),
+        break_minutes: Number(createForm.break_minutes || 0),
+        standby_hours: Number(createForm.standby_hours || 0),
+        breakdown_hours: Number(createForm.breakdown_hours || 0),
+        operator_name: createForm.operator_name || undefined,
+        notes: createForm.notes || undefined,
+      })
+      if (!res.success || !res.data) {
+        throw new Error('Respons tidak valid dari server.')
+      }
+      // Submit to SUBMITTED = menunggu konfirmasi user (PIC).
+      await timesheetService.submit(res.data.id)
+      showSuccessToast(`Timesheet #${res.data.id} diinput; menunggu konfirmasi penyewa.`)
+      setCreateOpen(false)
+      setCreateForm((prev) => ({ ...prev, rental_detail_id: '', start_hm: '', end_hm: '', operator_name: '', notes: '' }))
+      loadTimesheets()
+    } catch (err: any) {
+      showErrorToast(err?.message || 'Gagal menginput timesheet.')
+    } finally {
+      setCreating(false)
+    }
+  }
 
   const loadTimesheets = async () => {
     setIsLoading(true)
@@ -174,6 +254,9 @@ export const AdminTimesheetsPage: React.FC = () => {
           <p className="text-sm text-slate-500 mt-1">Setujui, tolak, atau koreksi timesheet harian dari unit rental.</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="primary" size="sm" className="gap-1.5 shrink-0" onClick={openCreate} leftIcon={<Plus size={14} />}>
+            Input Timesheet
+          </Button>
           <Search size={15} className="text-slate-400" />
           <Select
             value={filter}
@@ -304,6 +387,96 @@ export const AdminTimesheetsPage: React.FC = () => {
           description="Tidak ada timesheet pada filter status saat ini."
         />
       )}
+
+      <Modal
+        isOpen={createOpen}
+        onClose={() => !creating && setCreateOpen(false)}
+        title="Input Timesheet Harian"
+        size="lg"
+      >
+        <div className="space-y-4">
+          <p className="text-xs text-slate-500">
+            Catat pekerjaan aktual berdasarkan laporan operator. Record dikirim ke SUBMITTED (Menunggu Konfirmasi Penyewa).
+          </p>
+          <Select
+            label="Unit Rental (ONGOING) *"
+            required
+            name="rental_detail_id"
+            value={createForm.rental_detail_id}
+            onChange={(e) => setCreateForm((p) => ({ ...p, rental_detail_id: e.target.value }))}
+            options={ongoingDetails}
+            placeholder="Pilih unit…"
+            error={createErrors.rental_detail_id}
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Tanggal Laporan *"
+              type="date"
+              value={createForm.report_date}
+              max={new Date().toISOString().slice(0, 10)}
+              onChange={(e) => setCreateForm((p) => ({ ...p, report_date: e.target.value }))}
+              error={createErrors.report_date}
+            />
+            <Input
+              label="Nama Operator"
+              placeholder="Dari laporan operator lapangan"
+              value={createForm.operator_name}
+              onChange={(e) => setCreateForm((p) => ({ ...p, operator_name: e.target.value }))}
+            />
+            <Input
+              label="Jam Mulai (HM) *"
+              type="number"
+              step="0.01"
+              value={createForm.start_hm}
+              onChange={(e) => setCreateForm((p) => ({ ...p, start_hm: e.target.value }))}
+              error={createErrors.start_hm}
+            />
+            <Input
+              label="Jam Akhir (HM) *"
+              type="number"
+              step="0.01"
+              value={createForm.end_hm}
+              onChange={(e) => setCreateForm((p) => ({ ...p, end_hm: e.target.value }))}
+              error={createErrors.end_hm}
+            />
+            <Input
+              label="Break (menit)"
+              type="number"
+              min={0}
+              value={createForm.break_minutes}
+              onChange={(e) => setCreateForm((p) => ({ ...p, break_minutes: e.target.value }))}
+            />
+            <Input
+              label="Standby (jam)"
+              type="number"
+              min={0}
+              value={createForm.standby_hours}
+              onChange={(e) => setCreateForm((p) => ({ ...p, standby_hours: e.target.value }))}
+            />
+            <Input
+              label="Breakdown (jam)"
+              type="number"
+              min={0}
+              value={createForm.breakdown_hours}
+              onChange={(e) => setCreateForm((p) => ({ ...p, breakdown_hours: e.target.value }))}
+            />
+          </div>
+          <Textarea
+            label="Catatan"
+            rows={2}
+            value={createForm.notes}
+            onChange={(e) => setCreateForm((p) => ({ ...p, notes: e.target.value }))}
+          />
+          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+            <Button variant="outline" type="button" onClick={() => setCreateOpen(false)} disabled={creating}>
+              Batal
+            </Button>
+            <Button type="button" isLoading={creating} onClick={handleCreate}>
+              Simpan & Ajukan Konfirmasi
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       <ConfirmDialog
         isOpen={approveTarget !== null}

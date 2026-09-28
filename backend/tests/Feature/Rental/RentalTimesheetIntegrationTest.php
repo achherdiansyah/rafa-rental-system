@@ -129,9 +129,9 @@ class RentalTimesheetIntegrationTest extends TestCase
         $this->assertNotNull($ongoingRes->json('data.started_at'));
         $this->assertEquals(EquipmentStatus::ON_SITE, $unitList[0]->fresh()->status);
 
-        /** 5) Timesheet: owner records daily hours (8->16 minus 60min break = 7h) */
+        /** 5) Timesheet: admin inputs daily hours based on operator report (8->16 minus 60min break = 7h) */
         $detail = $rental->details()->first();
-        Sanctum::actingAs($user);
+        Sanctum::actingAs($admin);
         $tsRes = $this->postJson('/api/v1/timesheets', [
             'rental_detail_id' => $detail->id,
             'report_date' => now()->toDateString(),
@@ -156,7 +156,8 @@ class RentalTimesheetIntegrationTest extends TestCase
         ]);
         $second->assertCreated();
 
-        /** 6) User/PIC signature (private storage) */
+        /** 6) User/PIC signature (private storage) — confirmation of record */
+        Sanctum::actingAs($user);
         $sign = $this->postJson("/api/v1/timesheets/{$tsId}/signature", [
             'signature' => UploadedFile::fake()->image('ttd.png', 400, 200),
         ]);
@@ -167,8 +168,8 @@ class RentalTimesheetIntegrationTest extends TestCase
         $this->assertDatabaseHas('attachments', ['id' => $sign->json('data.id'), 'attachable_id' => $tsId]);
         Storage::disk('local')->assertExists($timesheet->fresh()->attachments()->first()->file_path);
 
-        /** 7) Submit for validation */
-        Sanctum::actingAs($user);
+        /** 7) Submit for validation (admin, after input) */
+        Sanctum::actingAs($admin);
         $this->postJson("/api/v1/timesheets/{$tsId}/submit")
             ->assertOk()->assertJsonPath('data.status', TimesheetStatus::SUBMITTED->value);
 
@@ -276,7 +277,7 @@ class RentalTimesheetIntegrationTest extends TestCase
         // Timesheet while rental is ONGOING, then submit
         $detail = Rental::find($rentalId)->details()->first()->id;
 
-        Sanctum::actingAs($user);
+        Sanctum::actingAs($admin);
         $tsId = $this->postJson('/api/v1/timesheets', [
             'rental_detail_id' => $detail,
             'report_date' => now()->toDateString(),
@@ -285,7 +286,6 @@ class RentalTimesheetIntegrationTest extends TestCase
         ])->json('data.id');
         $this->postJson("/api/v1/timesheets/{$tsId}/submit")->assertOk();
 
-        Sanctum::actingAs($admin);
         $this->postJson("/api/v1/timesheets/{$tsId}/approve")->assertOk();
 
         // Return -> inspect -> ready

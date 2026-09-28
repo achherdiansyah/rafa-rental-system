@@ -79,7 +79,7 @@ class PaymentVerificationTest extends TestCase
         }
 
         $rental = Rental::findOrFail($rentalId);
-        Sanctum::actingAs($owner);
+        Sanctum::actingAs($admin);
         $tsId = $this->postJson('/api/v1/timesheets', [
             'rental_detail_id' => $rental->details()->first()->id,
             'report_date' => now()->toDateString(),

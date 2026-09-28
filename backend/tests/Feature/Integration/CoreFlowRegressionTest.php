@@ -83,7 +83,7 @@ class CoreFlowRegressionTest extends TestCase
         $this->assertEquals(RentalStatus::ONGOING->value, $rental->status->value);
 
         // 2) Timesheet + approval
-        Sanctum::actingAs($owner);
+        Sanctum::actingAs($admin);
         $rd = $rental->details()->first();
         $tsid = $this->postJson('/api/v1/timesheets', [
             'rental_detail_id' => $rd->id,

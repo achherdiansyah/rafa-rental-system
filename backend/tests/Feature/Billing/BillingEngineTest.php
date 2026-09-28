@@ -112,7 +112,7 @@ class BillingEngineTest extends TestCase
         foreach ($details as $idx => $rd) {
             $hours = $hoursByDetail[$idx] ?? 8.5;
 
-            Sanctum::actingAs($owner);
+            Sanctum::actingAs($admin);
             $tsId = $this->postJson('/api/v1/timesheets', [
                 'rental_detail_id' => $rd->id,
                 'report_date' => now()->toDateString(),
@@ -259,7 +259,7 @@ class BillingEngineTest extends TestCase
         $rd = $rental->details()->first();
 
         // 7.25h DRAFT (not approved), 10.5h APPROVED
-        Sanctum::actingAs($owner);
+        Sanctum::actingAs($admin);
         $tsDraftId = $this->postJson('/api/v1/timesheets', [
             'rental_detail_id' => $rd->id,
             'report_date' => now()->subDay()->toDateString(),

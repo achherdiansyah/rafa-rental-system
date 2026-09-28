@@ -15,10 +15,12 @@ import { Pagination } from '@/components/data-display/Pagination'
 import { useToast } from '@/hooks/useToast'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useLatestCall } from '@/hooks/useLatestCall'
+import { useAuth } from '@/hooks/useAuth'
 
 export const UserProjectLocationsPage: React.FC = () => {
   const { success: showSuccessToast, error: showErrorToast } = useToast()
   const { run } = useLatestCall()
+  const { isAuthenticated } = useAuth()
 
   const [locations, setLocations] = useState<ProjectLocation[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -69,13 +71,14 @@ export const UserProjectLocationsPage: React.FC = () => {
     }
   }
 
-  // Single effect for every list trigger (search/page change).
-  // Previously two parallel effects duplicated the mount request, and a slow
-  // in-flight response could overwrite the fresh list after a create/edit.
+  // Single effect for every list trigger (auth ready / search / page change).
+  // Fetches only after authentication is confirmed so a reload can never
+  // fire the list request before the customer context is ready.
   useEffect(() => {
+    if (!isAuthenticated) return
     loadLocations()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearch, currentPage])
+  }, [isAuthenticated, debouncedSearch, currentPage])
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}

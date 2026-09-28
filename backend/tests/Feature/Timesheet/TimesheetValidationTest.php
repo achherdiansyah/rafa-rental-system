@@ -61,7 +61,9 @@ class TimesheetValidationTest extends TestCase
         $rental = Rental::factory()->create(['booking_id' => $booking->id, 'status' => RentalStatus::ONGOING]);
         $rentalDetail = RentalDetail::factory()->create(['rental_id' => $rental->id, 'assignment_id' => $assignment->id]);
 
-        Sanctum::actingAs($owner);
+        // Admin inputs the timesheet from the field/operator report, then
+        // submits it to SUBMITTED (awaiting user confirmation signature).
+        Sanctum::actingAs($admin);
         $timesheetId = $this->postJson('/api/v1/timesheets', [
             'rental_detail_id' => $rentalDetail->id,
             'report_date' => now()->toDateString(),
@@ -160,7 +162,7 @@ class TimesheetValidationTest extends TestCase
         $this->assertEquals($admin->id, $revision->revised_by);
     }
 
-    public function test_rejected_timesheet_can_be_resubmitted_by_owner(): void
+    public function test_rejected_timesheet_can_be_resubmitted_by_admin(): void
     {
         [$admin, $owner, $timesheet] = $this->submittedTimesheet();
 
@@ -169,7 +171,6 @@ class TimesheetValidationTest extends TestCase
             'reason' => 'Perlu konfirmasi jam operator.',
         ])->assertStatus(200);
 
-        Sanctum::actingAs($owner);
         $res = $this->postJson("/api/v1/timesheets/{$timesheet->id}/submit");
         $res->assertStatus(200)
             ->assertJsonPath('data.status', TimesheetStatus::SUBMITTED->value);

@@ -15,6 +15,10 @@ vi.mock('./services/projectLocationService', () => ({
   },
 }))
 
+vi.mock('@/hooks/useAuth', () => ({
+  useAuth: () => ({ isAuthenticated: true }),
+}))
+
 const renderComponent = () => {
   return render(
     <MemoryRouter>
