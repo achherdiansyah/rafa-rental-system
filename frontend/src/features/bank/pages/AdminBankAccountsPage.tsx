@@ -8,38 +8,47 @@ import { Modal } from '@/components/ui/Modal'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/data-display/Table'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/feedback/EmptyState'
+import { ErrorState } from '@/components/feedback/ErrorState'
 import { useToast } from '@/hooks/useToast'
+import { useLatestCall } from '@/hooks/useLatestCall'
 import { bankService } from '../services/bankService'
 import type { BankAccount } from '@/types/bank'
 import type { ApiError } from '@/types/api'
 
 export const AdminBankAccountsPage: React.FC = () => {
   const { success, error: toastError } = useToast()
+  const { run } = useLatestCall()
 
   const [accounts, setAccounts] = useState<BankAccount[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null)
   const [bankName, setBankName] = useState('')
   const [accountNumber, setAccountNumber] = useState('')
-  const [accountName, setAccountName] = useState('')
+  const [accountName, setAccountName] = useState('PT RAFA RENTAL NUSANTARA')
   const [isActive, setIsActive] = useState(true)
   const [formErrors, setFormErrors] = useState<Record<string, string[]>>({})
   const [isSaving, setIsSaving] = useState(false)
 
   const fetchAccounts = useCallback(async () => {
     setIsLoading(true)
+    setHasError(false)
     try {
-      const data = await bankService.getAccounts()
-      setAccounts(data || [])
-    } catch {
-      toastError('Gagal memuat daftar rekening bank perusahaan.')
-    } finally {
+      const out = await run(async () => {
+        const data = await bankService.getAccounts()
+        setAccounts(data || [])
+      })
+      if (out === null) return // stale request — request terbaru yang mengelola UI
       setIsLoading(false)
+    } catch {
+      setHasError(true)
+      setIsLoading(false)
+      toastError('Gagal memuat daftar rekening bank perusahaan.')
     }
-  }, [toastError])
+  }, [toastError, run])
 
   useEffect(() => {
     fetchAccounts()
@@ -116,6 +125,12 @@ export const AdminBankAccountsPage: React.FC = () => {
       {/* Content */}
       {isLoading ? (
         <TableSkeleton rows={3} cols={5} />
+      ) : hasError ? (
+        <ErrorState
+          title="Gagal memuat data"
+          message="Data rekening bank tidak bisa dimuat. Periksa koneksi lalu coba lagi."
+          onRetry={fetchAccounts}
+        />
       ) : accounts.length === 0 ? (
         <EmptyState
           icon={<Building2 size={24} />}

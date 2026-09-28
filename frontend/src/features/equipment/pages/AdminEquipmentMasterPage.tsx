@@ -13,14 +13,17 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 import { Pagination } from '@/components/data-display/Pagination'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/feedback/EmptyState'
+import { ErrorState } from '@/components/feedback/ErrorState'
 import { useToast } from '@/hooks/useToast'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useLatestCall } from '@/hooks/useLatestCall'
 import { equipmentService } from '../services/equipmentService'
 import type { EquipmentType, EquipmentModel } from '@/types/equipment'
 import type { ApiError, PaginationMeta } from '@/types/api'
 
 export const AdminEquipmentMasterPage: React.FC = () => {
   const { success, error: toastError } = useToast()
+  const { run } = useLatestCall()
 
   const [activeTab, setActiveTab] = useState<'models' | 'types'>('models')
 
@@ -32,6 +35,7 @@ export const AdminEquipmentMasterPage: React.FC = () => {
   const [filterType, setFilterType] = useState('')
   const [filterBrand, setFilterBrand] = useState('')
   const [isLoadingModels, setIsLoadingModels] = useState(true)
+  const [hasModelError, setHasModelError] = useState(false)
 
   // --- State Types ---
   const [types, setTypes] = useState<EquipmentType[]>([])
@@ -40,6 +44,7 @@ export const AdminEquipmentMasterPage: React.FC = () => {
   const [typeSearch, setTypeSearch] = useState('')
   const debouncedTypeSearch = useDebounce(typeSearch, 300)
   const [isLoadingTypes, setIsLoadingTypes] = useState(true)
+  const [hasTypeError, setHasTypeError] = useState(false)
 
   // --- Modal States ---
   const [isTypeModalOpen, setIsTypeModalOpen] = useState(false)
@@ -74,43 +79,53 @@ export const AdminEquipmentMasterPage: React.FC = () => {
       const res = await equipmentService.getTypes(undefined, true)
       setAllTypesList((res.data as unknown as EquipmentType[]) || [])
     } catch {
-      // Handled
+      // Silent: dropdown helpers are non-critical
     }
   }, [])
 
   // Fetch Models
   const fetchModels = useCallback(async (page: number = 1) => {
     setIsLoadingModels(true)
+    setHasModelError(false)
     try {
-      const res = await equipmentService.getModels({
-        page,
-        per_page: 10,
-        search: debouncedModelSearch || undefined,
-        equipment_type_id: filterType ? Number(filterType) : undefined,
-        brand: filterBrand || undefined,
+      const out = await run(async () => {
+        const res = await equipmentService.getModels({
+          page,
+          per_page: 10,
+          search: debouncedModelSearch || undefined,
+          equipment_type_id: filterType ? Number(filterType) : undefined,
+          brand: filterBrand || undefined,
+        })
+        setModels(res.data || [])
+        if (res.meta) setModelMeta(res.meta)
       })
-      setModels(res.data || [])
-      if (res.meta) setModelMeta(res.meta)
-    } catch {
-      toastError('Gagal memuat daftar model armada.')
-    } finally {
+      if (out === null) return // stale request — request terbaru yang mengelola UI
       setIsLoadingModels(false)
+    } catch {
+      setHasModelError(true)
+      setIsLoadingModels(false)
+      toastError('Gagal memuat daftar model armada.')
     }
-  }, [debouncedModelSearch, filterType, filterBrand, toastError])
+  }, [debouncedModelSearch, filterType, filterBrand, toastError, run])
 
   // Fetch Paginated Types
   const fetchTypes = useCallback(async (page: number = 1) => {
     setIsLoadingTypes(true)
+    setHasTypeError(false)
     try {
-      const res = await equipmentService.getTypes(debouncedTypeSearch || undefined, false, page)
-      setTypes((res.data as unknown as EquipmentType[]) || [])
-      if (res.meta) setTypeMeta(res.meta)
-    } catch {
-      toastError('Gagal memuat daftar tipe alat.')
-    } finally {
+      const out = await run(async () => {
+        const res = await equipmentService.getTypes(debouncedTypeSearch || undefined, false, page)
+        setTypes((res.data as unknown as EquipmentType[]) || [])
+        if (res.meta) setTypeMeta(res.meta)
+      })
+      if (out === null) return
       setIsLoadingTypes(false)
+    } catch {
+      setHasTypeError(true)
+      setIsLoadingTypes(false)
+      toastError('Gagal memuat daftar tipe alat.')
     }
-  }, [debouncedTypeSearch, toastError])
+  }, [debouncedTypeSearch, toastError, run])
 
   useEffect(() => {
     fetchAllTypes()
@@ -364,6 +379,12 @@ export const AdminEquipmentMasterPage: React.FC = () => {
           {/* Table */}
           {isLoadingModels ? (
             <TableSkeleton rows={5} cols={6} />
+          ) : hasModelError ? (
+            <ErrorState
+              title="Gagal memuat data"
+              message="Daftar model armada tidak bisa dimuat. Periksa koneksi lalu coba lagi."
+              onRetry={() => fetchModels(modelMeta.current_page)}
+            />
           ) : models.length === 0 ? (
             <EmptyState
               icon={<Truck size={24} />}
@@ -470,6 +491,12 @@ export const AdminEquipmentMasterPage: React.FC = () => {
 
           {isLoadingTypes ? (
             <TableSkeleton rows={4} cols={4} />
+          ) : hasTypeError ? (
+            <ErrorState
+              title="Gagal memuat data"
+              message="Daftar tipe alat tidak bisa dimuat. Periksa koneksi lalu coba lagi."
+              onRetry={() => fetchTypes(typeMeta.current_page)}
+            />
           ) : types.length === 0 ? (
             <EmptyState
               icon={<Layers size={24} />}
