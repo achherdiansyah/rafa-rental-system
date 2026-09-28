@@ -63,7 +63,12 @@ export const UserProjectLocationsPage: React.FC = () => {
           }
         }
       })
-      if (out === null) return // stale response — a newer call owns the list state
+      if (out === null) {
+        // stale/in-flight result: DON'T touch the list state, but still let the
+        // spinner terminate (a newer call re-arms it) so loading can never stick.
+        setIsLoading(false)
+        return
+      }
       setIsLoading(false)
     } catch {
       setIsLoading(false)
@@ -262,6 +267,8 @@ export const UserProjectLocationsPage: React.FC = () => {
                     variant="outline"
                     size="sm"
                     className="text-rose-600 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-700"
+                    aria-label={`Hapus lokasi ${loc.project_name}`}
+                    title="Hapus Lokasi"
                     onClick={() => {
                       setLocationToDelete(loc)
                       setIsDeleteDialogOpen(true)
