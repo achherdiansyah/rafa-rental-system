@@ -188,3 +188,42 @@ Tidak ada (terbukti benar). Bukti: `ProjectLocationPersistenceTest` (raw registe
 ## Final
 **FIXED.** Rantai yang sebelumnya salah: `FORM → POST → DB → GET → FRONTEND` — sebelumnya putus di
 `FRONTEND` (parser service membaca response dengan salah). Sekarang seluruh rantai hijau.
+
+---
+
+# Fix — Project Location Status (badge "Nonaktif" pada lokasi baru)
+
+## Root Cause (terbukti via RAW repro)
+- Migrasi & factory `project_locations.is_active` default = `true`; `UserProjectLocationsPage` render badge
+  "Nonaktif" saat `is_active=false`.
+- RAW repro: POST create (tanpa is_active) → **DB row `is_active = true`** namun **POST response
+  `data.is_active = false`** → card langsung (optimistic insert) membaca false → badge "Nonaktif".
+- Penyebab: `CreateProjectLocationAction` mengembalikan model hasil `create()` yang belum pernah memuat
+  nilai default dari database. Karena `is_active` tidak ada di atribut instance (kolom default di-apply
+  server-side), resource men-serialize `(bool)null = false` — sementara baris DB benar `true`.
+- Imbas rantai: response menipu status; state frontend (dan setiap pemakai `data.is_active`) tidak sinkron
+  dengan DB. (Update action sudah pakai `fresh()` — hanya Create yang kurang.)
+
+## Business Rule
+Tidak ada rule yang menjadikan lokasi baru NONAKTIF; analog entity lain (bank, unit) default `true`.
+Migrasi/factory sudah default `true` → source of truth: lokasi baru = AKTIF. Tidak ada rule baru yang dibuat;
+implementasi kini konsisten dengan default schema.
+
+## Backend Fix
+`backend/app/Actions/ProjectLocation/CreateProjectLocationAction.php`
+- Tambah `$location->refresh()` setelah `create()` → atribut instance / resource / response sama persis
+  dengan commit DB (is_active=true). Tanpa perubahan schema/contract.
+
+## Frontend Fix
+- Tidak diperlukan (badge merender status yang diberikan API; API kini benar).
+
+## Verification / Regression
+- `PlocStatusRegressionTest` (baru): create tanpa is_active → DB is_active=true, response is_active=true,
+  list + detail + search konsisten → PASS. `ProjectLocationPersistenceTest` + `ProjectLocationApiTest` → PASS.
+- `php artisan test` → **465 passed (2602 assertions)**.
+- Frontend `vitest` → **146 passed (37 files)**; `tsc`/`npm run build` → PASS.
+
+## Final
+**FIXED.** CREATE: PASS · READ: PASS · UPDATE: PASS · DELETE: PASS (soft; NOT ALLOWED bila dipakai booking) ·
+REFRESH: PASS · NAVIGATION: PASS (list tak pernah di-filter is_active; record tetap tampil) ·
+OWNERSHIP: PASS (A/B).
