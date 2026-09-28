@@ -96,10 +96,25 @@ export const UserProjectLocationsPage: React.FC = () => {
     setIsSubmitting(true)
     try {
       if (editingLocation) {
-        await projectLocationService.updateLocation(editingLocation.id, formData)
+        const res = await projectLocationService.updateLocation(editingLocation.id, formData)
+        // No fake success: toast only when the backend confirms an id
+        if (!res?.data?.id) {
+          const invalid = new Error('Respons tidak valid dari server.')
+          ;(invalid as Error & { isInvalidResponse?: boolean }).isInvalidResponse = true
+          throw invalid
+        }
         showSuccessToast('Lokasi proyek berhasil diperbarui.')
       } else {
-        await projectLocationService.createLocation(formData)
+        const res = await projectLocationService.createLocation(formData)
+        // Persistence proof: created resource must carry its id back
+        if (!res?.data?.id) {
+          const invalid = new Error('Respons tidak valid dari server.')
+          ;(invalid as Error & { isInvalidResponse?: boolean }).isInvalidResponse = true
+          throw invalid
+        }
+        // Apply the freshly created record immediately (optimistic) so the list
+        // is never empty while the follow-up GET refetches the full page.
+        setLocations((prev) => [res.data!, ...prev.filter((l) => l.id !== res.data!.id)])
         showSuccessToast('Lokasi proyek berhasil didaftarkan.')
       }
       setIsModalOpen(false)
@@ -107,8 +122,10 @@ export const UserProjectLocationsPage: React.FC = () => {
     } catch (err: any) {
       if (err?.response?.data?.errors) {
         setErrors(err.response.data.errors)
+      } else if ((err as Error & { isInvalidResponse?: boolean })?.isInvalidResponse) {
+        showErrorToast('Lokasi tersimpan di server namun respons tidak valid. Muat ulang halaman untuk memastikan data tampil.')
       } else {
-        showErrorToast('Terjadi kesalahan saat menyimpan lokasi proyek.')
+        showErrorToast(err?.message || 'Terjadi kesalahan saat menyimpan lokasi proyek.')
       }
     } finally {
       setIsSubmitting(false)

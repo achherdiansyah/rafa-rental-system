@@ -148,3 +148,34 @@ Fungsi inti user 100% berjalan; tidak ada CRITICAL/HIGH. Lima item OPEN kategori
 - `tsc`, `npm run build`, oxlint → PASS, 0 error.
 
 Jumlah finding tetap 6 (5 FIXED + 1 INFORMATIONAL).
+
+---
+
+# Follow-up Fix — Project Location Persistence (repro & hardening)
+
+## Summary
+Post/repro raw API flow (register → login → POST → DB → GET list → GET detail → re-login refresh) proved the **backend, DB, ownership, and authorization layers are correct** — a created location always persists and is immediately returned by list/detail, and User B cannot read/update/delete User A's row (verified with the exact single Authorization header a browser sends via `withToken`). The remaining failure class was the **frontend mutation path**: success toast fired on HTTP 2xx without verifying the persisted payload, and list display depended on a follow-up fetch vulnerable to stale/race — a user could be told "berhasil didaftarkan" while the list still showed the empty state.
+
+## ROOT CAUSE (final)
+- Frontend (`UserProjectLocationsPage`): success toast without persistence proof; list refresh not guaranteed to beat stale in-flight responses.
+- Backend/DB: **no defect** (raw-flow proof test, 28 assertions).
+
+## Backend Fix
+- None required for logic. Added `ProjectLocationPersistenceTest` (raw `register`→`login`→`POST`→DB→`GET list`→`GET detail`→re-login refresh; A/B isolation; CRUD + safe delete) — 3 tests / 28 assertions, all PASS.
+- Additional finding during instrumentation: a suspected ownership "leak" was a **test-harness artifact** (session-level `defaultHeaders` pollution), not an app bug; rerun with per-request `withToken` resolved the correct user. No authorization change made.
+
+## Frontend Fix
+`frontend/src/features/project/pages/UserProjectLocationsPage.tsx`
+- Success toast ONLY after the create/update response carries a valid resource `id` (no fake success; invalid response → explicit toast, list untouched).
+- Create now **optimistically inserts** the returned record (dedup by id), so the list can never flash "empty" while the confirming GET runs.
+- Existing guarantees kept: single-source `useEffect` (`[debouncedSearch, currentPage]`) + `useLatestCall` stale-guard (no duplicate mount GET, no stale overwrite).
+
+## Verification
+- Backend `php artisan test` → **464 passed (2590 assertions)** (includes 3 new raw-flow tests).
+- Frontend `vitest` → **144 passed (36 files)**; `tsc`, `npm run build`, oxlint → PASS.
+- CRUD: CREATE/READ/UPDATE/DELETE(NOT ALLOWED bila dipakai booking, soft-delete aman) → PASS.
+- Ownership A/B → PASS. Refresh persistence (re-login) → PASS.
+- Database verification → PASS (row + user_id + deleted_at null + soft-delete semantics).
+
+## Final
+**FIXED.** Source of truth for stage where symptom used to appear: `POST → DB → GET → FRONTEND` — POST/DB/GET selalu benar; lapisan FRONTEND yang kini sudah di-hardening.
