@@ -1,7 +1,7 @@
 import type { EquipmentModel } from './equipment'
 import type { ProjectLocation } from './projectLocation'
 
-export type BookingStatus = 'DRAFT' | 'SUBMITTED' | 'PENDING_APPROVAL' | 'REJECTED' | 'APPROVED' | 'PAYMENT_PENDING' | 'CONFIRMED' | 'DISPATCHED' | 'ARRIVED' | 'ONGOING' | 'COMPLETED' | 'CANCELLED' | 'EXPIRED'
+export type BookingStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'REJECTED' | 'APPROVED' | 'PAYMENT_PENDING' | 'CONFIRMED' | 'DISPATCHED' | 'ARRIVED' | 'ONGOING' | 'COMPLETED' | 'CANCELLED' | 'EXPIRED'
 
 export interface BookingUnitAssignmentSummary {
   id: number

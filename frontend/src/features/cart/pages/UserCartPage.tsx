@@ -334,6 +334,10 @@ export const UserCartPage: React.FC = () => {
                       )}
                     </div>
 
+                    <p className="text-[11px] text-slate-400 mt-2">
+                      Harga indikatif sesuai tarif berlaku saat tampilan; tagihan akhir memakai snapshot tarif saat invoice diterbitkan.
+                    </p>
+
                     {/* Editable: quantity & dates */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
                       <Input

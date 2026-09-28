@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { authService } from '@/features/auth/services/authService'
 import type {
   AuthContextType,
@@ -23,13 +24,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setStatus('authenticated')
   }
 
-  const clearAuthSession = () => {
+  const clearAuthSession = useCallback(() => {
     localStorage.removeItem('rafa_token')
     localStorage.removeItem('rafa_user')
     setToken(null)
     setUser(null)
     setStatus('unauthenticated')
-  }
+  }, [])
 
   const refreshUser = useCallback(async (): Promise<AuthUser | null> => {
     const currentToken = localStorage.getItem('rafa_token')
@@ -62,6 +63,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initAuth()
   }, [refreshUser])
+
+  const navigate = useNavigate()
+
+  // API 401 (session expired / token invalid): clear session and redirect
+  // in-app (SPA), without a full-page reload.
+  useEffect(() => {
+    const onAuthExpired = () => {
+      clearAuthSession()
+      navigate('/login?expired=1', { replace: true })
+    }
+    window.addEventListener('rafa:auth-expired', onAuthExpired)
+    return () => window.removeEventListener('rafa:auth-expired', onAuthExpired)
+  }, [navigate, clearAuthSession])
 
   const login = async (credentials: LoginCredentials): Promise<AuthUser> => {
     const response = await authService.login(credentials)

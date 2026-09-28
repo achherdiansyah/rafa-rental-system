@@ -17,11 +17,14 @@ import { useToast } from '@/hooks/useToast'
 
 const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'success' | 'warning' | 'danger' | 'outline'> = {
   DRAFT: 'secondary',
-  SUBMITTED: 'warning',
   PENDING_APPROVAL: 'warning',
   APPROVED: 'default',
   PAYMENT_PENDING: 'default',
   CONFIRMED: 'success',
+  DISPATCHED: 'warning',
+  ARRIVED: 'secondary',
+  ONGOING: 'success',
+  COMPLETED: 'success',
   REJECTED: 'danger',
   CANCELLED: 'danger',
   EXPIRED: 'outline',
@@ -114,7 +117,7 @@ export const UserBookingsPage: React.FC = () => {
 
   const canCancel = (b: Booking) =>
     !b.payment_met_at &&
-    ['DRAFT', 'SUBMITTED', 'PENDING_APPROVAL', 'APPROVED', 'PAYMENT_PENDING'].includes(b.status)
+    ['DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'PAYMENT_PENDING'].includes(b.status)
 
   const canReschedule = (b: Booking) =>
     ['APPROVED', 'PAYMENT_PENDING', 'CONFIRMED'].includes(b.status)

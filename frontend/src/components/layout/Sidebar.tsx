@@ -7,6 +7,7 @@ export interface SidebarItem {
   label: string
   href: string
   icon: React.ReactNode
+  badge?: number
 }
 
 export interface SidebarProps {
@@ -55,7 +56,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ items, title, isOpen = false, 
               <span className={isActive ? 'text-primary-600' : 'text-slate-400'}>
                 {item.icon}
               </span>
-              {item.label}
+              <span className="flex-1 truncate">{item.label}</span>
+              {typeof item.badge === 'number' && item.badge > 0 && (
+                <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-bold text-white bg-rose-500">
+                  {item.badge > 99 ? '99+' : item.badge}
+                </span>
+              )}
             </Link>
           )
         })}

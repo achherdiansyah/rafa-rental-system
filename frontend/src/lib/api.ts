@@ -31,9 +31,10 @@ apiClient.interceptors.response.use(
       localStorage.removeItem('rafa_token')
       localStorage.removeItem('rafa_user')
 
-      // Auto redirect to login if not already there, preventing infinite loops
-      if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
-        window.location.href = '/login?expired=1'
+      // Let the AuthProvider handle session cleanup + in-app navigation.
+      // No full-page reload: keeps SPA state and prevents redirect loops.
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('rafa:auth-expired'))
       }
     }
 

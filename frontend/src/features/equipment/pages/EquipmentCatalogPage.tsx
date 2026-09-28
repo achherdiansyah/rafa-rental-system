@@ -75,7 +75,7 @@ export const EquipmentCatalogPage: React.FC = () => {
       <div>
         <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Katalog Armada Alat Berat</h2>
         <p className="text-sm text-slate-500">
-          Jelajahi spesifikasi alat berat, ketersediaan unit, dan informasi tarif sewa resmi
+          Jelajahi spesifikasi alat berat dan informasi tarif sewa resmi. Ketersediaan unit diverifikasi saat pemesanan.
         </p>
       </div>
 
