@@ -21,6 +21,10 @@ export const bankService = {
     const response = await api.put<BankAccount>(`/bank-accounts/${id}`, payload)
     return response.data
   },
+
+  deleteAccount: async (id: number): Promise<void> => {
+    await api.delete(`/bank-accounts/${id}`)
+  },
 }
 
 export default bankService

@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Plus, Edit2, Building2 } from 'lucide-react'
+import { Plus, Edit2, Trash2, Building2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/form/Input'
 import { Switch } from '@/components/form/Switch'
 import { Badge } from '@/components/ui/Badge'
 import { Modal } from '@/components/ui/Modal'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/data-display/Table'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/feedback/EmptyState'
@@ -32,6 +33,10 @@ export const AdminBankAccountsPage: React.FC = () => {
   const [isActive, setIsActive] = useState(true)
   const [formErrors, setFormErrors] = useState<Record<string, string[]>>({})
   const [isSaving, setIsSaving] = useState(false)
+
+  // Delete Dialog
+  const [deleteTarget, setDeleteTarget] = useState<BankAccount | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const fetchAccounts = useCallback(async () => {
     setIsLoading(true)
@@ -108,6 +113,22 @@ export const AdminBankAccountsPage: React.FC = () => {
     }
   }
 
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return
+    setIsDeleting(true)
+    try {
+      await bankService.deleteAccount(deleteTarget.id)
+      success(`Rekening ${deleteTarget.bank_name} (${deleteTarget.account_number}) berhasil dihapus.`)
+      setDeleteTarget(null)
+      fetchAccounts()
+    } catch (err) {
+      const apiErr = err as ApiError
+      toastError(apiErr.message || 'Gagal menghapus rekening bank perusahaan.')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -179,6 +200,16 @@ export const AdminBankAccountsPage: React.FC = () => {
                   >
                     <Edit2 size={14} />
                   </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-rose-600 hover:bg-rose-50"
+                    onClick={() => setDeleteTarget(acc)}
+                    aria-label={`Hapus rekening ${acc.bank_name}`}
+                    title="Hapus Rekening"
+                  >
+                    <Trash2 size={14} />
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -239,6 +270,18 @@ export const AdminBankAccountsPage: React.FC = () => {
           </div>
         </form>
       </Modal>
+
+      {/* CONFIRM DIALOG: DELETE */}
+      <ConfirmDialog
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+        title="Konfirmasi Hapus Rekening Bank"
+        message={`Apakah Anda yakin ingin menghapus rekening "${deleteTarget?.bank_name}" (${deleteTarget?.account_number})? Rekening yang sudah pernah dipakai transaksi pembayaran tidak dapat dihapus demi menjaga histori keuangan.`}
+        confirmText="Hapus Rekening"
+        variant="danger"
+        isLoading={isDeleting}
+      />
     </div>
   )
 }

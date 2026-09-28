@@ -83,6 +83,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('/{bankAccount}', [BankAccountController::class, 'show'])->name('show');
             Route::post('/', [BankAccountController::class, 'store'])->name('store');
             Route::put('/{bankAccount}', [BankAccountController::class, 'update'])->name('update');
+            Route::delete('/{bankAccount}', [BankAccountController::class, 'destroy'])->name('destroy');
         });
 
         // Project Locations (Customer project delivery destinations)

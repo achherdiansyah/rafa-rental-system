@@ -4,6 +4,7 @@ namespace Tests\Feature\Domain;
 
 use App\Enums\UserRole;
 use App\Models\BankAccount;
+use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -195,5 +196,68 @@ class BankAccountApiTest extends TestCase
         $this->putJson("/api/v1/bank-accounts/{$accountId}", [
             'bank_name' => 'Owner Bank Updated',
         ])->assertStatus(200);
+    }
+
+    public function test_user_cannot_delete_bank_account(): void
+    {
+        $user = User::factory()->create(['role' => UserRole::USER]);
+        $account = BankAccount::factory()->create();
+
+        Sanctum::actingAs($user);
+
+        $response = $this->deleteJson("/api/v1/bank-accounts/{$account->id}");
+
+        $response->assertStatus(403);
+        $this->assertDatabaseHas('bank_accounts', ['id' => $account->id]);
+    }
+
+    public function test_admin_can_delete_unused_bank_account(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $account = BankAccount::factory()->create([
+            'bank_name' => 'BCA Sementara',
+            'account_number' => 'DEL-UNUSED-01',
+        ]);
+
+        Sanctum::actingAs($admin);
+
+        $response = $this->deleteJson("/api/v1/bank-accounts/{$account->id}");
+
+        $response->assertStatus(200)
+            ->assertJson(['success' => true]);
+        $this->assertDatabaseMissing('bank_accounts', ['id' => $account->id]);
+    }
+
+    public function test_admin_cannot_delete_account_used_by_payment_and_history_survives(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $account = BankAccount::factory()->create([
+            'bank_name' => 'BCA Histori',
+            'account_number' => 'DEL-USED-01',
+        ]);
+
+        Payment::factory()->create(['bank_account_id' => $account->id]);
+
+        Sanctum::actingAs($admin);
+
+        $response = $this->deleteJson("/api/v1/bank-accounts/{$account->id}");
+
+        $response->assertStatus(409)
+            ->assertJson([
+                'success' => false,
+                'code' => 'BUSINESS_RULE_VIOLATION',
+            ]);
+
+        // Financial history intact — account still present, payment still linked
+        $this->assertDatabaseHas('bank_accounts', ['id' => $account->id]);
+        $this->assertDatabaseHas('payments', ['bank_account_id' => $account->id]);
+    }
+
+    public function test_admin_cannot_delete_missing_bank_account(): void
+    {
+        $admin = User::factory()->admin()->create();
+        Sanctum::actingAs($admin);
+
+        $this->deleteJson('/api/v1/bank-accounts/999999')->assertStatus(404);
     }
 }
