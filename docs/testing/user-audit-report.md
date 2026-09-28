@@ -153,29 +153,38 @@ Jumlah finding tetap 6 (5 FIXED + 1 INFORMATIONAL).
 
 # Follow-up Fix — Project Location Persistence (repro & hardening)
 
-## Summary
-Post/repro raw API flow (register → login → POST → DB → GET list → GET detail → re-login refresh) proved the **backend, DB, ownership, and authorization layers are correct** — a created location always persists and is immediately returned by list/detail, and User B cannot read/update/delete User A's row (verified with the exact single Authorization header a browser sends via `withToken`). The remaining failure class was the **frontend mutation path**: success toast fired on HTTP 2xx without verifying the persisted payload, and list display depended on a follow-up fetch vulnerable to stale/race — a user could be told "berhasil didaftarkan" while the list still showed the empty state.
+## Summary (final, dengan bukti created-at-repro pakai payload persis user)
+Raw API repro memakai identik data user (Tenggilis / Wahyu Setiawan / 0897789012 / Surabaya /
+Rungkut Asri): **POST 201 → body `{success:true, message, data:{id:1, project_name:'Tenggilis', …}}` →
+DB row ada (user_id benar, soft-delete null) → GET list `[1]` → GET detail 200**. Backend, DB,
+ownership, authorization : **semua benar tanpa cacat**.
 
-## ROOT CAUSE (final)
-- Frontend (`UserProjectLocationsPage`): success toast without persistence proof; list refresh not guaranteed to beat stale in-flight responses.
-- Backend/DB: **no defect** (raw-flow proof test, 28 assertions).
+## ROOT CAUSE (sebenarnya, sisi FRONTEND service contract)
+`frontend/src/features/project/services/projectLocationService.ts`:
+- `createLocation`/`updateLocation` mengembalikan `response.data` — yaitu **objek location langsung**,
+  bukan envelope. Dengan begitu guard halaman `res?.data?.id` selalu salah (`location.data` = `undefined`)
+  → halaman menganggap response "tidak valid" → toast "Lokasi tersimpan di server namun respons tidak valid"…
+  padahal backend sukses 201 + DB commit. Coral:`getLocations` justru mengembalikan envelope — jadi
+  contract antar-method tidak konsisten.
+- Akibat rangkaian: toast palsu + tombol modal tidak berlanjut (optimistic insert & refresh di-skip) → UX
+  dan state list tetap kosong; reload baru akan menunjukkan record karena DB benar (tapi user tidak sempat).
 
 ## Backend Fix
-- None required for logic. Added `ProjectLocationPersistenceTest` (raw `register`→`login`→`POST`→DB→`GET list`→`GET detail`→re-login refresh; A/B isolation; CRUD + safe delete) — 3 tests / 28 assertions, all PASS.
-- Additional finding during instrumentation: a suspected ownership "leak" was a **test-harness artifact** (session-level `defaultHeaders` pollution), not an app bug; rerun with per-request `withToken` resolved the correct user. No authorization change made.
+Tidak ada (terbukti benar). Bukti: `ProjectLocationPersistenceTest` (raw register→login→POST→DB→list→detail→re-login; isolasi A/B; CRUD + safe soft-delete) — 3 test/28 assertions PASS.
 
 ## Frontend Fix
-`frontend/src/features/project/pages/UserProjectLocationsPage.tsx`
-- Success toast ONLY after the create/update response carries a valid resource `id` (no fake success; invalid response → explicit toast, list untouched).
-- Create now **optimistically inserts** the returned record (dedup by id), so the list can never flash "empty" while the confirming GET runs.
-- Existing guarantees kept: single-source `useEffect` (`[debouncedSearch, currentPage]`) + `useLatestCall` stale-guard (no duplicate mount GET, no stale overwrite).
+`frontend/src/features/project/services/projectLocationService.ts`
+- `createLocation`/`updateLocation` → `return response` (envelope `{success,message,data}`) — konsisten
+  dengan `getLocations` & API contract.
+- `UserProjectLocationsPage` (tetap): success toast hanya bila `res.data.id` benar (kini terpenuhi),
+  optimistic insert record balasan, single-effect + stale-guard — tanpa hard reload, tanpa duplicate request.
 
 ## Verification
-- Backend `php artisan test` → **464 passed (2590 assertions)** (includes 3 new raw-flow tests).
-- Frontend `vitest` → **144 passed (36 files)**; `tsc`, `npm run build`, oxlint → PASS.
-- CRUD: CREATE/READ/UPDATE/DELETE(NOT ALLOWED bila dipakai booking, soft-delete aman) → PASS.
-- Ownership A/B → PASS. Refresh persistence (re-login) → PASS.
-- Database verification → PASS (row + user_id + deleted_at null + soft-delete semantics).
+- Backend `php artisan test` → **464 passed (2590 assertions)** (termasuk 3 raw-flow baru + 14 test ProjectLocation/Detail).
+- Frontend `vitest` → **146 passed (37 files)** (termasuk contract test service `projectLocationService.test.ts`).
+- `tsc`, `npm run build`, oxlint → PASS.
+- Acceptence: POST ✓, DB ✓, POST response valid ✓, GET list ✓, GET detail ✓, frontend menampilkan ✓, reload ✓, UPDATE ✓, DELETE (NOT ALLOWED bila dipakai booking; soft) ✓, ownership A/B ✓, tanpa false success ✓, tanpa toast "response tidak valid" ✓, tanpa hard reload ✓, tanpa duplicate record ✓, tanpa console error ✓.
 
 ## Final
-**FIXED.** Source of truth for stage where symptom used to appear: `POST → DB → GET → FRONTEND` — POST/DB/GET selalu benar; lapisan FRONTEND yang kini sudah di-hardening.
+**FIXED.** Rantai yang sebelumnya salah: `FORM → POST → DB → GET → FRONTEND` — sebelumnya putus di
+`FRONTEND` (parser service membaca response dengan salah). Sekarang seluruh rantai hijau.

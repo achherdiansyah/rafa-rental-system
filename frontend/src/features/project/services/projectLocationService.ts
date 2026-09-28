@@ -17,12 +17,14 @@ export const projectLocationService = {
 
   async createLocation(data: CreateProjectLocationInput): Promise<ApiResponse<ProjectLocation>> {
     const response = await api.post<ProjectLocation>('/project-locations', data)
-    return response.data as unknown as ApiResponse<ProjectLocation>
+    // api.post already resolves the envelope {success, message, data}; return it
+    // as-is so callers can read res.data.id (contract identical to getLocations).
+    return response
   },
 
   async updateLocation(id: number, data: UpdateProjectLocationInput): Promise<ApiResponse<ProjectLocation>> {
     const response = await api.put<ProjectLocation>(`/project-locations/${id}`, data)
-    return response.data as unknown as ApiResponse<ProjectLocation>
+    return response
   },
 
   async deleteLocation(id: number): Promise<ApiResponse<null>> {
