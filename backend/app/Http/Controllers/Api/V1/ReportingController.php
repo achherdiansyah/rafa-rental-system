@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Api\ApiController;
 use App\Models\User;
+use App\Services\Reports\OperationalReportService;
 use App\Services\Reports\ReportingQueryService;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -15,7 +17,8 @@ use Illuminate\Http\Request;
 class ReportingController extends ApiController
 {
     public function __construct(
-        private readonly ReportingQueryService $service
+        private readonly ReportingQueryService $service,
+        private readonly OperationalReportService $operational
     ) {}
 
     public function bookings(Request $request): JsonResponse
@@ -67,6 +70,74 @@ class ReportingController extends ApiController
         return $this->success(
             $this->service->dashboard($this->filters($request)),
             'Dashboard operasional berhasil dimuat.'
+        );
+    }
+
+    // ------------------------------------------------------------------
+    // Row-level operational reports (drillable, paginated, sortable)
+    // ------------------------------------------------------------------
+
+    public function operationalBookings(Request $request): JsonResponse
+    {
+        return $this->paginated(
+            $this->operational->bookingReport($this->filters($request), $this->scopeFor($request)),
+            'Laporan booking (operasional) berhasil dimuat.'
+        );
+    }
+
+    public function operationalTimesheets(Request $request): JsonResponse
+    {
+        return $this->paginated(
+            $this->operational->timesheetReport($this->filters($request), $this->scopeFor($request)),
+            'Laporan timesheet jam aktual berhasil dimuat.'
+        );
+    }
+
+    public function operationalRentals(Request $request): JsonResponse
+    {
+        return $this->paginated(
+            $this->operational->rentalUtilization($this->filters($request), $this->scopeFor($request)),
+            'Laporan utilasi rental berhasil dimuat.'
+        );
+    }
+
+    public function operationalActivity(Request $request): JsonResponse
+    {
+        return $this->paginated(
+            $this->operational->projectCustomerActivity($this->filters($request), $this->scopeFor($request)),
+            'Laporan aktivitas proyek/pelanggan berhasil dimuat.'
+        );
+    }
+
+    /**
+     * Equipment fleet report is cross-customer (ADMIN/OWNER only).
+     */
+    public function operationalEquipment(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        if (! $user->isAdmin() && ! $user->isOwner()) {
+            return $this->error('Akses ditolak.', [], 403, 'FORBIDDEN');
+        }
+
+        return $this->paginated(
+            $this->operational->equipmentReport($this->filters($request)),
+            'Laporan status armada berhasil dimuat.'
+        );
+    }
+
+    private function paginated(LengthAwarePaginator $paginated, string $message): JsonResponse
+    {
+        return $this->success(
+            $paginated->items(),
+            $message,
+            200,
+            [
+                'current_page' => $paginated->currentPage(),
+                'per_page' => $paginated->perPage(),
+                'total' => $paginated->total(),
+                'last_page' => $paginated->lastPage(),
+            ]
         );
     }
 

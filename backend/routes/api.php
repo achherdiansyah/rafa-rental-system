@@ -207,6 +207,11 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('/timesheet', [ReportingController::class, 'timesheet'])->name('timesheet');
             Route::get('/financial', [ReportingController::class, 'financial'])->name('financial');
             Route::get('/equipment-utilization', [ReportingController::class, 'equipmentUtilization'])->name('equipment-utilization');
+            Route::get('/operational/bookings', [ReportingController::class, 'operationalBookings'])->name('operational.bookings');
+            Route::get('/operational/timesheets', [ReportingController::class, 'operationalTimesheets'])->name('operational.timesheets');
+            Route::get('/operational/rentals', [ReportingController::class, 'operationalRentals'])->name('operational.rentals');
+            Route::get('/operational/activity', [ReportingController::class, 'operationalActivity'])->name('operational.activity');
+            Route::get('/operational/equipment', [ReportingController::class, 'operationalEquipment'])->name('operational.equipment');
         });
 
         // Equipment Master Management (Admin/Owner)
