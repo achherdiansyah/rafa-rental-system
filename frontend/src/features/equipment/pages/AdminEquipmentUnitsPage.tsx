@@ -11,14 +11,17 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 import { Pagination } from '@/components/data-display/Pagination'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/feedback/EmptyState'
+import { ErrorState } from '@/components/feedback/ErrorState'
 import { useToast } from '@/hooks/useToast'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useLatestCall } from '@/hooks/useLatestCall'
 import { equipmentService } from '../services/equipmentService'
 import type { EquipmentUnit, EquipmentModel, EquipmentStatus } from '@/types/equipment'
 import type { ApiError, PaginationMeta } from '@/types/api'
 
 export const AdminEquipmentUnitsPage: React.FC = () => {
   const { success, error: toastError } = useToast()
+  const { run } = useLatestCall()
 
   const [units, setUnits] = useState<EquipmentUnit[]>([])
   const [modelsList, setModelsList] = useState<EquipmentModel[]>([])
@@ -28,6 +31,7 @@ export const AdminEquipmentUnitsPage: React.FC = () => {
   const [filterModel, setFilterModel] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   // --- Form Modal State ---
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -61,22 +65,27 @@ export const AdminEquipmentUnitsPage: React.FC = () => {
 
   const fetchUnits = useCallback(async (page: number = 1) => {
     setIsLoading(true)
+    setHasError(false)
     try {
-      const res = await equipmentService.getUnits({
-        page,
-        per_page: 10,
-        search: debouncedSearch || undefined,
-        equipment_model_id: filterModel ? Number(filterModel) : undefined,
-        status: filterStatus || undefined,
+      const out = await run(async () => {
+        const res = await equipmentService.getUnits({
+          page,
+          per_page: 10,
+          search: debouncedSearch || undefined,
+          equipment_model_id: filterModel ? Number(filterModel) : undefined,
+          status: filterStatus || undefined,
+        })
+        setUnits(res.data || [])
+        if (res.meta) setMeta(res.meta)
       })
-      setUnits(res.data || [])
-      if (res.meta) setMeta(res.meta)
-    } catch {
-      toastError('Gagal memuat daftar unit fisik armada.')
-    } finally {
+      if (out === null) return // stale request — request terbaru yang mengelola UI
       setIsLoading(false)
+    } catch {
+      setHasError(true)
+      setIsLoading(false)
+      toastError('Gagal memuat daftar unit fisik armada.')
     }
-  }, [debouncedSearch, filterModel, filterStatus, toastError])
+  }, [debouncedSearch, filterModel, filterStatus, toastError, run])
 
   useEffect(() => {
     fetchModelsList()
@@ -270,6 +279,12 @@ export const AdminEquipmentUnitsPage: React.FC = () => {
       {/* Table Content */}
       {isLoading ? (
         <TableSkeleton rows={5} cols={6} />
+      ) : hasError ? (
+        <ErrorState
+          title="Gagal memuat data"
+          message="Daftar unit fisik armada tidak bisa dimuat. Periksa koneksi lalu coba lagi."
+          onRetry={() => fetchUnits(meta.current_page)}
+        />
       ) : units.length === 0 ? (
         <EmptyState
           icon={<Truck size={24} />}

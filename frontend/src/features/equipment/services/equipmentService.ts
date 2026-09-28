@@ -17,6 +17,7 @@ import type {
   EquipmentModelFilterParams,
   EquipmentUnitFilterParams,
   EquipmentPriceFilterParams,
+  EquipmentAttachment,
 } from '@/types/equipment'
 
 export const equipmentService = {
@@ -77,15 +78,25 @@ export const equipmentService = {
     await api.delete(`/equipment/models/${id}`)
   },
 
-  uploadModelPhoto: async (modelId: number, file: File): Promise<void> => {
+  uploadModelPhoto: async (modelId: number, file: File): Promise<EquipmentAttachment> => {
     const formData = new FormData()
     formData.append('photo', file)
 
-    await api.post(`/equipment/models/${modelId}/photos`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
+    const res = await api.post<ApiResponse<EquipmentAttachment>>(
+      `/equipment/models/${modelId}/photos`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    )
+
+    if (!res.data?.data) {
+      throw new Error('Upload berhasil tetapi respons tidak valid.')
+    }
+
+    return res.data.data
   },
 
   deleteModelPhoto: async (modelId: number, attachmentId: number): Promise<void> => {

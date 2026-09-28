@@ -136,7 +136,7 @@ export const EquipmentCatalogPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {models.map((model) => {
               const lowestRate = getLowestPrice(model)
-              const primaryPhoto = model.attachments?.[0]?.url
+              const primaryPhoto = model.attachments?.find((a) => a.url)?.url
 
               return (
                 <Card key={model.id} className="overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow">

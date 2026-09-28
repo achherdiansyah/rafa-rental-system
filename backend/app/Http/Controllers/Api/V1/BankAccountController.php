@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Bank\CreateBankAccountAction;
+use App\Actions\Bank\DeleteBankAccountAction;
 use App\Actions\Bank\UpdateBankAccountAction;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Requests\Bank\StoreBankAccountRequest;
@@ -69,5 +70,25 @@ class BankAccountController extends ApiController
         $updated = $action->execute($bankAccount, $request->validated());
 
         return $this->success(new BankAccountResource($updated), 'Data rekening bank perusahaan berhasil diperbarui.');
+    }
+
+    /**
+     * Delete an unused company bank account.
+     *
+     * Accounts already referenced by payments cannot be hard-deleted;
+     * the action throws a 409 BusinessRuleException keeping history intact.
+     */
+    public function destroy(Request $request, BankAccount $bankAccount, DeleteBankAccountAction $action): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        if (! $user->can('manage-bank-accounts')) {
+            return $this->forbidden('Anda tidak memiliki izin untuk menghapus rekening bank perusahaan.');
+        }
+
+        $action->execute($bankAccount);
+
+        return $this->success(null, 'Rekening bank perusahaan berhasil dihapus.');
     }
 }
