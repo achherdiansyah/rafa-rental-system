@@ -14,6 +14,8 @@ use App\Services\Refund\RefundLifecycleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\Response;
 
 class RefundController extends ApiController
 {
@@ -113,5 +115,27 @@ class RefundController extends ApiController
             new RefundResource($updated),
             'Refund ditandai gagal; riwayat tetap tersimpan.'
         );
+    }
+
+    /**
+     * Authorized stream of the refund transfer proof (private storage).
+     */
+    public function proof(Request $request, Refund $refund): Response
+    {
+        Gate::authorize('view', $refund);
+
+        $proof = $refund->attachments()->where('document_type', 'REFUND_PROOF')->first();
+        if (! $proof || ! Storage::disk('local')->exists($proof->file_path)) {
+            abort(404);
+        }
+
+        $content = Storage::disk('local')->get($proof->file_path);
+
+        return response($content, 200, [
+            'Content-Type' => $proof->mime_type,
+            'Content-Disposition' => 'inline; filename="'.$proof->file_name.'"',
+            'Content-Length' => (string) strlen($content),
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 }

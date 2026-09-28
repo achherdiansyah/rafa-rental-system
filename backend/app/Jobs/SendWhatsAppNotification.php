@@ -8,14 +8,18 @@ use App\Services\WhatsApp\WhatsAppGateway;
 use App\Services\WhatsApp\WhatsAppMessage;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Async WhatsApp delivery on the database queue. Logs SENT/FAILED for audit;
- * failures never bubble up (the system keeps running).
+ * failures never bubble up (the system keeps running). $tries = 1 makes the
+ * job fail-fast, so a later retry can never double-record a delivery.
  */
 class SendWhatsAppNotification implements ShouldQueue
 {
     use Queueable;
+
+    public int $tries = 1;
 
     public function __construct(
         private readonly WhatsAppMessage $message,
@@ -45,6 +49,11 @@ class SendWhatsAppNotification implements ShouldQueue
                 'sent_at' => $result['sent'] ? now() : null,
             ]);
         } catch (\Throwable $e) {
+            Log::warning('WHATSAPP_DELIVERY_ERROR '.($this->message->event ?? ''), [
+                'recipient_user_id' => $this->recipientUserId,
+                'provider' => $this->provider,
+                'error' => $e->getMessage(),
+            ]);
             NotificationDelivery::create([
                 'event' => $this->message->event,
                 'channel' => 'whatsapp',
