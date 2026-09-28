@@ -21,8 +21,9 @@ efisien dan otorisasi per role.
 | **12C** | Operational Reports (drillable rows, filter/paginate/sort, ARMADA admin-only) | Selesai (`cb58579`) |
 | **12D** | Financial Reports (invoice/payment/partial/outstanding/overpayment/refund, approved basis) | Selesai (`7257d06`) |
 | **12E** | Report Export (CSV streaming, filter-aware, scoped, chunked) | Selesai (`eba5154`) |
-| **12F** | Dashboard & Report UI (reusable explorer: filter/search/sort/pagi/detail/export) | Selesai (Aktif) |
-| 12G | Integration Testing & Final Review | Pending |
+| **12F** | Dashboard & Report UI (reusable explorer: filter/search/sort/pagi/detail/export) | Selesai (`e8a5ed9`) |
+| **12G** | Integration Testing & Review (KPI DB-match, N+1, immutability, export auth) | Selesai (Aktif) |
+| 12H | Final Review & Git Merge | Pending |
 
 ---
 
@@ -50,3 +51,6 @@ efisien dan otorisasi per role.
   finansial — komponen reusable `ReportExplorer` (tabs, filter, search, sort,
   pagination, detail, export CSV), tanpa waterfall/duplicate request,
   loading/empty/error, responsive & accessible.
+- `07-integration-test-report.md`: Laporan integrasi dashboard & reporting
+  (430 backend tests): KPI vs DB, filter/sort/pagination, export scoped, N+1
+  guard, dan non-mutasi transaksi.
