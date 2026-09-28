@@ -19,3 +19,15 @@ Schedule::command('invoices:expire')
     ->everyMinute()
     ->withoutOverlapping()
     ->appendOutputTo(storage_path('logs/scheduler.log'));
+
+// Phase 11E: outstanding reminder (idempotent — same-day guard inside command).
+Schedule::command('outstanding:remind')
+    ->dailyAt('07:30')
+    ->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/scheduler.log'));
+
+// Phase 13D: logical DB backup into private storage (daily).
+Schedule::command('db:backup')
+    ->dailyAt('01:00')
+    ->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/scheduler.log'));

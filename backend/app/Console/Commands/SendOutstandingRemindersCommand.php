@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\NotificationDelivery;
 use App\Models\User;
 use App\Services\Finance\CustomerOutstandingService;
 use App\Services\WhatsApp\WhatsAppNotifier;
@@ -29,6 +30,16 @@ class SendOutstandingRemindersCommand extends Command
             /** @var User|null $recipient */
             $recipient = User::find($customer['user_id']);
             if (! $recipient) {
+                continue;
+            }
+
+            // Same-day idempotency: avoid duplicate reminders per customer/day.
+            $alreadySent = NotificationDelivery::where('event', 'OUTSTANDING_REMINDER')
+                ->where('recipient_id', $recipient->id)
+                ->whereDate('created_at', today())
+                ->exists();
+
+            if ($alreadySent) {
                 continue;
             }
 

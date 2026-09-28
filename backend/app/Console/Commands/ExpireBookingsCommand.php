@@ -26,7 +26,9 @@ class ExpireBookingsCommand extends Command
                 $action->execute($booking);
                 $expiredCount++;
             } catch (\Throwable $e) {
-                // Deadline not yet passed or already satisfied — skip silently
+                Log::warning('AUDIT [BOOKING_EXPIRY_SKIP]: '.$e->getMessage(), [
+                    'booking_id' => $booking->id,
+                ]);
             }
         }
 

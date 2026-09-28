@@ -19,8 +19,9 @@ kesenjangan coverage aturan bisnis & authorization, lalu menyiapkan produksi
 | **13A** | Full Regression & Test Coverage (semua suite + matriks peran + golden path) | Selesai |
 | **13B** | Security Review & Hardening (token expiry, rate limits, error masking, upload throttle) | Selesai |
 | **13C** | Database & Performance Optimization (index jalur panas, N+1 guard, bundle review) | Selesai |
-| **13D** | File Storage & Data Integrity (private/authorized download, orphan audit, FK/unik, backup-restore) | Selesai (Aktif) |
-| 13E | Deployment & Operations (deploy blueprint, monitoring) | Pending |
+| **13D** | File Storage & Data Integrity (private/authorized download, orphan audit, FK/unik, backup-restore) | Selesai |
+| **13E** | Scheduler, Queue & Operational Reliability (cron shared hosting, idempotensi, logging) | Selesai (Aktif) |
+| 13F | Final QA Gate & Git Merge | Pending |
 | 13E | Final QA Gate & Git Merge | Pending |
 
 ---
@@ -40,3 +41,6 @@ kesenjangan coverage aturan bisnis & authorization, lalu menyiapkan produksi
   berotorisasi, nama file acak, validasi mime/ukuran, audit orphan tanpa
   penghapusan otomatis, integritas FK/unik, dan strategi backup/restore
   (`db:backup` + mysql restore + rsync storage).
+- `05-scheduler-queue-reliability.md`: Scheduler & reliability — jadwal cron
+  shared hosting, idempotensi expiry booking/invoice, guard reminder per hari,
+  job queue fail-fast tanpa duplikasi, logging failure.
