@@ -183,6 +183,34 @@ class ReportingQueryServiceTest extends TestCase
         $this->assertLessThan(5, $queries, 'Ringkasan harusnya agregat SQL tanpa N+1.');
     }
 
+    public function test_dashboard_bundles_kpis_and_equipment_counts(): void
+    {
+        $user = User::factory()->create();
+        $project = ProjectLocation::factory()->create(['user_id' => $user->id, 'project_name' => 'Proyek A']);
+        $this->bookingFor($user, BookingStatus::CONFIRMED->value, '2026-09-01');
+        $this->bookingFor($user, BookingStatus::DRAFT->value, '2026-09-02');
+        $this->approvedHours($user, $project, 8.0);
+        EquipmentUnit::factory()->create(['status' => 'AVAILABLE']);
+
+        $dashboard = app(ReportingQueryService::class)->dashboard(['from' => '2026-09-01', 'to' => '2026-09-30']);
+
+        $this->assertEquals(3, $dashboard['bookings']['total']);
+        $this->assertEquals(0, $dashboard['rentals']['active']);
+        $this->assertEqualsWithDelta(8.0, $dashboard['timesheet']['total_hours'], 0.001);
+        $this->assertEqualsWithDelta(8.0, $dashboard['equipment']['utilization_hours'], 0.001);
+        $this->assertArrayHasKey('fleet_total', $dashboard['equipment']);
+        $this->assertGreaterThanOrEqual(1, $dashboard['equipment']['available']);
+        $this->assertIsArray($dashboard['financial']['invoices']);
+        $this->assertIsArray($dashboard['outstanding']);
+
+        // Dashboard endpoint: admin-only
+        Sanctum::actingAs($user);
+        $this->getJson('/api/v1/reports/dashboard')->assertStatus(403);
+        $admin = User::factory()->admin()->create();
+        Sanctum::actingAs($admin);
+        $this->getJson('/api/v1/reports/dashboard')->assertOk()->assertJsonPath('data.bookings.total', 3);
+    }
+
     public function test_api_authorization_scopes_user_and_blocks_utilization(): void
     {
         $user = User::factory()->create();

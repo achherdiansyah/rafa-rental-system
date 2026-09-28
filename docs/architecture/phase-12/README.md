@@ -16,8 +16,8 @@ efisien dan otorisasi per role.
 
 | Subphase | Fokus | Status |
 |---|---|---|
-| **12A** | Reporting & Query Services (agregat SQL, filter, scoping, no N+1) | Selesai (Aktif) |
-| 12B | Dashboard UI (Admin/Owner + User) | Pending |
+| **12A** | Reporting & Query Services (agregat SQL, filter, scoping, no N+1) | Selesai (`ba767d8`) |
+| **12B** | Admin Dashboard (KPI bundle 1-request, filter periode, read-only) | Selesai (Aktif) |
 | 12C | Exports (CSV/PDF) | Pending |
 | 12D | Integration Testing & Final Review | Pending |
 
@@ -29,3 +29,6 @@ efisien dan otorisasi per role.
   (booking/equipment/rental/timesheet/invoice/payment/refund/outstanding),
   agregasi GROUP BY, filter from/to/status/customer/project/model/rental,
   scoping User/Admin/Owner, tanpa N+1 dan tanpa mutasi data transaksi.
+- `02-admin-dashboard.md`: Spesifikasi dashboard Admin/Owner — endpoint KPI
+  bundle satu-request (`/reports/dashboard`), KPI operasional & finansial,
+  trend per periode, tanpa kalkulasi di frontend.

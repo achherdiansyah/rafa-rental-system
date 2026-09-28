@@ -201,6 +201,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
         // Read-only Reporting (aggregates; business data never mutated)
         Route::prefix('reports')->name('reports.')->group(function () {
+            Route::get('/dashboard', [ReportingController::class, 'dashboard'])->name('dashboard');
             Route::get('/bookings', [ReportingController::class, 'bookings'])->name('bookings');
             Route::get('/rentals', [ReportingController::class, 'rentals'])->name('rentals');
             Route::get('/timesheet', [ReportingController::class, 'timesheet'])->name('timesheet');

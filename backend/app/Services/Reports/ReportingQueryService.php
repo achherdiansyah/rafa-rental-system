@@ -3,8 +3,10 @@
 namespace App\Services\Reports;
 
 use App\Enums\PaymentStatus;
+use App\Enums\RentalStatus;
 use App\Enums\TimesheetStatus;
 use App\Models\Booking;
+use App\Models\EquipmentUnit;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Refund;
@@ -278,6 +280,86 @@ class ReportingQueryService
                 'customer_count' => count($outstanding),
                 'total_outstanding' => array_sum(array_column($outstanding, 'total_outstanding')),
                 'customers' => $outstanding,
+            ],
+        ];
+    }
+
+    /**
+     * Physical equipment fleet status counts (admin/owner).
+     *
+     * @param  array<string, mixed>  $filters  unused (fleet snapshot)
+     */
+    public function equipmentStatusCounts(array $filters = []): array
+    {
+        $rows = EquipmentUnit::query()
+            ->select('status', DB::raw('COUNT(*) as total'))
+            ->groupBy('status')
+            ->orderBy('status')
+            ->get();
+
+        $counts = [];
+        $fleet = 0;
+        foreach ($rows as $row) {
+            $key = $this->statusValue($row->status);
+            $counts[$key] = (int) $row->total;
+            $fleet += (int) $row->total;
+        }
+
+        return [
+            'fleet_total' => $fleet,
+            'available' => $counts['AVAILABLE'] ?? 0,
+            'in_use' => ($counts['ON_SITE'] ?? 0) + ($counts['MOBILIZING'] ?? 0) + ($counts['DEMOBILIZING'] ?? 0) + ($counts['RETURN_INSPECTION'] ?? 0),
+            'maintenance' => $counts['MAINTENANCE'] ?? 0,
+            'by_status' => $counts,
+        ];
+    }
+
+    /**
+     * Single-payload admin/owner dashboard KPI bundle (one API request).
+     *
+     * @param  array<string, mixed>  $filters
+     */
+    public function dashboard(array $filters = []): array
+    {
+        $bookings = $this->bookingSummary($filters);
+        $rentals = $this->rentalSummary($filters);
+        $timesheet = $this->timesheetSummary($filters);
+        $utilization = $this->equipmentUtilization($filters);
+        $fleet = $this->equipmentStatusCounts();
+        $financial = $this->financialSummary($filters);
+
+        return [
+            'period' => $bookings['period'],
+            'bookings' => [
+                'total' => $bookings['total'],
+                'by_status' => $bookings['by_status'],
+            ],
+            'rentals' => [
+                'total' => $rentals['total'],
+                'active' => $rentals['by_status'][RentalStatus::ONGOING->value] ?? 0,
+                'by_status' => $rentals['by_status'],
+                'by_project' => $rentals['by_project'],
+            ],
+            'timesheet' => [
+                'total_hours' => $timesheet['total_hours'],
+                'by_month' => $timesheet['by_month'],
+            ],
+            'equipment' => [
+                'fleet_total' => $fleet['fleet_total'],
+                'available' => $fleet['available'],
+                'in_use' => $fleet['in_use'],
+                'maintenance' => $fleet['maintenance'],
+                'utilization_hours' => $utilization['total_hours'],
+                'top_models' => array_slice($utilization['by_model'], 0, 5),
+            ],
+            'financial' => [
+                'invoices' => $financial['invoices'],
+                'payments' => $financial['payments'],
+                'refunds' => $financial['refunds'],
+            ],
+            'outstanding' => [
+                'customer_count' => $financial['outstanding']['customer_count'],
+                'total' => $financial['outstanding']['total_outstanding'],
             ],
         ];
     }

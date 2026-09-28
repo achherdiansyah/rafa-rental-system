@@ -53,6 +53,23 @@ class ReportingController extends ApiController
     /**
      * Equipment utilization requires ADMIN/OWNER (cross-customer asset data).
      */
+    /**
+     * Single-payload admin/owner dashboard (minimises API requests).
+     */
+    public function dashboard(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        if (! $user->isAdmin() && ! $user->isOwner()) {
+            return $this->error('Akses ditolak.', [], 403, 'FORBIDDEN');
+        }
+
+        return $this->success(
+            $this->service->dashboard($this->filters($request)),
+            'Dashboard operasional berhasil dimuat.'
+        );
+    }
+
     public function equipmentUtilization(Request $request): JsonResponse
     {
         /** @var User $user */

@@ -21,7 +21,6 @@ const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 const ForbiddenPage = lazy(() => import('@/pages/ForbiddenPage'))
 const UnauthorizedPage = lazy(() => import('@/pages/UnauthorizedPage'))
 const UserPortalPlaceholder = lazy(() => import('@/pages/UserPortalPlaceholder'))
-const AdminPortalPlaceholder = lazy(() => import('@/pages/AdminPortalPlaceholder'))
 const OwnerPortalPlaceholder = lazy(() => import('@/pages/OwnerPortalPlaceholder'))
 const OwnerPricingPage = lazy(() => import('@/features/equipment/pages/OwnerPricingPage'))
 const AdminEquipmentMasterPage = lazy(() => import('@/features/equipment/pages/AdminEquipmentMasterPage'))
@@ -47,6 +46,7 @@ const AdminRefundsPage = lazy(() => import('@/features/refund/pages/AdminRefunds
 const AdminOutstandingPage = lazy(() => import('@/features/refund/pages/AdminOutstandingPage'))
 const UserNotificationsPage = lazy(() => import('@/features/notification/pages/UserNotificationsPage'))
 const AdminNotificationsPage = lazy(() => import('@/features/notification/pages/AdminNotificationsPage'))
+const AdminDashboardPage = lazy(() => import('@/features/reporting/pages/AdminDashboardPage'))
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -95,7 +95,7 @@ export const AppRoutes: React.FC = () => {
           {/* 3.2 Admin Portal (/admin/*) - Restricted to ADMIN and OWNER */}
           <Route element={<RoleRoute allowedRoles={['ADMIN', 'OWNER']} />}>
             <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminPortalPlaceholder />} />
+              <Route index element={<AdminDashboardPage />} />
               <Route path="equipment" element={<AdminEquipmentMasterPage />} />
               <Route path="units" element={<AdminEquipmentUnitsPage />} />
               <Route path="banks" element={<AdminBankAccountsPage />} />

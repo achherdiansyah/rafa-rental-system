@@ -80,7 +80,7 @@ describe('Route Guard & Access Control', () => {
     })
 
     expect(await screen.findByRole('heading', { name: /akses ditolak/i }, { timeout: 15000 })).toBeInTheDocument()
-    expect(screen.queryByText(/meja kerja operasional/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/dashboard operasional/i)).not.toBeInTheDocument()
   }, 20000)
 
   it('allows authenticated ADMIN to access /admin', async () => {
@@ -92,7 +92,8 @@ describe('Route Guard & Access Control', () => {
       isAuthenticated: true,
     })
 
-    expect(await screen.findByRole('heading', { name: /meja kerja operasional/i }, { timeout: 15000 })).toBeInTheDocument()
+expect(await screen.findByRole('heading', { name: /dashboard operasional/i }, {
+    timeout: 15000 })).toBeInTheDocument()
   }, 20000)
 
   it('blocks authenticated ADMIN from accessing /owner and redirects to /forbidden', async () => {
