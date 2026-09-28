@@ -18,8 +18,9 @@ kesenjangan coverage aturan bisnis & authorization, lalu menyiapkan produksi
 |---|---|---|
 | **13A** | Full Regression & Test Coverage (semua suite + matriks peran + golden path) | Selesai |
 | **13B** | Security Review & Hardening (token expiry, rate limits, error masking, upload throttle) | Selesai |
-| **13C** | Database & Performance Optimization (index jalur panas, N+1 guard, bundle review) | Selesai (Aktif) |
-| 13D | Deployment & Operations (deploy blueprint, backup, monitoring) | Pending |
+| **13C** | Database & Performance Optimization (index jalur panas, N+1 guard, bundle review) | Selesai |
+| **13D** | File Storage & Data Integrity (private/authorized download, orphan audit, FK/unik, backup-restore) | Selesai (Aktif) |
+| 13E | Deployment & Operations (deploy blueprint, monitoring) | Pending |
 | 13E | Final QA Gate & Git Merge | Pending |
 
 ---
@@ -35,3 +36,7 @@ kesenjangan coverage aturan bisnis & authorization, lalu menyiapkan produksi
 - `03-database-performance.md`: Optimasi DB — index jalur panas (status/date),
   guard N+1 pada list rental, konfirmasi jalur baca non-mutasi, review bundle
   frontend (442 backend tests).
+- `04-file-storage-integrity.md`: Audit storage — bukti privat + download
+  berotorisasi, nama file acak, validasi mime/ukuran, audit orphan tanpa
+  penghapusan otomatis, integritas FK/unik, dan strategi backup/restore
+  (`db:backup` + mysql restore + rsync storage).

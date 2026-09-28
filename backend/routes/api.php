@@ -178,6 +178,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::prefix('refunds')->name('refunds.')->group(function () {
             Route::get('/', [RefundController::class, 'index'])->name('index');
             Route::get('/{refund}', [RefundController::class, 'show'])->name('show');
+            Route::get('/{refund}/proof', [RefundController::class, 'proof'])->name('proof');
             Route::post('/{refund}/approve', [RefundController::class, 'approve'])->name('approve');
             Route::post('/{refund}/process', [RefundController::class, 'process'])->name('process');
             Route::post('/{refund}/complete', [RefundController::class, 'complete'])->name('complete')->middleware('throttle:file-upload');
