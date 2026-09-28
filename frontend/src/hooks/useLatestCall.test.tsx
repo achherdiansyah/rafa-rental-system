@@ -1,3 +1,4 @@
+import { StrictMode } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useLatestCall } from './useLatestCall'
@@ -56,5 +57,24 @@ describe('useLatestCall', () => {
     rejectOld(new Error('late failure'))
     await first // must NOT rethrow — this is the reported false-error bug
     expect(vi.fn()).not.toHaveBeenCalled()
+  })
+
+  it('stays mounted through StrictMode double-mount (no stuck loading)', async () => {
+    const { result } = renderHook(() => useLatestCall(), {
+      wrapper: ({ children }) => <StrictMode>{children}</StrictMode>,
+    })
+
+    // Under StrictMode the effect mounts → unmounts → remounts. The cleanup of
+    // the first mount must not permanently disable the hook, otherwise every
+    // run() returns null and callers never exit their loading branch.
+    const outcome = await act(async () => result.current.run(() => Promise.resolve('ok')))
+    expect(outcome).toBe('ok')
+
+    // The latest REAL failure must still surface after remount.
+    await act(async () => {
+      await expect(result.current.run(() => Promise.reject(new Error('real failure')))).rejects.toThrow(
+        'real failure'
+      )
+    })
   })
 })

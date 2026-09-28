@@ -19,6 +19,12 @@ export function useLatestCall(): {
     const seq = seqRef
     const mounted = mountedRef
 
+    // Re-assert mounted on EVERY effect run. StrictMode double-mounts in dev
+    // (mount#1 → cleanup → mount#2); without this reset, mount#1's cleanup
+    // leaves mounted=false and every later run() would return null forever,
+    // so stale-skip branches would never clear isLoading → stuck skeleton.
+    mounted.current = true
+
     return () => {
       mounted.current = false
       seq.current++ // invalidate any in-flight tail on unmount

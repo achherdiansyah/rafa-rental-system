@@ -45,6 +45,7 @@ const fmtValue = (v: unknown): string => {
 export const ReportExplorer: React.FC<ReportExplorerProps> = ({ title, subtitle, tabs, columnByTab }) => {
   const { error: showErrorToast } = useToast()
   const [active, setActive] = useState<ReportType>(tabs[0].key)
+  const [draft, setDraft] = useState({ from: '', to: '', status: '', customerId: '' })
   const [filters, setFilters] = useState({ from: '', to: '', status: '', customerId: '' })
   const [q, setQ] = useState('')
   const [page, setPage] = useState(1)
@@ -98,8 +99,10 @@ export const ReportExplorer: React.FC<ReportExplorerProps> = ({ title, subtitle,
   }
 
   const applyFilters = () => {
+    // Apply only on explicit action; typing in the inputs must NOT trigger a
+    // server refetch per keystroke (avoids duplicate requests + skeleton flicker).
+    setFilters(draft)
     setPage(1)
-    load()
   }
 
   const toggleSort = (col: ReportColumn) => {
@@ -177,12 +180,12 @@ export const ReportExplorer: React.FC<ReportExplorerProps> = ({ title, subtitle,
       </div>
 
       <div className="flex flex-wrap items-end gap-2">
-        <Input label="Dari" type="date" value={filters.from} onChange={(e) => setFilters((f) => ({ ...f, from: e.target.value }))} />
-        <Input label="Sampai" type="date" value={filters.to} onChange={(e) => setFilters((f) => ({ ...f, to: e.target.value }))} />
+        <Input label="Dari" type="date" value={draft.from} onChange={(e) => setDraft((f) => ({ ...f, from: e.target.value }))} />
+        <Input label="Sampai" type="date" value={draft.to} onChange={(e) => setDraft((f) => ({ ...f, to: e.target.value }))} />
         {activeTab.statusOptions && (
-          <Select label="Status" value={filters.status} onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value }))} options={activeTab.statusOptions} placeholder="Semua Status" />
+          <Select label="Status" value={draft.status} onChange={(e) => setDraft((f) => ({ ...f, status: e.target.value }))} options={activeTab.statusOptions} placeholder="Semua Status" />
         )}
-        <Input label="Customer ID" type="number" value={filters.customerId} onChange={(e) => setFilters((f) => ({ ...f, customerId: e.target.value }))} />
+        <Input label="Customer ID" type="number" value={draft.customerId} onChange={(e) => setDraft((f) => ({ ...f, customerId: e.target.value }))} />
         <Button variant="outline" size="sm" onClick={applyFilters}>
           Terapkan
         </Button>
