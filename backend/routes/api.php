@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\V1\ProjectLocationController;
 use App\Http\Controllers\Api\V1\RecommendationController;
 use App\Http\Controllers\Api\V1\RefundController;
 use App\Http\Controllers\Api\V1\RentalController;
+use App\Http\Controllers\Api\V1\ReportingController;
 use App\Http\Controllers\Api\V1\TimesheetController;
 use Illuminate\Support\Facades\Route;
 
@@ -196,6 +197,28 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('/deliveries', [NotificationController::class, 'deliveries'])->name('deliveries');
             Route::post('/read-all', [NotificationController::class, 'markAllRead'])->name('read-all');
             Route::post('/{notification}/read', [NotificationController::class, 'markRead'])->name('read');
+        });
+
+        // Read-only Reporting (aggregates; business data never mutated)
+        Route::prefix('reports')->name('reports.')->group(function () {
+            Route::get('/dashboard', [ReportingController::class, 'dashboard'])->name('dashboard');
+            Route::get('/bookings', [ReportingController::class, 'bookings'])->name('bookings');
+            Route::get('/rentals', [ReportingController::class, 'rentals'])->name('rentals');
+            Route::get('/timesheet', [ReportingController::class, 'timesheet'])->name('timesheet');
+            Route::get('/financial', [ReportingController::class, 'financial'])->name('financial');
+            Route::get('/equipment-utilization', [ReportingController::class, 'equipmentUtilization'])->name('equipment-utilization');
+            Route::get('/operational/bookings', [ReportingController::class, 'operationalBookings'])->name('operational.bookings');
+            Route::get('/operational/timesheets', [ReportingController::class, 'operationalTimesheets'])->name('operational.timesheets');
+            Route::get('/operational/rentals', [ReportingController::class, 'operationalRentals'])->name('operational.rentals');
+            Route::get('/operational/activity', [ReportingController::class, 'operationalActivity'])->name('operational.activity');
+            Route::get('/operational/equipment', [ReportingController::class, 'operationalEquipment'])->name('operational.equipment');
+            Route::get('/financial/invoices', [ReportingController::class, 'financialInvoices'])->name('financial.invoices');
+            Route::get('/financial/payments', [ReportingController::class, 'financialPayments'])->name('financial.payments');
+            Route::get('/financial/partials', [ReportingController::class, 'financialPartials'])->name('financial.partials');
+            Route::get('/financial/outstanding', [ReportingController::class, 'financialOutstanding'])->name('financial.outstanding');
+            Route::get('/financial/overpayments', [ReportingController::class, 'financialOverpayments'])->name('financial.overpayments');
+            Route::get('/financial/refunds', [ReportingController::class, 'financialRefunds'])->name('financial.refunds');
+            Route::get('/export/{type}', [ReportingController::class, 'export'])->name('export');
         });
 
         // Equipment Master Management (Admin/Owner)
