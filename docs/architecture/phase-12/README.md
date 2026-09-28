@@ -22,8 +22,34 @@ efisien dan otorisasi per role.
 | **12D** | Financial Reports (invoice/payment/partial/outstanding/overpayment/refund, approved basis) | Selesai (`7257d06`) |
 | **12E** | Report Export (CSV streaming, filter-aware, scoped, chunked) | Selesai (`eba5154`) |
 | **12F** | Dashboard & Report UI (reusable explorer: filter/search/sort/pagi/detail/export) | Selesai (`e8a5ed9`) |
-| **12G** | Integration Testing & Review (KPI DB-match, N+1, immutability, export auth) | Selesai (Aktif) |
-| 12H | Final Review & Git Merge | Pending |
+| **12G** | Integration Testing & Review (KPI DB-match, N+1, immutability, export auth) | Selesai (`156f965`) |
+| **12H** | Final Review, Quality Gate & Git Merge ke `main` | Selesai (merge), READY FOR PHASE 13 |
+
+---
+
+## 4. Final Review 12A–12G (Phase 12H)
+
+| Checklist | Status | Bukti |
+|---|---|---|
+| Reporting read-only (tanpa mutasi transaksi) | ✔ | service query murni; test non-mutasi |
+| Tidak ada business rule baru di laporan | ✔ | semua dari snapshot/sumber; komentar `ponytail:` utk kebijakan |
+| Financial report memakai approved payment | ✔ | `leftJoinSub` payments APPROVED; REJECTED dikecualikan (diuji) |
+| Historical transaction immutable | ✔ | laporan tidak menulis; nilai transaksi tetap (diuji) |
+| Authorization benar (User/Admin/Owner + scope) | ✔ | USER scoped; equipment/dashboard admin/owner; API 403 |
+| Query efisien, tanpa N+1 | ✔ | agregat SQL + guard query-count di test |
+| UI responsive & reusable | ✔ | `ReportExplorer` (tabs/filter/search/sort/page/detail/export); skeleton/empty/error |
+| Export aman | ✔ | scope otorisasi + filter aktif + hanya kolom whitelist; streaming chunk |
+| Tidak bergantung Redis/Docker utk production | ✔ | MySQL + sinkron/DB-queue; tanpa Redis/Horizon/MinIO |
+
+### Quality Gate 12H
+
+| Command | Hasil |
+|---|---|
+| `php artisan test` | **430 passed (2295 assertions)** |
+| `./vendor/bin/pint --test` | passed |
+| `npm run test` | **121 passed (30 files)** |
+| `npm run build` (tsc -b + vite) | sukses |
+| Static analysis (larastan/phpstan) | tidak tersedia di repo |
 
 ---
 
