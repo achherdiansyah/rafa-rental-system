@@ -55,7 +55,7 @@ export const EquipmentDetailPage: React.FC = () => {
   const allInPrice = model.prices?.find((p) => p.is_all_in)
   const nonAllInPrice = model.prices?.find((p) => !p.is_all_in)
 
-  const photos = model.attachments?.map((a) => a.url) || []
+  const photos = model.attachments?.map((a) => a.url).filter((u): u is string => Boolean(u)) || []
 
   return (
     <div className="space-y-6">

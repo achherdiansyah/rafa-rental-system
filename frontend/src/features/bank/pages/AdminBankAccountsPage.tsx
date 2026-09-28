@@ -279,6 +279,7 @@ export const AdminBankAccountsPage: React.FC = () => {
         title="Konfirmasi Hapus Rekening Bank"
         message={`Apakah Anda yakin ingin menghapus rekening "${deleteTarget?.bank_name}" (${deleteTarget?.account_number})? Rekening yang sudah pernah dipakai transaksi pembayaran tidak dapat dihapus demi menjaga histori keuangan.`}
         confirmText="Hapus Rekening"
+        cancelText="Batal"
         variant="danger"
         isLoading={isDeleting}
       />
