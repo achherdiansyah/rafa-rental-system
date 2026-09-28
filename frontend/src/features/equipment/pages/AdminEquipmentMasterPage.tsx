@@ -71,6 +71,7 @@ export const AdminEquipmentMasterPage: React.FC = () => {
   // --- Photo Management Modal State ---
   const [photoModalModel, setPhotoModalModel] = useState<EquipmentModel | null>(null)
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Fetch Types List (All for select options)
@@ -269,33 +270,94 @@ export const AdminEquipmentMasterPage: React.FC = () => {
     }
   }
 
-  // --- Photo Upload Handler ---
+  // --- Photo Upload Handler (select → local preview → upload === one request) ---
+  const ALLOWED_PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+  const MAX_PHOTO_SIZE_KB = 5120
+
+  const doUploadPhoto = useCallback(
+    async (file: File) => {
+      if (!photoModalModel) return
+      setIsUploadingPhoto(true)
+      try {
+        const attachment = await equipmentService.uploadModelPhoto(photoModalModel.id, file)
+        if (previewUrl) URL.revokeObjectURL(previewUrl)
+        setPreviewUrl(null)
+        success('Foto alat berat berhasil diunggah.')
+
+        // Prepend backend attachment so preview shows instantly (no full refetch needed)
+        setPhotoModalModel((current) =>
+          current
+            ? { ...current, attachments: [attachment, ...(current.attachments ?? [])] }
+            : current
+        )
+        fetchModels(modelMeta.current_page)
+      } catch (err) {
+        const apiErr = err as ApiError
+        toastError(apiErr.message || 'Gagal mengunggah foto.')
+      } finally {
+        setIsUploadingPhoto(false)
+        if (fileInputRef.current) fileInputRef.current.value = ''
+      }
+    },
+    [photoModalModel, previewUrl, success, toastError, fetchModels, modelMeta.current_page]
+  )
+
   const handleUploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !photoModalModel) return
 
-    setIsUploadingPhoto(true)
-    try {
-      await equipmentService.uploadModelPhoto(photoModalModel.id, file)
-      success('Foto alat berat berhasil diunggah.')
-      fetchModels(modelMeta.current_page)
-      // Close or refresh model state
-      setPhotoModalModel(null)
-    } catch (err) {
-      const apiErr = err as ApiError
-      toastError(apiErr.message || 'Gagal mengunggah foto.')
-    } finally {
-      setIsUploadingPhoto(false)
+    // Guard: never fire a second upload while one is still in-flight
+    if (isUploadingPhoto) {
       if (fileInputRef.current) fileInputRef.current.value = ''
+      return
     }
+
+    // Client-side validation (mirrors backend rules)
+    if (!ALLOWED_PHOTO_TYPES.includes(file.type)) {
+      toastError('Format foto tidak didukung. Gunakan JPG, PNG, atau WebP.')
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+    if (file.size > MAX_PHOTO_SIZE_KB * 1024) {
+      toastError('Ukuran foto maksimal 5 MB.')
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+
+    // Show local preview immediately from the object URL
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    const objectUrl = URL.createObjectURL(file)
+    setPreviewUrl(objectUrl)
+
+    await doUploadPhoto(file)
+  }
+
+  // Revoke any pending local object URL on unmount
+  useEffect(() => {
+    return () => {
+      setPreviewUrl((url) => {
+        if (url) URL.revokeObjectURL(url)
+        return null
+      })
+    }
+  }, [])
+
+  const handleOpenPhotoModal = (model: EquipmentModel) => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    setPreviewUrl(null)
+    setPhotoModalModel(model)
   }
 
   const handleDeletePhoto = async (modelId: number, attachmentId: number) => {
     try {
       await equipmentService.deleteModelPhoto(modelId, attachmentId)
       success('Foto berhasil dihapus.')
+      setPhotoModalModel((current) =>
+        current
+          ? { ...current, attachments: (current.attachments ?? []).filter((a) => a.id !== attachmentId) }
+          : current
+      )
       fetchModels(modelMeta.current_page)
-      setPhotoModalModel(null)
     } catch (err) {
       const apiErr = err as ApiError
       toastError(apiErr.message || 'Gagal menghapus foto.')
@@ -437,7 +499,7 @@ export const AdminEquipmentMasterPage: React.FC = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => setPhotoModalModel(model)}
+                          onClick={() => handleOpenPhotoModal(model)}
                           title="Kelola Foto Alat"
                           aria-label={`Kelola foto ${model.model_name}`}
                         >
@@ -704,7 +766,11 @@ export const AdminEquipmentMasterPage: React.FC = () => {
       {/* MODAL: PHOTO MANAGEMENT */}
       <Modal
         isOpen={!!photoModalModel}
-        onClose={() => setPhotoModalModel(null)}
+        onClose={() => {
+          if (previewUrl) URL.revokeObjectURL(previewUrl)
+          setPreviewUrl(null)
+          setPhotoModalModel(null)
+        }}
         title={`Foto Armada: ${photoModalModel?.brand} ${photoModalModel?.model_name}`}
         size="lg"
       >
@@ -724,6 +790,7 @@ export const AdminEquipmentMasterPage: React.FC = () => {
             <Button
               size="sm"
               isLoading={isUploadingPhoto}
+              disabled={isUploadingPhoto}
               onClick={() => fileInputRef.current?.click()}
               leftIcon={<Plus size={14} />}
             >
@@ -731,11 +798,39 @@ export const AdminEquipmentMasterPage: React.FC = () => {
             </Button>
           </div>
 
+          {/* Local preview: shown the moment a valid file is selected (before upload returns) */}
+          {previewUrl && (
+            <div className="relative rounded-xl border border-emerald-300 overflow-hidden bg-slate-100 aspect-video">
+              <img src={previewUrl} alt="Pratinjau foto baru" className="w-full h-full object-cover" />
+              {isUploadingPhoto && (
+                <div className="absolute inset-0 bg-slate-900/40 flex items-center justify-center">
+                  <div className="text-white text-sm font-medium bg-slate-900/60 px-3 py-1.5 rounded-lg">
+                    Mengunggah...
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-96 overflow-y-auto p-1">
             {photoModalModel?.attachments && photoModalModel.attachments.length > 0 ? (
               photoModalModel.attachments.map((att) => (
                 <div key={att.id} className="group relative rounded-xl border border-slate-200 overflow-hidden bg-slate-100 aspect-video">
-                  <img src={att.url} alt={att.file_name} className="w-full h-full object-cover" />
+                  {att.url ? (
+                    <img
+                      src={att.url}
+                      alt={att.file_name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // Never render a broken image tag when the file cannot be served
+                        ;(e.currentTarget as HTMLImageElement).style.display = 'none'
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-slate-400">
+                      <Image size={20} />
+                    </div>
+                  )}
                   <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-2">
                     <Button
                       variant="danger"
