@@ -218,6 +218,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('/financial/outstanding', [ReportingController::class, 'financialOutstanding'])->name('financial.outstanding');
             Route::get('/financial/overpayments', [ReportingController::class, 'financialOverpayments'])->name('financial.overpayments');
             Route::get('/financial/refunds', [ReportingController::class, 'financialRefunds'])->name('financial.refunds');
+            Route::get('/export/{type}', [ReportingController::class, 'export'])->name('export');
         });
 
         // Equipment Master Management (Admin/Owner)

@@ -54,8 +54,9 @@ trait FiltersAndPagination
             $query->orderBy($defaultKey, 'desc');
         }
 
-        $perPage = min(max((int) ($filters['per_page'] ?? 15), 1), 100);
+        $perPage = min(max((int) ($filters['per_page'] ?? 15), 1), 1000);
+        $page = max(1, (int) ($filters['page'] ?? 1));
 
-        return $query->paginate($perPage)->withQueryString();
+        return $query->paginate($perPage, ['*'], 'page', $page)->withQueryString();
     }
 }

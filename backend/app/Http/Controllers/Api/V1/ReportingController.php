@@ -10,6 +10,7 @@ use App\Services\Reports\ReportingQueryService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Read-only reporting endpoints. BUSINESS data is never mutated here.
@@ -193,6 +194,97 @@ class ReportingController extends ApiController
             $this->financial->refundReport($this->filters($request), $this->scopeFor($request)),
             'Laporan refund berhasil dimuat.'
         );
+    }
+
+    /**
+     * Stream the active-filtered report as CSV (Excel-friendly, UTF-8 BOM).
+     * Respects the same authorization scope; chunked via pagination (1..N).
+     * BUSINESS data is never mutated.
+     */
+    public function export(Request $request, string $type): StreamedResponse|JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        $scope = $this->scopeFor($request);
+
+        if ($type === 'equipment' && ! $user->isAdmin() && ! $user->isOwner()) {
+            return $this->error('Akses ditolak.', [], 403, 'FORBIDDEN');
+        }
+
+        $filters = $this->filters($request);
+        $filters['per_page'] = 500;
+
+        $listing = $this->listingResolver($type, $filters, $scope, $user);
+        if (! $listing) {
+            abort(404);
+        }
+
+        $filename = $this->exportFilename($type, $filters, $user);
+
+        return response()->streamDownload(function () use ($listing) {
+            $handle = fopen('php://output', 'w');
+            fwrite($handle, "\xEF\xBB\xBF"); // UTF-8 BOM for Excel
+            $headerWritten = false;
+
+            for ($page = 1; $page <= 100; $page++) {
+                $paginated = $listing($page);
+                $items = $paginated->items();
+                if (! $headerWritten && count($items) > 0) {
+                    fputcsv($handle, array_keys($items[0]));
+                    $headerWritten = true;
+                }
+                foreach ($items as $row) {
+                    fputcsv($handle, array_values($row));
+                }
+                if ($page >= $paginated->lastPage() || count($items) === 0) {
+                    break;
+                }
+            }
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
+    /**
+     * Resolve the row-level listing callback for a report type (filter+scope aware).
+     *
+     * @param  array<string, mixed>  $filters
+     * @return (callable(int): LengthAwarePaginator)|null
+     */
+    private function listingResolver(string $type, array $filters, ?int $scope, User $user): ?callable
+    {
+        $byType = [
+            'bookings' => fn (int $page) => $this->operational->bookingReport($filters + ['page' => $page], $scope),
+            'timesheets' => fn (int $page) => $this->operational->timesheetReport($filters + ['page' => $page], $scope),
+            'rentals' => fn (int $page) => $this->operational->rentalUtilization($filters + ['page' => $page], $scope),
+            'activity' => fn (int $page) => $this->operational->projectCustomerActivity($filters + ['page' => $page], $scope),
+            'invoices' => fn (int $page) => $this->financial->invoiceReport($filters + ['page' => $page], $scope),
+            'payments' => fn (int $page) => $this->financial->paymentReport($filters + ['page' => $page], $scope),
+            'partials' => fn (int $page) => $this->financial->partialReport($filters + ['page' => $page], $scope),
+            'outstanding' => fn (int $page) => $this->financial->outstandingReport($filters + ['page' => $page], $scope),
+            'overpayments' => fn (int $page) => $this->financial->overpaymentReport($filters + ['page' => $page], $scope),
+            'refunds' => fn (int $page) => $this->financial->refundReport($filters + ['page' => $page], $scope),
+        ];
+
+        if ($type === 'equipment') {
+            return fn (int $page) => $this->operational->equipmentReport($filters + ['page' => $page]);
+        }
+
+        return $byType[$type] ?? null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    private function exportFilename(string $type, array $filters, User $user): string
+    {
+        $from = isset($filters['from']) ? preg_replace('/[^0-9-]/', '', (string) $filters['from']) : 'open';
+        $to = isset($filters['to']) ? preg_replace('/[^0-9-]/', '', (string) $filters['to']) : 'open';
+
+        return sprintf('rafa-report-%s-%s-to-%s.csv', $type, $from, $to);
     }
 
     public function equipmentUtilization(Request $request): JsonResponse
