@@ -71,6 +71,7 @@ export const AdminEquipmentMasterPage: React.FC = () => {
   // --- Photo Management Modal State ---
   const [photoModalModel, setPhotoModalModel] = useState<EquipmentModel | null>(null)
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -270,43 +271,23 @@ export const AdminEquipmentMasterPage: React.FC = () => {
     }
   }
 
-  // --- Photo Upload Handler (select → local preview → upload === one request) ---
+  // --- Photo Upload Flow: select → local preview → [Simpan] → upload → persisted ---
   const ALLOWED_PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp']
   const MAX_PHOTO_SIZE_KB = 5120
 
-  const doUploadPhoto = useCallback(
-    async (file: File) => {
-      if (!photoModalModel) return
-      setIsUploadingPhoto(true)
-      try {
-        const attachment = await equipmentService.uploadModelPhoto(photoModalModel.id, file)
-        if (previewUrl) URL.revokeObjectURL(previewUrl)
-        setPreviewUrl(null)
-        success('Foto alat berat berhasil diunggah.')
+  const clearSelectedPhoto = useCallback(() => {
+    setPreviewUrl((url) => {
+      if (url) URL.revokeObjectURL(url)
+      return null
+    })
+    setSelectedFile(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }, [])
 
-        // Prepend backend attachment so preview shows instantly (no full refetch needed)
-        setPhotoModalModel((current) =>
-          current
-            ? { ...current, attachments: [attachment, ...(current.attachments ?? [])] }
-            : current
-        )
-        fetchModels(modelMeta.current_page)
-      } catch (err) {
-        const apiErr = err as ApiError
-        toastError(apiErr.message || 'Gagal mengunggah foto.')
-      } finally {
-        setIsUploadingPhoto(false)
-        if (fileInputRef.current) fileInputRef.current.value = ''
-      }
-    },
-    [photoModalModel, previewUrl, success, toastError, fetchModels, modelMeta.current_page]
-  )
-
-  const handleUploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Step 1 — picking a file only prepares a local preview; NO request is sent.
+  const handleSelectPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file || !photoModalModel) return
-
-    // Guard: never fire a second upload while one is still in-flight
+    if (!file) return
     if (isUploadingPhoto) {
       if (fileInputRef.current) fileInputRef.current.value = ''
       return
@@ -324,12 +305,42 @@ export const AdminEquipmentMasterPage: React.FC = () => {
       return
     }
 
-    // Show local preview immediately from the object URL
     if (previewUrl) URL.revokeObjectURL(previewUrl)
-    const objectUrl = URL.createObjectURL(file)
-    setPreviewUrl(objectUrl)
+    setPreviewUrl(URL.createObjectURL(file))
+    setSelectedFile(file)
+  }
 
-    await doUploadPhoto(file)
+  // Step 2 — Save persists via the EXISTING endpoint and reads its response
+  // envelope {success, message, data}. On success the backend URL replaces the
+  // local preview; on failure the local preview stays but nothing is saved.
+  const handleSavePhoto = async () => {
+    if (!selectedFile || !photoModalModel || isUploadingPhoto) return
+
+    setIsUploadingPhoto(true)
+    try {
+      const attachment = await equipmentService.uploadModelPhoto(photoModalModel.id, selectedFile)
+      success('Foto alat berat berhasil diunggah.')
+
+      // Prepend persisted attachment (from backend) so the stored image shows
+      setPhotoModalModel((current) =>
+        current
+          ? { ...current, attachments: [attachment, ...(current.attachments ?? [])] }
+          : current
+      )
+      clearSelectedPhoto()
+      fetchModels(modelMeta.current_page)
+    } catch (err) {
+      // Not saved — keep local preview so the user can retry
+      const apiErr = err as ApiError
+      toastError(apiErr.message || 'Gagal mengunggah foto.')
+    } finally {
+      setIsUploadingPhoto(false)
+    }
+  }
+
+  // Failed/abandoned selection → drop the pending file + object URL
+  const handleCancelPhotoSelection = () => {
+    clearSelectedPhoto()
   }
 
   // Revoke any pending local object URL on unmount
@@ -343,8 +354,7 @@ export const AdminEquipmentMasterPage: React.FC = () => {
   }, [])
 
   const handleOpenPhotoModal = (model: EquipmentModel) => {
-    if (previewUrl) URL.revokeObjectURL(previewUrl)
-    setPreviewUrl(null)
+    clearSelectedPhoto()
     setPhotoModalModel(model)
   }
 
@@ -767,8 +777,7 @@ export const AdminEquipmentMasterPage: React.FC = () => {
       <Modal
         isOpen={!!photoModalModel}
         onClose={() => {
-          if (previewUrl) URL.revokeObjectURL(previewUrl)
-          setPreviewUrl(null)
+          clearSelectedPhoto()
           setPhotoModalModel(null)
         }}
         title={`Foto Armada: ${photoModalModel?.brand} ${photoModalModel?.model_name}`}
@@ -784,12 +793,11 @@ export const AdminEquipmentMasterPage: React.FC = () => {
               type="file"
               ref={fileInputRef}
               accept="image/jpeg,image/png,image/webp"
-              onChange={handleUploadPhoto}
+              onChange={handleSelectPhoto}
               className="hidden"
             />
             <Button
               size="sm"
-              isLoading={isUploadingPhoto}
               disabled={isUploadingPhoto}
               onClick={() => fileInputRef.current?.click()}
               leftIcon={<Plus size={14} />}
@@ -798,17 +806,38 @@ export const AdminEquipmentMasterPage: React.FC = () => {
             </Button>
           </div>
 
-          {/* Local preview: shown the moment a valid file is selected (before upload returns) */}
-          {previewUrl && (
-            <div className="relative rounded-xl border border-emerald-300 overflow-hidden bg-slate-100 aspect-video">
-              <img src={previewUrl} alt="Pratinjau foto baru" className="w-full h-full object-cover" />
-              {isUploadingPhoto && (
-                <div className="absolute inset-0 bg-slate-900/40 flex items-center justify-center">
-                  <div className="text-white text-sm font-medium bg-slate-900/60 px-3 py-1.5 rounded-lg">
-                    Mengunggah...
+          {/* Local preview: shown as soon as a valid file is selected; saved only on Simpan */}
+          {previewUrl && selectedFile && (
+            <div className="rounded-xl border border-emerald-300 overflow-hidden bg-slate-100">
+              <div className="relative aspect-video">
+                <img src={previewUrl} alt="Pratinjau foto baru" className="w-full h-full object-cover" />
+                {isUploadingPhoto && (
+                  <div className="absolute inset-0 bg-slate-900/40 flex items-center justify-center">
+                    <div className="text-white text-sm font-medium bg-slate-900/60 px-3 py-1.5 rounded-lg">
+                      Mengunggah...
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+              <div className="flex items-center justify-end gap-2 p-3 border-t border-emerald-200 bg-white">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={isUploadingPhoto}
+                  onClick={handleCancelPhotoSelection}
+                >
+                  Batal
+                </Button>
+                <Button
+                  size="sm"
+                  isLoading={isUploadingPhoto}
+                  disabled={isUploadingPhoto}
+                  onClick={handleSavePhoto}
+                  leftIcon={<Plus size={14} />}
+                >
+                  Simpan
+                </Button>
+              </div>
             </div>
           )}
 
