@@ -1,0 +1,31 @@
+# Phase 12: Dashboard & Reporting — RAFA Rental System
+
+Dokumentasi lapisan laporan/dashboard dan akses data agregat.
+
+---
+
+## 1. Tujuan Phase 12
+
+Menyediakan laporan operasional & finansial read-only (booking, rental,
+timesheet, utilisasi armada, keuangan, outstanding) dengan query agregat yang
+efisien dan otorisasi per role.
+
+---
+
+## 2. Struktur Subphase
+
+| Subphase | Fokus | Status |
+|---|---|---|
+| **12A** | Reporting & Query Services (agregat SQL, filter, scoping, no N+1) | Selesai (Aktif) |
+| 12B | Dashboard UI (Admin/Owner + User) | Pending |
+| 12C | Exports (CSV/PDF) | Pending |
+| 12D | Integration Testing & Final Review | Pending |
+
+---
+
+## 3. Daftar Dokumen
+
+- `01-reporting-query.md`: Spesifikasi `ReportingQueryService` — sumber data
+  (booking/equipment/rental/timesheet/invoice/payment/refund/outstanding),
+  agregasi GROUP BY, filter from/to/status/customer/project/model/rental,
+  scoping User/Admin/Owner, tanpa N+1 dan tanpa mutasi data transaksi.

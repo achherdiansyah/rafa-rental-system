@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\V1\ProjectLocationController;
 use App\Http\Controllers\Api\V1\RecommendationController;
 use App\Http\Controllers\Api\V1\RefundController;
 use App\Http\Controllers\Api\V1\RentalController;
+use App\Http\Controllers\Api\V1\ReportingController;
 use App\Http\Controllers\Api\V1\TimesheetController;
 use Illuminate\Support\Facades\Route;
 
@@ -196,6 +197,15 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('/deliveries', [NotificationController::class, 'deliveries'])->name('deliveries');
             Route::post('/read-all', [NotificationController::class, 'markAllRead'])->name('read-all');
             Route::post('/{notification}/read', [NotificationController::class, 'markRead'])->name('read');
+        });
+
+        // Read-only Reporting (aggregates; business data never mutated)
+        Route::prefix('reports')->name('reports.')->group(function () {
+            Route::get('/bookings', [ReportingController::class, 'bookings'])->name('bookings');
+            Route::get('/rentals', [ReportingController::class, 'rentals'])->name('rentals');
+            Route::get('/timesheet', [ReportingController::class, 'timesheet'])->name('timesheet');
+            Route::get('/financial', [ReportingController::class, 'financial'])->name('financial');
+            Route::get('/equipment-utilization', [ReportingController::class, 'equipmentUtilization'])->name('equipment-utilization');
         });
 
         // Equipment Master Management (Admin/Owner)
