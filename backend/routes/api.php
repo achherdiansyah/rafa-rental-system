@@ -60,7 +60,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::post('/pricing/calculate', PricingCalculationController::class)->name('pricing.calculate');
 
     // 4. Authenticated Routes (Sanctum)
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         // Auth Session management
         Route::prefix('auth')->name('auth.')->group(function () {
             Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -144,7 +144,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::post('/', [TimesheetController::class, 'store'])->name('store');
             Route::get('/{timesheet}', [TimesheetController::class, 'show'])->name('show');
             Route::post('/{timesheet}/submit', [TimesheetController::class, 'submit'])->name('submit');
-            Route::post('/{timesheet}/signature', [TimesheetController::class, 'sign'])->name('signature');
+            Route::post('/{timesheet}/signature', [TimesheetController::class, 'sign'])->name('signature')->middleware('throttle:file-upload');
             Route::post('/{timesheet}/approve', [TimesheetController::class, 'approve'])->name('approve');
             Route::post('/{timesheet}/reject', [TimesheetController::class, 'reject'])->name('reject');
             Route::put('/{timesheet}/revise', [TimesheetController::class, 'revise'])->name('revise');
@@ -162,7 +162,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::post('/{invoice}/void', [InvoiceController::class, 'void'])->name('void');
             Route::post('/{invoice}/extend-deadline', [InvoiceController::class, 'extendDeadline'])->name('extend-deadline');
             Route::get('/{invoice}/payments', [PaymentController::class, 'index'])->name('payments.index');
-            Route::post('/{invoice}/payments', [PaymentController::class, 'store'])->name('payments.store');
+            Route::post('/{invoice}/payments', [PaymentController::class, 'store'])->name('payments.store')->middleware('throttle:file-upload');
         });
 
         // Payment detail & admin verification (single-param binding)
@@ -180,7 +180,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('/{refund}', [RefundController::class, 'show'])->name('show');
             Route::post('/{refund}/approve', [RefundController::class, 'approve'])->name('approve');
             Route::post('/{refund}/process', [RefundController::class, 'process'])->name('process');
-            Route::post('/{refund}/complete', [RefundController::class, 'complete'])->name('complete');
+            Route::post('/{refund}/complete', [RefundController::class, 'complete'])->name('complete')->middleware('throttle:file-upload');
             Route::post('/{refund}/fail', [RefundController::class, 'fail'])->name('fail');
         });
 
@@ -234,7 +234,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::delete('/models/{model}', [EquipmentModelController::class, 'destroy'])->name('models.destroy');
 
             // Equipment Media
-            Route::post('/models/{model}/photos', [EquipmentMediaController::class, 'uploadPhoto'])->name('models.photos.upload');
+            Route::post('/models/{model}/photos', [EquipmentMediaController::class, 'uploadPhoto'])->name('models.photos.upload')->middleware('throttle:file-upload');
             Route::delete('/models/{model}/photos/{attachment}', [EquipmentMediaController::class, 'deletePhoto'])->name('models.photos.delete');
 
             // Physical Equipment Units
