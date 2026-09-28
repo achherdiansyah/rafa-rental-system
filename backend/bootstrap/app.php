@@ -25,6 +25,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Trust HTTPS-terminating proxy (cPanel/AutoSSL) so Url::current() &
+        // generated asset URLs use https when behind ProxyPass / HTTPS.
+        $middleware->trustProxies(at: (string) env('TRUSTED_PROXIES', '*'));
+
         $middleware->alias([
             'role' => RequireRole::class,
         ]);

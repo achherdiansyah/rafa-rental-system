@@ -20,8 +20,9 @@ kesenjangan coverage aturan bisnis & authorization, lalu menyiapkan produksi
 | **13B** | Security Review & Hardening (token expiry, rate limits, error masking, upload throttle) | Selesai |
 | **13C** | Database & Performance Optimization (index jalur panas, N+1 guard, bundle review) | Selesai |
 | **13D** | File Storage & Data Integrity (private/authorized download, orphan audit, FK/unik, backup-restore) | Selesai |
-| **13E** | Scheduler, Queue & Operational Reliability (cron shared hosting, idempotensi, logging) | Selesai (Aktif) |
-| 13F | Final QA Gate & Git Merge | Pending |
+| **13E** | Scheduler, Queue & Operational Reliability (cron shared hosting, idempotensi, logging) | Selesai |
+| **13F** | cPanel Production Readiness (CORS, trust proxy, .env production template, checklist ops) | Selesai (Aktif) |
+| 13G | Final QA Gate & Git Merge | Pending |
 | 13E | Final QA Gate & Git Merge | Pending |
 
 ---
@@ -44,3 +45,7 @@ kesenjangan coverage aturan bisnis & authorization, lalu menyiapkan produksi
 - `05-scheduler-queue-reliability.md`: Scheduler & reliability — jadwal cron
   shared hosting, idempotensi expiry booking/invoice, guard reminder per hari,
   job queue fail-fast tanpa duplikasi, logging failure.
+- `06-cpanel-readiness.md` → `docs/deployment/cpanel-production-checklist.md`:
+  checklist kesiapan cPanel — docroot, .env production, APP_KEY/debug, storage
+  link, migration, cron scheduler/queue shared-host, config/route cache, CORS,
+  HTTPS/trust proxy, verifikasi pasca-deploy. Tanpa Docker/Node runtime/Redis.
