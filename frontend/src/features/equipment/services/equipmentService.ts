@@ -82,7 +82,7 @@ export const equipmentService = {
     const formData = new FormData()
     formData.append('photo', file)
 
-    const res = await api.post<ApiResponse<EquipmentAttachment>>(
+    const res = await api.post<EquipmentAttachment>(
       `/equipment/models/${modelId}/photos`,
       formData,
       {
@@ -92,11 +92,13 @@ export const equipmentService = {
       }
     )
 
-    if (!res.data?.data) {
+    // api.post already returns the unwrapped envelope {success, message, data},
+    // so `res.data` is the attachment itself — do NOT nest another `.data`.
+    if (!res.data || typeof res.data !== 'object') {
       throw new Error('Upload berhasil tetapi respons tidak valid.')
     }
 
-    return res.data.data
+    return res.data
   },
 
   deleteModelPhoto: async (modelId: number, attachmentId: number): Promise<void> => {
