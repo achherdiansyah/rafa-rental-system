@@ -9,7 +9,6 @@ import {
   fallbackBrand,
   fallbackHero,
   fallbackContent,
-  stats,
   categories,
   featuredFallback,
   benefits,
@@ -18,6 +17,54 @@ import {
 import type { EquipmentType, EquipmentModel } from '@/types/equipment'
 
 const idr = (n: number): string => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n || 0)
+
+const STATS: Array<{ count?: number; suffix?: string; staticText?: string; label: string }> = [
+  { count: 5, suffix: '+', label: 'Unit Alat Berat' },
+  { count: 30, suffix: '+', label: 'Proyek Terlayani' },
+  { count: 100, suffix: '%', label: 'Kualitas Terjaga' },
+  { staticText: '24/7', label: 'Dukungan Pelanggan' },
+]
+
+function CountUp({ value, suffix = '', duration = 1500 }: { value: number; suffix?: string; duration?: number }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  const [display, setDisplay] = useState(0)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    if (typeof IntersectionObserver === 'undefined') {
+      setDisplay(value) // non-browser environments (tests)
+      return
+    }
+    let raf = 0
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return
+        io.disconnect()
+        const start = performance.now()
+        const tick = (t: number) => {
+          const p = Math.min((t - start) / duration, 1)
+          setDisplay(Math.round(value * p))
+          if (p < 1) raf = requestAnimationFrame(tick)
+        }
+        raf = requestAnimationFrame(tick)
+      },
+      { threshold: 0.4 }
+    )
+    io.observe(el)
+    return () => {
+      io.disconnect()
+      cancelAnimationFrame(raf)
+    }
+  }, [value, duration])
+
+  return (
+    <span ref={ref}>
+      {display}
+      {suffix}
+    </span>
+  )
+}
 
 const CATEGORY_ICON = { Excavator: Truck, Bulldozer: Tractor, 'Wheel Loader': Container, 'Dump Truck': Truck, Crane: Wrench, Compactor: Box } as Record<string, typeof Truck>
 const categoryIcon = (name: string) => {
@@ -72,13 +119,13 @@ export const HomePage: React.FC = () => {
           loading="eager"
           decoding="async"
         />
-        <div className="absolute inset-0 bg-black/45" aria-hidden="true" />
+        <div className="absolute inset-0 bg-white/55" aria-hidden="true" />
         <div className="relative z-10 max-w-2xl pt-20 pb-28 pl-6 sm:pl-16 lg:pl-28 pr-6">
-          <p className="text-sm font-semibold tracking-wide text-white">{companyLabel}</p>
-          <h1 className="mt-4 text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.05]">
+          <p className="text-sm font-semibold tracking-wide text-slate-800">{companyLabel}</p>
+          <h1 className="mt-4 text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.05]">
             {heroTitle}
           </h1>
-          <p className="mt-5 text-lg text-slate-100 leading-relaxed max-w-xl">{heroSubtitle}</p>
+          <p className="mt-5 text-lg text-slate-700 leading-relaxed max-w-xl">{heroSubtitle}</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link to={ctaLink}>
               <Button size="lg" variant="accent" rightIcon={<ArrowRight size={18} />}>{ctaText}</Button>
@@ -90,12 +137,14 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* STATISTICS — lightweight strip */}
+      {/* STATISTICS — count-up strip */}
       <section className="border-y border-slate-200 bg-white py-12" aria-label="Statistik perusahaan">
         <div className="grid grid-cols-2 gap-y-10 lg:grid-cols-4 lg:divide-x lg:divide-slate-100">
-          {stats.map((s) => (
+          {STATS.map((s) => (
             <div key={s.label} className="text-center px-4">
-              <p className="text-4xl lg:text-5xl font-extrabold text-accent-500 tracking-tight">{s.value}</p>
+              <p className="text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight">
+                {s.staticText ?? <CountUp value={s.count ?? 0} suffix={s.suffix ?? ''} />}
+              </p>
               <p className="mt-2 text-sm font-medium uppercase tracking-wide text-slate-500">{s.label}</p>
             </div>
           ))}

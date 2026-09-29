@@ -70,15 +70,20 @@ describe('HomePage CMS sync', () => {
     expect(screen.queryByText('Gambar Armada')).not.toBeInTheDocument()
   })
 
-  it('renders the statistics strip using the specified constants', async () => {
+  it('renders the statistics strip with the specified constants (counting values)', async () => {
     vi.mocked(cmsService.getPublic).mockResolvedValue({})
 
     renderHome()
 
     expect(await screen.findByText('Unit Alat Berat')).toBeInTheDocument()
-    expect(screen.getByText('100+')).toBeInTheDocument()
     expect(screen.getByText('Proyek Terlayani')).toBeInTheDocument()
+    expect(screen.getByText('Kualitas Terjaga')).toBeInTheDocument()
     expect(screen.getByText('Dukungan Pelanggan')).toBeInTheDocument()
+    // numeric values animate to their targets + suffix
+    expect((await screen.findAllByText('5+')).length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByText('30+')).toBeInTheDocument()
+    expect(screen.getByText('100%')).toBeInTheDocument()
+    expect(screen.getByText('24/7')).toBeInTheDocument()
   })
 
   it('shows the featured-equipment fallback list when the API returns no data', async () => {
