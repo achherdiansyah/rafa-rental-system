@@ -309,42 +309,61 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* CONTACT — full-bleed dark card */}
-      <section id="contact" className="relative w-screen left-1/2 -translate-x-1/2 scroll-mt-24 bg-slate-900">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 space-y-10">
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Kontak</h2>
-            <p className="text-slate-400 text-sm">Hubungi kami untuk kebutuhan armada dan penawaran sewa terbaik.</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="space-y-2 text-center">
-              <div className="mx-auto w-11 h-11 rounded-xl bg-accent-500/15 text-accent-400 flex items-center justify-center"><MapPin size={20} /></div>
-              <h3 className="font-semibold text-white text-sm">Alamat</h3>
-              <p className="text-sm text-slate-400">{contact.address}</p>
+      {/* CONTACT — light, 2-col, selaras dgn footer */}
+      <section id="contact" className="scroll-mt-24 bg-white">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 lg:py-24 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
+          {/* LEFT — heading + CTA */}
+          <div className="space-y-6 max-w-xl">
+            <div className="space-y-3">
+              <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Hubungi Kami</h2>
+              <p className="text-slate-600 leading-relaxed">
+                Punya kebutuhan alat berat untuk proyek Anda? Hubungi tim RAFA Rental untuk mendapatkan informasi mengenai armada dan kebutuhan rental Anda.
+              </p>
             </div>
-            <div className="space-y-2 text-center">
-              <div className="mx-auto w-11 h-11 rounded-xl bg-accent-500/15 text-accent-400 flex items-center justify-center"><Phone size={20} /></div>
-              <h3 className="font-semibold text-white text-sm">Telepon</h3>
-              <p className="text-sm text-slate-400">{contact.phone}</p>
-            </div>
-            <div className="space-y-2 text-center">
-              <div className="mx-auto w-11 h-11 rounded-xl bg-accent-500/15 text-accent-400 flex items-center justify-center"><Mail size={20} /></div>
-              <h3 className="font-semibold text-white text-sm">Email</h3>
-              <p className="text-sm text-slate-400 break-all">{contact.email}</p>
-            </div>
-            <div className="space-y-2 text-center">
-              <div className="mx-auto w-11 h-11 rounded-xl bg-accent-500/15 text-accent-400 flex items-center justify-center"><Clock size={20} /></div>
-              <h3 className="font-semibold text-white text-sm">Jam Operasional</h3>
-              <p className="text-sm text-slate-400">{contact.hours}</p>
-            </div>
-          </div>
-          <div className="flex flex-wrap justify-center gap-3">
             <a href={contact.waLink} target="_blank" rel="noreferrer" className="inline-block">
-              <Button size="lg" variant="accent" leftIcon={<MessageCircle size={18} />}>{contact.waText}</Button>
+              <Button size="lg" leftIcon={<MessageCircle size={18} />}>Hubungi via WhatsApp</Button>
             </a>
-            <Link to="/register">
-              <Button variant="outline" size="lg" className="border-slate-700 bg-white/5 text-white hover:bg-white/10 hover:text-white">Daftar Sekarang</Button>
-            </Link>
+          </div>
+
+          {/* RIGHT — info kontak */}
+          <div className="lg:pt-4">
+            <div className="divide-y divide-slate-100">
+              <div className="flex items-center gap-4 py-4">
+                <MapPin size={18} className="text-accent-500 shrink-0" />
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Alamat</p>
+                  <p className="text-sm text-slate-700 mt-0.5">{contact.address}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 py-4">
+                <Phone size={18} className="text-accent-500 shrink-0" />
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Telepon</p>
+                  <p className="text-sm text-slate-700 mt-0.5">{contact.phone}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 py-4">
+                <MessageCircle size={18} className="text-accent-500 shrink-0" />
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-400">WhatsApp</p>
+                  <p className="text-sm text-slate-700 mt-0.5">{contact.whatsapp}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 py-4">
+                <Mail size={18} className="text-accent-500 shrink-0" />
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Email</p>
+                  <p className="text-sm text-slate-700 mt-0.5 break-all">{contact.email}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 py-4">
+                <Clock size={18} className="text-accent-500 shrink-0" />
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Jam Operasional</p>
+                  <p className="text-sm text-slate-700 mt-0.5">{contact.hours}</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
