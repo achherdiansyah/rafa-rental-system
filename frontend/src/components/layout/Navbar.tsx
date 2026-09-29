@@ -11,6 +11,13 @@ export interface NavbarProps {
   showMenuToggle?: boolean
 }
 
+const DEFAULT_MENU: Array<{ label: string; href: string }> = [
+  { label: 'Beranda', href: '/' },
+  { label: 'Equipment', href: '/#equipment' },
+  { label: 'Tentang Kami', href: '/#about' },
+  { label: 'Kontak', href: '/#contact' },
+]
+
 export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = false }) => {
   const { user, isAuthenticated, logout } = useAuth()
   const cms = useCms()
@@ -55,15 +62,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = f
         </div>
 
         <nav className="flex items-center gap-2 sm:gap-4">
-          {cmsMenu.length > 0 && (
-            <div className="hidden md:flex items-center gap-4 mr-2">
-              {cmsMenu.map((m) => (
-                <Link key={m.href} to={m.href} className="text-sm font-medium text-slate-600 hover:text-slate-900">
-                  {m.label}
-                </Link>
-              ))}
-            </div>
-          )}
+          <div className="hidden md:flex items-center gap-6 mr-2">
+            {(cmsMenu.length > 0 ? cmsMenu : DEFAULT_MENU).map((m) => (
+              <Link key={m.href} to={m.href} className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
+                {m.label}
+              </Link>
+            ))}
+          </div>
           {isAuthenticated && user ? (
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="flex items-center gap-2 text-sm text-slate-700">
@@ -100,10 +105,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = f
           ) : (
             <div className="flex items-center gap-2">
               <Link to="/login">
-                <Button variant="ghost" size="sm">Login</Button>
+                <Button variant="ghost" size="sm">Masuk</Button>
               </Link>
               <Link to="/register">
-                <Button variant="primary" size="sm">Register</Button>
+                <Button variant="primary" size="sm">Daftar</Button>
               </Link>
             </div>
           )}

@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/useToast'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useLatestCall } from '@/hooks/useLatestCall'
 import { useAuth } from '@/hooks/useAuth'
+import { PageHeader } from '@/components/ui/PageHeader'
 
 export const UserProjectLocationsPage: React.FC = () => {
   const { success: showSuccessToast, error: showErrorToast } = useToast()
@@ -188,16 +189,16 @@ export const UserProjectLocationsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Lokasi Proyek</h2>
-          <p className="text-sm text-slate-500">Kelola daftar lokasi pengerjaan proyek untuk pengiriman armada.</p>
-        </div>
-        <Button onClick={openCreateModal} className="gap-2 shrink-0">
-          <Plus size={16} />
-          Tambah Lokasi Baru
-        </Button>
-      </div>
+      <PageHeader
+        title="Lokasi Proyek"
+        subtitle="Kelola daftar lokasi pengerjaan proyek untuk pengiriman armada."
+        actions={
+          <Button onClick={openCreateModal} className="gap-2 shrink-0">
+            <Plus size={16} />
+            Tambah Lokasi Baru
+          </Button>
+        }
+      />
 
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row gap-3">

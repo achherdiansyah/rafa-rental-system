@@ -4,9 +4,14 @@ import { MemoryRouter } from 'react-router-dom'
 import { HomePage } from './HomePage'
 import { CmsProvider } from '@/features/cms/CmsContext'
 import { cmsService } from '@/features/cms/services/cmsService'
+import { equipmentService } from '@/features/equipment/services/equipmentService'
 
 vi.mock('@/features/cms/services/cmsService', () => ({
   cmsService: { getPublic: vi.fn() },
+}))
+
+vi.mock('@/features/equipment/services/equipmentService', () => ({
+  equipmentService: { getTypes: vi.fn() },
 }))
 
 const renderHome = () =>
@@ -19,7 +24,14 @@ const renderHome = () =>
   )
 
 describe('HomePage CMS sync', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(equipmentService.getTypes).mockResolvedValue({
+      success: true,
+      message: 'ok',
+      data: [],
+    } as never)
+  })
 
   it('renders admin-set hero content from the public CMS API (no defaults)', async () => {
     vi.mocked(cmsService.getPublic).mockResolvedValue({
@@ -35,7 +47,7 @@ describe('HomePage CMS sync', () => {
     expect(await screen.findByText('Sewa Alat Profesional')).toBeInTheDocument()
     expect(screen.getByText('Subtitle dari CMS')).toBeInTheDocument()
     expect(screen.getByText('Mulai Sekarang')).toBeInTheDocument()
-    const img = screen.getByAltText('Hero RAFA Rental') as HTMLImageElement
+    const img = screen.getByAltText('Armada alat berat') as HTMLImageElement
     expect(img.src).toContain('/storage/cms/hero.png')
   })
 
@@ -44,7 +56,7 @@ describe('HomePage CMS sync', () => {
 
     renderHome()
 
-    expect(await screen.findByText(/Sewa Armada Alat Berat Mudah, Akurat & Transparan/)).toBeInTheDocument()
-    expect(screen.getByText('Mulai Sewa Sekarang')).toBeInTheDocument()
+    expect(await screen.findByText('Sewa Alat Berat untuk Proyek Anda')).toBeInTheDocument()
+    expect(screen.getByText('Cari Equipment')).toBeInTheDocument()
   })
 })

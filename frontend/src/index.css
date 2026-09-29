@@ -29,6 +29,27 @@
   --color-slate-800: #1e293b;
   --color-slate-900: #0f172a;
   --color-slate-950: #020617;
+
+  /* Accent — gold for highlight / selected CTA emphasis */
+  --color-accent-50: #fffbeb;
+  --color-accent-100: #fef3c7;
+  --color-accent-200: #fde68a;
+  --color-accent-300: #fcd34d;
+  --color-accent-400: #fbbf24;
+  --color-accent-500: #f59e0b;
+  --color-accent-600: #d97706;
+  --color-accent-700: #b45309;
+
+  /* Design system radii (moderate, corporate) */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  /* Soft card shadows */
+  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 1px 3px rgb(15 23 42 / 0.04);
+  --shadow-card-hover: 0 4px 12px rgb(15 23 42 / 0.07);
+  --shadow-btn: 0 1px 2px rgb(15 23 42 / 0.08);
 }
 
 :root {
@@ -41,10 +62,32 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background-color: var(--color-slate-50);
+  background-color: #fafbfc;
   color: var(--color-slate-900);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Unified card surface (white + thin border + soft shadow + moderate radius) */
+.card-surface {
+  background: #ffffff;
+  border: 1px solid var(--color-slate-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+/* Subtle interaction */
+.card-surface.hoverable:hover {
+  box-shadow: var(--shadow-card-hover);
+  border-color: var(--color-slate-300);
+}
+
+/* Section heading rhythm */
+.page-title {
+  @apply text-2xl font-bold tracking-tight text-slate-900;
+}
+.page-subtitle {
+  @apply text-sm text-slate-500 mt-1;
 }
 
 /* Accessible focus ring */
