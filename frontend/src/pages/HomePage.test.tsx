@@ -47,16 +47,19 @@ describe('HomePage CMS sync', () => {
     expect(await screen.findByText('Sewa Alat Profesional')).toBeInTheDocument()
     expect(screen.getByText('Subtitle dari CMS')).toBeInTheDocument()
     expect(screen.getByText('Mulai Sekarang')).toBeInTheDocument()
-    const img = screen.getByAltText('Armada alat berat') as HTMLImageElement
+    const img = screen.getByAltText('Armada alat berat RAFA Rental') as HTMLImageElement
     expect(img.src).toContain('/storage/cms/hero.png')
   })
 
-  it('falls back to defaults when CMS is empty', async () => {
+  it('falls back to defaults + local hero asset when CMS is empty', async () => {
     vi.mocked(cmsService.getPublic).mockResolvedValue({})
 
     renderHome()
 
     expect(await screen.findByText('Sewa Alat Berat untuk Proyek Anda')).toBeInTheDocument()
     expect(screen.getByText('Cari Equipment')).toBeInTheDocument()
+    const img = screen.getByAltText('Armada alat berat RAFA Rental') as HTMLImageElement
+    expect(img.src).toContain('hero-equipment.svg')
+    expect(screen.queryByText('Gambar Armada')).not.toBeInTheDocument()
   })
 })

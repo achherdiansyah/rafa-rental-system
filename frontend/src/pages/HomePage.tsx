@@ -27,26 +27,29 @@ export const HomePage: React.FC = () => {
     }
   }, [])
 
-  const companyLabel = cms.brand_name || 'RAFA Rental'
+  const companyLabel = cms.brand_name || 'CV SUMBER MAKMUR RAFA'
   const heroTitle = cms.hero_title || 'Sewa Alat Berat untuk Proyek Anda'
   const heroSubtitle =
-    cms.hero_subtitle || 'Solusi penyewaan alat berat berkualitas dengan proses mudah, cepat, dan terpercaya.'
+    cms.hero_subtitle ||
+    'Solusi penyewaan alat berat untuk kebutuhan konstruksi, pertambangan, dan pekerjaan lapangan dengan proses yang praktis dan terpercaya.'
   const ctaText = cms.hero_cta_text || 'Cari Equipment'
-  const ctaLink = cms.hero_cta_link || '/register'
-  const heroImage = cms.hero_image || null
+  const ctaLink = cms.hero_cta_link || '/app/equipment'
+  const heroImage = cms.hero_image || '/hero-equipment.svg'
   const ctaSection = cms.cta_section || 'Hubungi tim kami untuk kebutuhan armada dan penawaran sewa terbaik.'
   const footerText = cms.footer || 'PT RAFA Rental Nusantara. All rights reserved.'
 
   return (
     <div className="space-y-16">
-      {/* HERO — split layout */}
-      <section id="home" className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center py-10 scroll-mt-24">
-        <div className="space-y-5 max-w-xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold border border-slate-200">
-            <HardHat size={14} className="text-slate-500" /> {companyLabel}
+      {/* HERO — 45/55 split, image dominant */}
+      <section id="home" className="grid grid-cols-1 lg:grid-cols-[45fr_55fr] gap-10 lg:gap-14 items-center py-10 lg:py-16 scroll-mt-24">
+        <div className="space-y-6 max-w-xl">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 text-slate-500 text-xs font-semibold tracking-wide border border-slate-200">
+            <HardHat size={14} className="text-slate-400" /> {companyLabel}
           </div>
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">{heroTitle}</h1>
-          <p className="text-lg text-slate-600 leading-relaxed">{heroSubtitle}</p>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.05]">
+            {heroTitle}
+          </h1>
+          <p className="text-lg text-slate-600 leading-relaxed max-w-lg">{heroSubtitle}</p>
           <div className="flex flex-wrap gap-3 pt-1">
             <Link to={ctaLink}>
               <Button size="lg" rightIcon={<ArrowRight size={18} />}>
@@ -59,15 +62,15 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
         <div className="relative">
-          <div className="absolute inset-0 -z-10 bg-gradient-to-b from-slate-100 to-transparent rounded-[2rem]" aria-hidden="true" />
-          {heroImage ? (
-            <img src={heroImage} alt="Armada alat berat" className="w-full aspect-[4/3] object-cover rounded-2xl border border-slate-200 shadow-card" />
-          ) : (
-            <div className="w-full aspect-[4/3] rounded-2xl border border-dashed border-slate-300 bg-white flex flex-col items-center justify-center gap-2 text-slate-300">
-              <Truck size={56} strokeWidth={1} />
-              <p className="text-sm text-slate-400">Gambar Armada</p>
-            </div>
-          )}
+          <div
+            className="absolute inset-0 -z-10 rounded-[2rem] bg-gradient-to-b from-slate-100 via-white to-transparent"
+            aria-hidden="true"
+          />
+          <img
+            src={heroImage}
+            alt="Armada alat berat RAFA Rental"
+            className="w-full aspect-[5/4] object-contain lg:aspect-[6/5]" 
+          />
         </div>
       </section>
 
