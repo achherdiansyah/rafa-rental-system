@@ -171,12 +171,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = f
           ) : (
             <>
               <Link to="/login">
-                <Button variant="outline" size="sm" className="hidden sm:inline-flex">
+                <Button variant="accent" size="sm" className="h-9 px-4 text-[15px] font-medium rounded-lg">
                   Masuk
                 </Button>
               </Link>
               <Link to="/register">
-                <Button variant="primary" size="sm">Daftar</Button>
+                <Button variant="primary" size="sm" className="h-9 px-4 text-[15px] font-medium rounded-lg">
+                  Daftar
+                </Button>
               </Link>
               <button
                 type="button"
