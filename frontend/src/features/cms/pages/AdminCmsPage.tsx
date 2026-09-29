@@ -16,10 +16,17 @@ const DEFAULT_TEXT: Array<{ key: string; label: string; group: string; multiline
   { key: 'hero_subtitle', label: 'Sub Judul Hero', group: 'hero' },
   { key: 'hero_cta_text', label: 'CTA Teks', group: 'hero' },
   { key: 'hero_cta_link', label: 'CTA Link', group: 'hero' },
-  { key: 'about', label: 'Tentang Perusahaan', group: 'content', multiline: true },
+{ key: 'about', label: 'Tentang Perusahaan', group: 'content', multiline: true },
   { key: 'services', label: 'Layanan / Keunggulan', group: 'content', multiline: true },
   { key: 'cta_section', label: 'Section CTA', group: 'content', multiline: true },
   { key: 'footer', label: 'Footer', group: 'content', multiline: true },
+  { key: 'address', label: 'Alamat', group: 'contact' },
+  { key: 'phone', label: 'Telepon', group: 'contact' },
+  { key: 'whatsapp', label: 'WhatsApp', group: 'contact', hint: 'Nomor tampil di section Kontak, mis. +62 812-0000-0000' },
+  { key: 'email', label: 'Email', group: 'contact' },
+  { key: 'hours', label: 'Jam Operasional', group: 'contact' },
+  { key: 'whatsapp_cta_text', label: 'CTA WhatsApp Teks', group: 'contact' },
+  { key: 'whatsapp_cta_link', label: 'CTA WhatsApp Link', group: 'contact', hint: 'mis. https://wa.me/6281200000000' },
 ]
 
 const MEDIA = [
@@ -123,6 +130,7 @@ export const AdminCmsPage: React.FC = () => {
     brand: DEFAULT_TEXT.filter((f) => f.group === 'brand' || f.group === 'navbar'),
     hero: DEFAULT_TEXT.filter((f) => f.group === 'hero'),
     content: DEFAULT_TEXT.filter((f) => f.group === 'content'),
+    contact: DEFAULT_TEXT.filter((f) => f.group === 'contact'),
   }
 
   return (

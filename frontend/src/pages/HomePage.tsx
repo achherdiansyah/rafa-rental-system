@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { HardHat, ArrowRight, Truck, ChevronRight, ChevronLeft, Tractor, Container, Box, Wrench } from 'lucide-react'
+import { HardHat, ArrowRight, Truck, ChevronRight, ChevronLeft, Tractor, Container, Box, Wrench, MapPin, Phone, Mail, Clock, MessageCircle } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { equipmentService } from '@/features/equipment/services/equipmentService'
@@ -108,6 +108,16 @@ export const HomePage: React.FC = () => {
   const aboutText = cms.about ?? fallbackContent.about
   const ctaSection = cms.cta_section ?? fallbackContent.cta_section
   const footerNote = cms.footer ?? fallbackContent.footer
+
+  const contact = {
+    address: cms.address ?? fallbackContent.address,
+    phone: cms.phone ?? fallbackContent.phone,
+    whatsapp: cms.whatsapp ?? fallbackContent.whatsapp,
+    email: cms.email ?? fallbackContent.email,
+    hours: cms.hours ?? fallbackContent.hours,
+    waText: cms.whatsapp_cta_text ?? fallbackContent.whatsapp_cta_text,
+    waLink: cms.whatsapp_cta_link ?? fallbackContent.whatsapp_cta_link,
+  }
 
   const featuredCards =
     featured.length > 0
@@ -311,18 +321,47 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* CONTACT — minimal, no invented company info */}
-      <section id="contact" className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center scroll-mt-24">
-        <div className="space-y-3">
+      {/* CONTACT — grid icons, selaras dengan section lain */}
+      <section id="contact" className="space-y-6 scroll-mt-24">
+        <div>
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Kontak</h2>
-          <p className="text-slate-600 max-w-md leading-relaxed">Siap memulai? Gunakan akun Anda untuk melakukan pemesanan, atau daftar untuk mulai menyewa armada.</p>
+          <p className="text-sm text-slate-500 mt-1">Hubungi kami untuk kebutuhan armada dan penawaran sewa terbaik.</p>
         </div>
-        <div className="flex flex-wrap gap-3 lg:justify-end">
-          <Link to="/login">
-            <Button variant="outline" size="lg">Masuk Akun</Button>
-          </Link>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="space-y-3">
+            <div className="w-10 h-10 rounded-lg bg-accent-50 text-accent-500 flex items-center justify-center"><MapPin size={20} /></div>
+            <h3 className="font-semibold text-slate-900">Alamat</h3>
+            <p className="text-sm text-slate-500 leading-relaxed">{contact.address}</p>
+          </div>
+          <div className="space-y-3">
+            <div className="w-10 h-10 rounded-lg bg-accent-50 text-accent-500 flex items-center justify-center"><Phone size={20} /></div>
+            <h3 className="font-semibold text-slate-900">Telepon</h3>
+            <p className="text-sm text-slate-600">{contact.phone}</p>
+          </div>
+          <div className="space-y-3">
+            <div className="w-10 h-10 rounded-lg bg-accent-50 text-accent-500 flex items-center justify-center"><Mail size={20} /></div>
+            <h3 className="font-semibold text-slate-900">Email</h3>
+            <p className="text-sm text-primary-700 break-all">{contact.email}</p>
+          </div>
+          <div className="space-y-3">
+            <div className="w-10 h-10 rounded-lg bg-accent-50 text-accent-500 flex items-center justify-center"><Clock size={20} /></div>
+            <h3 className="font-semibold text-slate-900">Jam Operasional</h3>
+            <p className="text-sm text-slate-600">{contact.hours}</p>
+          </div>
+          <div className="space-y-3">
+            <div className="w-10 h-10 rounded-lg bg-accent-50 text-accent-500 flex items-center justify-center"><MessageCircle size={20} /></div>
+            <h3 className="font-semibold text-slate-900">WhatsApp</h3>
+            <p className="text-sm text-slate-600">{contact.whatsapp}</p>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <a href={contact.waLink} target="_blank" rel="noreferrer" className="inline-block">
+            <Button size="lg" variant="primary" className="bg-emerald-500 hover:bg-emerald-600" leftIcon={<MessageCircle size={18} />}>
+              {contact.waText}
+            </Button>
+          </a>
           <Link to="/register">
-            <Button size="lg">Daftar Sekarang</Button>
+            <Button variant="outline" size="lg">Daftar Sekarang</Button>
           </Link>
         </div>
       </section>
