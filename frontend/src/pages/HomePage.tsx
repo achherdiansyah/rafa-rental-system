@@ -119,13 +119,13 @@ export const HomePage: React.FC = () => {
           loading="eager"
           decoding="async"
         />
-        <div className="absolute inset-0 bg-white/55" aria-hidden="true" />
+        <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
         <div className="relative z-10 max-w-2xl pt-20 pb-28 pl-6 sm:pl-16 lg:pl-28 pr-6">
-          <p className="text-sm font-semibold tracking-wide text-slate-800">{companyLabel}</p>
-          <h1 className="mt-4 text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.05]">
+          <p className="text-sm font-semibold tracking-wide text-white">{companyLabel}</p>
+          <h1 className="mt-4 text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.05]">
             {heroTitle}
           </h1>
-          <p className="mt-5 text-lg text-slate-700 leading-relaxed max-w-xl">{heroSubtitle}</p>
+          <p className="mt-5 text-lg text-slate-100 leading-relaxed max-w-xl">{heroSubtitle}</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link to={ctaLink}>
               <Button size="lg" variant="accent" rightIcon={<ArrowRight size={18} />}>{ctaText}</Button>
