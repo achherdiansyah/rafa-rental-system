@@ -1,10 +1,33 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { HardHat, ArrowRight, ShieldCheck, Clock, CheckCircle } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
+import { cmsService } from '@/features/cms/services/cmsService'
 
 export const HomePage: React.FC = () => {
+  const [cms, setCms] = useState<Record<string, string | null>>({})
+
+  useEffect(() => {
+    let mounted = true
+    cmsService
+      .getPublic()
+      .then((data) => {
+        if (mounted) setCms(data)
+      })
+      .catch(() => undefined) // landing renders defaults when CMS is empty
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  const heroTitle = cms.hero_title || 'Sewa Armada Alat Berat Mudah, Akurat & Transparan'
+  const heroSubtitle =
+    cms.hero_subtitle ||
+    'Layanan reservasi armada alat berat untuk proyek konstruksi, tambang, dan infrastruktur dengan monitoring operasional presisi.'
+  const ctaText = cms.hero_cta_text || 'Mulai Sewa Sekarang'
+  const ctaLink = cms.hero_cta_link || '/register'
+
   return (
     <div className="space-y-12">
       {/* Hero */}
@@ -12,17 +35,12 @@ export const HomePage: React.FC = () => {
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-50 text-primary-700 text-xs font-semibold border border-primary-200">
           <HardHat size={14} /> Sistem Manajemen Rental Alat Berat Terpercaya
         </div>
-        <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 tracking-tight">
-          Sewa Armada Alat Berat <br className="hidden sm:inline" />
-          <span className="text-primary-600">Mudah, Akurat & Transparan</span>
-        </h1>
-        <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-          Layanan reservasi armada alat berat untuk proyek konstruksi, tambang, dan infrastruktur dengan monitoring operasional presisi.
-        </p>
+        <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 tracking-tight">{heroTitle}</h1>
+        <p className="text-lg text-slate-600 max-w-2xl mx-auto">{heroSubtitle}</p>
         <div className="flex justify-center gap-3 pt-2">
-          <Link to="/register">
+          <Link to={ctaLink}>
             <Button size="lg" rightIcon={<ArrowRight size={18} />}>
-              Mulai Sewa Sekarang
+              {ctaText}
             </Button>
           </Link>
           <Link to="/login">
@@ -31,6 +49,9 @@ export const HomePage: React.FC = () => {
             </Button>
           </Link>
         </div>
+        {cms.hero_image && (
+          <img src={cms.hero_image} alt="Hero RAFA Rental" className="mx-auto mt-6 max-w-3xl rounded-3xl shadow-lg object-cover" />
+        )}
       </section>
 
       {/* Value Props */}
