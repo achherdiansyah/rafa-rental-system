@@ -106,6 +106,7 @@ export const HomePage: React.FC = () => {
   const heroImage = cms.hero_image ?? fallbackHero.image
 
   const aboutText = cms.about ?? fallbackContent.about
+  const ctaSection = cms.cta_section ?? fallbackContent.cta_section
   const footerNote = cms.footer ?? fallbackContent.footer
 
   const featuredCards =
@@ -299,7 +300,16 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* CTA band removed per request — hero CTA "Cari Equipment" remains yellow (accent) */}
+      {/* CTA — teks + button tetap, tanpa card */}
+      <section className="text-center space-y-4 py-6">
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Butuh alat berat untuk proyek Anda?</h2>
+        <p className="text-slate-600 max-w-2xl mx-auto leading-relaxed">{ctaSection}</p>
+        <div className="flex justify-center pt-1">
+          <Link to="/app/equipment">
+            <Button size="lg" variant="accent" rightIcon={<ArrowRight size={18} />}>Cari Equipment</Button>
+          </Link>
+        </div>
+      </section>
 
       {/* CONTACT — minimal, no invented company info */}
       <section id="contact" className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center scroll-mt-24">
