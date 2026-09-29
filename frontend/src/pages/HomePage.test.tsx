@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { HomePage } from './HomePage'
 import { CmsProvider } from '@/features/cms/CmsContext'
+import { fallbackHero, fallbackContent } from '@/features/cms/landingFallbackData'
 import { cmsService } from '@/features/cms/services/cmsService'
 import { equipmentService } from '@/features/equipment/services/equipmentService'
 
@@ -89,5 +90,24 @@ describe('HomePage CMS sync', () => {
     expect(await screen.findByText('Excavator PC200')).toBeInTheDocument()
     expect(screen.getByText('Dump Truck HD785')).toBeInTheDocument()
     expect(screen.getByText('Rp 2.500.000 / hari')).toBeInTheDocument()
+  })
+
+  it('CASE B — partial CMS: fills fallback only for missing CMS fields', async () => {
+    vi.mocked(cmsService.getPublic).mockResolvedValue({
+      brand_name: 'RAFA Nikel Corp',
+      hero_title: 'Judul dari CMS',
+      // hero_subtitle, cta, about, image NOT provided -> fallback used
+    })
+
+    renderHome()
+
+    // CMS wins for provided fields
+    expect((await screen.findAllByText('RAFA Nikel Corp')).length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByText('Judul dari CMS')).toBeInTheDocument()
+    // fallback fills only the missing fields (no lorem/blank)
+    expect(screen.getByText(fallbackHero.subtitle)).toBeInTheDocument()
+    expect(screen.getByText(fallbackContent.about)).toBeInTheDocument()
+    const img = screen.getByAltText('Armada alat berat RAFA Rental') as HTMLImageElement
+    expect(img.src).toContain('hero-equipment.svg')
   })
 })
