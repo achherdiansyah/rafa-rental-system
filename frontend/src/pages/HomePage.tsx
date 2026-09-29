@@ -1,19 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { HardHat, ArrowRight, Truck, ChevronRight, ChevronLeft, Tractor, Container, Box, Wrench, MapPin, Phone, Mail, Clock, MessageCircle } from 'lucide-react'
+import { ArrowRight, Truck, ChevronRight, ChevronLeft, Tractor, Container, Box, Wrench, MapPin, Phone, Mail, Clock, MessageCircle } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { equipmentService } from '@/features/equipment/services/equipmentService'
 import { useCms } from '@/features/cms/CmsContext'
-import {
-  fallbackBrand,
-  fallbackHero,
-  fallbackContent,
-  categories,
-  featuredFallback,
-  benefits,
-  fallbackNav,
-} from '@/features/cms/landingFallbackData'
+import { fallbackHero, fallbackContent, categories, featuredFallback, benefits } from '@/features/cms/landingFallbackData'
 import type { EquipmentType, EquipmentModel } from '@/types/equipment'
 
 const idr = (n: number): string => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n || 0)
@@ -96,8 +88,6 @@ export const HomePage: React.FC = () => {
     }
   }, [])
 
-  const brandName = cms.brand_name ?? fallbackBrand.brand_name
-  const brandLogo = cms.brand_logo || null
   const companyLabel = cms.brand_name ?? fallbackHero.eyebrow
   const heroTitle = cms.hero_title ?? fallbackHero.title
   const heroSubtitle = cms.hero_subtitle ?? fallbackHero.subtitle
@@ -107,8 +97,6 @@ export const HomePage: React.FC = () => {
 
   const aboutText = cms.about ?? fallbackContent.about
   const ctaSection = cms.cta_section ?? fallbackContent.cta_section
-  const footerNote = cms.footer ?? fallbackContent.footer
-
   const contact = {
     address: cms.address ?? fallbackContent.address,
     phone: cms.phone ?? fallbackContent.phone,
@@ -321,72 +309,45 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* CONTACT — grid icons, selaras dengan section lain */}
-      <section id="contact" className="space-y-6 scroll-mt-24">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Kontak</h2>
-          <p className="text-sm text-slate-500 mt-1">Hubungi kami untuk kebutuhan armada dan penawaran sewa terbaik.</p>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="space-y-3">
-            <div className="w-10 h-10 rounded-lg bg-accent-50 text-accent-500 flex items-center justify-center"><MapPin size={20} /></div>
-            <h3 className="font-semibold text-slate-900">Alamat</h3>
-            <p className="text-sm text-slate-500 leading-relaxed">{contact.address}</p>
+      {/* CONTACT — full-bleed dark card */}
+      <section id="contact" className="relative w-screen left-1/2 -translate-x-1/2 scroll-mt-24 bg-slate-900">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 space-y-10">
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Kontak</h2>
+            <p className="text-slate-400 text-sm">Hubungi kami untuk kebutuhan armada dan penawaran sewa terbaik.</p>
           </div>
-          <div className="space-y-3">
-            <div className="w-10 h-10 rounded-lg bg-accent-50 text-accent-500 flex items-center justify-center"><Phone size={20} /></div>
-            <h3 className="font-semibold text-slate-900">Telepon</h3>
-            <p className="text-sm text-slate-600">{contact.phone}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="space-y-2 text-center">
+              <div className="mx-auto w-11 h-11 rounded-xl bg-accent-500/15 text-accent-400 flex items-center justify-center"><MapPin size={20} /></div>
+              <h3 className="font-semibold text-white text-sm">Alamat</h3>
+              <p className="text-sm text-slate-400">{contact.address}</p>
+            </div>
+            <div className="space-y-2 text-center">
+              <div className="mx-auto w-11 h-11 rounded-xl bg-accent-500/15 text-accent-400 flex items-center justify-center"><Phone size={20} /></div>
+              <h3 className="font-semibold text-white text-sm">Telepon</h3>
+              <p className="text-sm text-slate-400">{contact.phone}</p>
+            </div>
+            <div className="space-y-2 text-center">
+              <div className="mx-auto w-11 h-11 rounded-xl bg-accent-500/15 text-accent-400 flex items-center justify-center"><Mail size={20} /></div>
+              <h3 className="font-semibold text-white text-sm">Email</h3>
+              <p className="text-sm text-slate-400 break-all">{contact.email}</p>
+            </div>
+            <div className="space-y-2 text-center">
+              <div className="mx-auto w-11 h-11 rounded-xl bg-accent-500/15 text-accent-400 flex items-center justify-center"><Clock size={20} /></div>
+              <h3 className="font-semibold text-white text-sm">Jam Operasional</h3>
+              <p className="text-sm text-slate-400">{contact.hours}</p>
+            </div>
           </div>
-          <div className="space-y-3">
-            <div className="w-10 h-10 rounded-lg bg-accent-50 text-accent-500 flex items-center justify-center"><Mail size={20} /></div>
-            <h3 className="font-semibold text-slate-900">Email</h3>
-            <p className="text-sm text-primary-700 break-all">{contact.email}</p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <a href={contact.waLink} target="_blank" rel="noreferrer" className="inline-block">
+              <Button size="lg" variant="accent" leftIcon={<MessageCircle size={18} />}>{contact.waText}</Button>
+            </a>
+            <Link to="/register">
+              <Button variant="outline" size="lg" className="border-slate-700 bg-white/5 text-white hover:bg-white/10 hover:text-white">Daftar Sekarang</Button>
+            </Link>
           </div>
-          <div className="space-y-3">
-            <div className="w-10 h-10 rounded-lg bg-accent-50 text-accent-500 flex items-center justify-center"><Clock size={20} /></div>
-            <h3 className="font-semibold text-slate-900">Jam Operasional</h3>
-            <p className="text-sm text-slate-600">{contact.hours}</p>
-          </div>
-          <div className="space-y-3">
-            <div className="w-10 h-10 rounded-lg bg-accent-50 text-accent-500 flex items-center justify-center"><MessageCircle size={20} /></div>
-            <h3 className="font-semibold text-slate-900">WhatsApp</h3>
-            <p className="text-sm text-slate-600">{contact.whatsapp}</p>
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <a href={contact.waLink} target="_blank" rel="noreferrer" className="inline-block">
-            <Button size="lg" variant="primary" className="bg-emerald-500 hover:bg-emerald-600" leftIcon={<MessageCircle size={18} />}>
-              {contact.waText}
-            </Button>
-          </a>
-          <Link to="/register">
-            <Button variant="outline" size="lg">Daftar Sekarang</Button>
-          </Link>
         </div>
       </section>
-
-      {/* FOOTER — minimalist */}
-      <footer className="border-t border-slate-200 pt-10 pb-4 space-y-8">
-        <div className="flex flex-col md:flex-row items-start justify-between gap-8">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-600 text-white overflow-hidden">
-              {brandLogo ? <img src={brandLogo} alt={brandName} className="w-full h-full object-contain p-1 bg-white" /> : <HardHat size={20} />}
-            </span>
-            <span className="font-bold text-lg text-slate-900">{brandName}</span>
-          </div>
-          <nav aria-label="Navigasi footer" className="flex flex-wrap gap-6">
-            {fallbackNav.map((m) => (
-              <Link key={m.href} to={m.href} className="text-sm text-slate-600 hover:text-slate-900 transition-colors">
-                {m.label}
-              </Link>
-            ))}
-          </nav>
-        </div>
-        <p className="text-xs text-slate-400">
-          &copy; {new Date().getFullYear()} {footerNote}
-        </p>
-      </footer>
     </div>
   )
 }

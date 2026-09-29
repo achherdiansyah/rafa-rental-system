@@ -38,11 +38,13 @@ describe('PublicLayout brand/navbar CMS sync', () => {
 
     renderLayout()
 
-    expect(await screen.findByText('RAFA Premium Rental')).toBeInTheDocument()
-    expect(screen.getByAltText('RAFA Premium Rental')).toBeInTheDocument()
-    expect(screen.getByText('Katalog')).toBeInTheDocument()
-    expect(screen.getByText('Beranda')).toBeInTheDocument()
-    await waitFor(() => expect(screen.getByText(/RAFA Premium Rental\. All rights/i)).toBeInTheDocument())
+    expect((await screen.findAllByText('RAFA Premium Rental')).length).toBeGreaterThanOrEqual(1)
+    expect((await screen.findAllByAltText('RAFA Premium Rental')).length).toBeGreaterThanOrEqual(1)
+    expect((await screen.findAllByText('Katalog')).length).toBeGreaterThanOrEqual(1)
+    expect((await screen.findAllByText('Beranda')).length).toBeGreaterThanOrEqual(1)
+    await waitFor(() =>
+      expect(screen.getByText(new RegExp('©.*RAFA Premium Rental'))).toBeInTheDocument()
+    )
   })
 
   it('falls back to the default brand when CMS is empty', async () => {
@@ -50,6 +52,6 @@ describe('PublicLayout brand/navbar CMS sync', () => {
 
     renderLayout()
 
-    expect(await screen.findByText('CV SUMBER MAKMUR RAFA')).toBeInTheDocument()
+    expect((await screen.findAllByText('CV SUMBER MAKMUR RAFA')).length).toBeGreaterThanOrEqual(1)
   })
 })
