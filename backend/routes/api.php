@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BankAccountController;
 use App\Http\Controllers\Api\V1\BookingController;
 use App\Http\Controllers\Api\V1\CartController;
+use App\Http\Controllers\Api\V1\CmsController;
 use App\Http\Controllers\Api\V1\EquipmentMediaController;
 use App\Http\Controllers\Api\V1\EquipmentModelController;
 use App\Http\Controllers\Api\V1\EquipmentPriceController;
@@ -49,7 +50,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('reset-password');
     });
 
-    // 3. Public Equipment Catalog & Pricing Simulation Endpoints (Read-only / Calculation)
+    // 3. Public CMS (landing page content, read-only) + Public Equipment Catalog
+    Route::get('/cms/public', [CmsController::class, 'publicShow'])->name('cms.public');
+
     Route::prefix('equipment')->name('equipment.')->group(function () {
         Route::get('/types', [EquipmentTypeController::class, 'index'])->name('types.index');
         Route::get('/types/{type}', [EquipmentTypeController::class, 'show'])->name('types.show');
@@ -260,7 +263,16 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         | Admin-Only Routes
         |--------------------------------------------------------------------------
         | Endpoints restricted to ADMIN and OWNER roles.
-        */
+          */
+
+        // Landing-page CMS (ADMIN only; public read is /cms/public)
+        Route::middleware('role:ADMIN')->prefix('admin/cms')->name('admin.cms.')->group(function () {
+            Route::get('/', [CmsController::class, 'adminIndex'])->name('index');
+            Route::put('/{key}', [CmsController::class, 'update'])->name('update');
+            Route::post('/{key}/media', [CmsController::class, 'uploadMedia'])->name('media')->middleware('throttle:file-upload');
+            Route::delete('/{key}', [CmsController::class, 'destroy'])->name('destroy');
+        });
+
         Route::middleware('role:ADMIN,OWNER')->prefix('admin')->name('admin.')->group(function () {
             // User Management
             Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');

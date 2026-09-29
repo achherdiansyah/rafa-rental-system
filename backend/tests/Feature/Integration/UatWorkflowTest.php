@@ -129,7 +129,7 @@ class UatWorkflowTest extends TestCase
 
         // ---------- 6) Timesheet + validation ----------
         $rd = Rental::find($rentalId)->details()->first();
-        Sanctum::actingAs($user);
+        Sanctum::actingAs($admin);
         $tsId = $this->postJson('/api/v1/timesheets', [
             'rental_detail_id' => $rd->id,
             'report_date' => now()->toDateString(),
@@ -241,7 +241,7 @@ class UatWorkflowTest extends TestCase
         $this->app->make(Factory::class)->forgetGuards();
         $this->getJson('/api/v1/invoices')->assertStatus(401);
         // duplicate timesheet rejected (business rule)
-        Sanctum::actingAs($user);
+        Sanctum::actingAs($admin);
         $this->postJson('/api/v1/timesheets', [
             'rental_detail_id' => $rd->id,
             'report_date' => now()->toDateString(),

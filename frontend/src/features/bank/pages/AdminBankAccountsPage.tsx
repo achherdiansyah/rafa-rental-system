@@ -5,6 +5,7 @@ import { Input } from '@/components/form/Input'
 import { Switch } from '@/components/form/Switch'
 import { Badge } from '@/components/ui/Badge'
 import { Modal } from '@/components/ui/Modal'
+import { PageHeader } from '@/components/ui/PageHeader'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/data-display/Table'
 import { TableSkeleton } from '@/components/ui/Skeleton'
@@ -132,16 +133,15 @@ export const AdminBankAccountsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Rekening Bank Perusahaan</h2>
-          <p className="text-sm text-slate-500">Kelola nomor rekening resmi penampungan transfer pembayaran invoice penyewa</p>
-        </div>
-
-        <Button onClick={handleOpenCreate} leftIcon={<Plus size={16} />}>
-          Daftarkan Rekening Baru
-        </Button>
-      </div>
+      <PageHeader
+        title="Rekening Bank Perusahaan"
+        subtitle="Kelola nomor rekening resmi penampungan transfer pembayaran invoice penyewa"
+        actions={
+          <Button onClick={handleOpenCreate} leftIcon={<Plus size={16} />}>
+            Daftarkan Rekening Baru
+          </Button>
+        }
+      />
 
       {/* Content */}
       {isLoading ? (

@@ -9,6 +9,9 @@ Dokumen spesifikasi formal seluruh lifecycle dan state transitions untuk entitas
 ### 1.1 State Definition
 - **DRAFT:** Keranjang tersimpan, belum di-submit oleh user.
 - **SUBMITTED / PENDING_APPROVAL:** Booking diajukan, menunggu telaah dan persetujuan Admin.
+  > Catatan implementasi: `SUBMITTED` adalah label fase (alias) dari `PENDING_APPROVAL`. T-B01
+  > mendarat langsung di status persistable `PENDING_APPROVAL`; `SUBMITTED` tidak pernah
+  > disimpan sebagai record tersendiri (bukan state menengah yang persisten).
 - **REJECTED:** Booking ditolak oleh Admin (alasan dicatat, kuota dilepas).
 - **APPROVED / PAYMENT_PENDING:** Booking disetujui, invoice resmi 24 jam diterbitkan, menunggu pembayaran.
 - **CONFIRMED:** Pembayaran (lunas / DP sah) telah diverifikasi dan disetujui Admin.

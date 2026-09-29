@@ -18,11 +18,14 @@ import { useToast } from '@/hooks/useToast'
 
 const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'success' | 'warning' | 'danger' | 'outline'> = {
   DRAFT: 'secondary',
-  SUBMITTED: 'warning',
   PENDING_APPROVAL: 'warning',
   APPROVED: 'default',
   PAYMENT_PENDING: 'default',
   CONFIRMED: 'success',
+  DISPATCHED: 'warning',
+  ARRIVED: 'secondary',
+  ONGOING: 'success',
+  COMPLETED: 'success',
   REJECTED: 'danger',
   CANCELLED: 'danger',
   EXPIRED: 'outline',

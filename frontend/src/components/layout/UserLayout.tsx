@@ -1,12 +1,40 @@
-import React, { useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import React, { useEffect, useState } from 'react'
+import { Outlet, useLocation } from 'react-router-dom'
 import { LayoutDashboard, Truck, Sparkles, CalendarCheck, Receipt, User, MapPin, ShoppingCart, ClipboardList, Clock, Wallet, RotateCcw, Bell } from 'lucide-react'
 import { Navbar } from './Navbar'
 import { Sidebar } from './Sidebar'
+import { notificationService } from '@/features/notification/services/notificationService'
 import type { SidebarItem } from './Sidebar'
+
+const NOTIFICATIONS_CHANGED_EVENT = 'rafa:notifications-changed'
 
 export const UserLayout: React.FC = () => {
   const [isMobileOpen, setIsMobileOpen] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
+  const location = useLocation()
+
+  // Unread badge: fetched on mount, on every navigation, and whenever the
+  // notifications page marks items as read. No polling, no duplicate fetches.
+  useEffect(() => {
+    let mounted = true
+    const refresh = () => {
+      notificationService
+        .unreadCount()
+        .then((count) => {
+          if (mounted) setUnreadCount(count)
+        })
+        .catch(() => {
+          // Silent: keep the previous badge value on transient failures
+        })
+    }
+
+    refresh()
+    window.addEventListener(NOTIFICATIONS_CHANGED_EVENT, refresh)
+    return () => {
+      mounted = false
+      window.removeEventListener(NOTIFICATIONS_CHANGED_EVENT, refresh)
+    }
+  }, [location.pathname])
 
   const navItems: SidebarItem[] = [
     { label: 'Overview', href: '/app', icon: <LayoutDashboard size={18} /> },
@@ -20,7 +48,7 @@ export const UserLayout: React.FC = () => {
     { label: 'Tagihan & Bayar', href: '/app/invoices', icon: <Receipt size={18} /> },
     { label: 'Refund Saya', href: '/app/refunds', icon: <RotateCcw size={18} /> },
     { label: 'Outstanding', href: '/app/outstanding', icon: <Wallet size={18} /> },
-    { label: 'Notifikasi', href: '/app/notifications', icon: <Bell size={18} /> },
+    { label: 'Notifikasi', href: '/app/notifications', icon: <Bell size={18} />, badge: unreadCount },
     { label: 'Profil Saya', href: '/app/profile', icon: <User size={18} /> },
   ]
 

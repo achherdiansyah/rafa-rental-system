@@ -83,7 +83,7 @@ class InvoiceLifecycleTest extends TestCase
 
         $rental = Rental::findOrFail($rentalId);
         foreach ($rental->details as $rd) {
-            Sanctum::actingAs($owner);
+            Sanctum::actingAs($admin);
             $tsId = $this->postJson('/api/v1/timesheets', [
                 'rental_detail_id' => $rd->id,
                 'report_date' => now()->toDateString(),

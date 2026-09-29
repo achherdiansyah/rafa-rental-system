@@ -15,7 +15,7 @@ class EnumTest extends TestCase
     public function test_booking_status_values_match_phase1_state_machine(): void
     {
         $expected = [
-            'DRAFT', 'SUBMITTED', 'PENDING_APPROVAL', 'REJECTED',
+            'DRAFT', 'PENDING_APPROVAL', 'REJECTED',
             'APPROVED', 'PAYMENT_PENDING', 'CONFIRMED', 'DISPATCHED',
             'ARRIVED', 'ONGOING', 'COMPLETED', 'CANCELLED', 'EXPIRED',
         ];

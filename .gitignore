@@ -35,3 +35,8 @@ backend/public/hot/
 # Storage
 backend/storage/*.key
 backend/public/storage
+
+# Playwright
+frontend/test-results/
+frontend/playwright-report/
+

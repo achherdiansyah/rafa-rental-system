@@ -79,7 +79,7 @@ class PaymentSubmissionTest extends TestCase
         // Record + approve timesheet while rental is ONGOING
         $rental = Rental::findOrFail($rentalId);
         $tsId = null;
-        Sanctum::actingAs($owner);
+        Sanctum::actingAs($admin);
         $tsId = $this->postJson('/api/v1/timesheets', [
             'rental_detail_id' => $rental->details()->first()->id,
             'report_date' => now()->toDateString(),
@@ -88,7 +88,6 @@ class PaymentSubmissionTest extends TestCase
         ])->json('data.id');
         $this->postJson("/api/v1/timesheets/{$tsId}/submit")->assertOk();
 
-        Sanctum::actingAs($admin);
         $this->postJson("/api/v1/timesheets/{$tsId}/approve")->assertOk();
 
         // Return -> inspect -> READY

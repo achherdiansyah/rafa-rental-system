@@ -26,7 +26,6 @@ class CancelBookingAction
     /** Pre-payment statuses a USER may cancel directly. */
     protected const USER_CANCELLABLE = [
         BookingStatus::DRAFT->value,
-        BookingStatus::SUBMITTED->value,
         BookingStatus::PENDING_APPROVAL->value,
         BookingStatus::APPROVED->value,
         BookingStatus::PAYMENT_PENDING->value,

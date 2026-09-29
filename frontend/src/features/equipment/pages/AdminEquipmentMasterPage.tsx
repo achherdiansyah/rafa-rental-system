@@ -7,6 +7,7 @@ import { Textarea } from '@/components/form/Textarea'
 import { Switch } from '@/components/form/Switch'
 import { Badge } from '@/components/ui/Badge'
 import { Modal } from '@/components/ui/Modal'
+import { PageHeader } from '@/components/ui/PageHeader'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Tabs } from '@/components/ui/Tabs'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/data-display/Table'
@@ -377,13 +378,11 @@ export const AdminEquipmentMasterPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Master Data Armada</h2>
-          <p className="text-sm text-slate-500">Kelola spesifikasi model alat berat dan kategori peralatan</p>
-        </div>
-
-        <div className="flex gap-2">
+      <PageHeader
+        title="Master Data Armada"
+        subtitle="Kelola spesifikasi model alat berat dan kategori peralatan"
+        actions={
+          <div className="flex gap-2">
           {activeTab === 'models' ? (
             <Button onClick={handleOpenCreateModel} leftIcon={<Plus size={16} />}>
               Tambah Model Baru
@@ -393,8 +392,9 @@ export const AdminEquipmentMasterPage: React.FC = () => {
               Tambah Tipe Baru
             </Button>
           )}
-        </div>
-      </div>
+          </div>
+        }
+      />
 
       {/* Tabs */}
       <Tabs

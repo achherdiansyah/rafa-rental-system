@@ -37,6 +37,7 @@ export const UserNotificationsPage: React.FC = () => {
 
   const markRead = async (id: string) => {
     await notificationService.markRead(id)
+    window.dispatchEvent(new CustomEvent('rafa:notifications-changed'))
     const [list, count] = await Promise.all([
       notificationService.getNotifications({ per_page: 50 }),
       notificationService.unreadCount(),
@@ -50,6 +51,7 @@ export const UserNotificationsPage: React.FC = () => {
     try {
       await notificationService.markAllRead()
       showSuccessToast('Semua notifikasi ditandai sudah dibaca.')
+      window.dispatchEvent(new CustomEvent('rafa:notifications-changed'))
       await load()
     } catch (err: any) {
       showErrorToast(err?.message || 'Gagal menandai notifikasi.')

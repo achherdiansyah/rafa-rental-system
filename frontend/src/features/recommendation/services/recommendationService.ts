@@ -12,11 +12,10 @@ export const recommendationService = {
   async requestRecommendation(
     input: CreateRecommendationInput
   ): Promise<ApiResponse<RecommendationRequest>> {
-    const response = await api.post<ApiResponse<RecommendationRequest>>(
-      '/api/v1/recommendations/request',
-      input
-    )
-    return response.data
+    // NOTE: axios `api` already sets baseURL = `${API_BASE}/api/v1`;
+    // paths must NOT repeat the /api/v1 prefix.
+    const response = await api.post<RecommendationRequest>('/recommendations/request', input)
+    return response
   },
 
   /**
@@ -26,13 +25,10 @@ export const recommendationService = {
     page = 1,
     perPage = 10
   ): Promise<ApiResponse<RecommendationRequest[]>> {
-    const response = await api.get<ApiResponse<RecommendationRequest[]>>(
-      '/api/v1/recommendations',
-      {
-        params: { page, per_page: perPage },
-      }
-    )
-    return response.data
+    const response = await api.get<RecommendationRequest[]>('/recommendations', {
+      params: { page, per_page: perPage },
+    })
+    return response
   },
 
   /**
@@ -41,9 +37,7 @@ export const recommendationService = {
   async getRecommendation(
     id: number
   ): Promise<ApiResponse<RecommendationRequest>> {
-    const response = await api.get<ApiResponse<RecommendationRequest>>(
-      `/api/v1/recommendations/${id}`
-    )
-    return response.data
+    const response = await api.get<RecommendationRequest>(`/recommendations/${id}`)
+    return response
   },
 }

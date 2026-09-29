@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Outlet } from 'react-router-dom'
-import { LayoutDashboard, CheckSquare, Layers, Truck, Clock, CreditCard, RefreshCw, Building2, ClipboardCheck, Receipt, Users, RadioTower, Table2, PiggyBank } from 'lucide-react'
+import { LayoutDashboard, CheckSquare, Layers, Truck, Clock, CreditCard, RefreshCw, Building2, ClipboardCheck, Receipt, Users, RadioTower, Table2, PiggyBank, Globe } from 'lucide-react'
 import { Navbar } from './Navbar'
 import { Sidebar } from './Sidebar'
 import type { SidebarItem } from './Sidebar'
@@ -23,6 +23,7 @@ export const AdminLayout: React.FC = () => {
     { label: 'Laporan Operasional', href: '/admin/reports/operational', icon: <Table2 size={18} /> },
     { label: 'Laporan Finansial', href: '/admin/reports/financial', icon: <PiggyBank size={18} /> },
     { label: 'Monitor Notifikasi', href: '/admin/notifications', icon: <RadioTower size={18} /> },
+    { label: 'CMS Landing Page', href: '/admin/cms', icon: <Globe size={18} /> },
   ]
 
   return (

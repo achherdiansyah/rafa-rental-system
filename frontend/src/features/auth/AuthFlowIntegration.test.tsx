@@ -144,7 +144,7 @@ describe('Frontend End-to-End Authentication Journey', () => {
     fireEvent.click(screen.getByRole('button', { name: /masuk/i }))
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /executive dashboard/i })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: /executive summary/i })).toBeInTheDocument()
     }, { timeout: 10000 })
 
     expect(screen.getByText('Owner Bisnis')).toBeInTheDocument()

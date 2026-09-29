@@ -117,7 +117,7 @@ expect(await screen.findByRole('heading', { name: /dashboard operasional/i }, {
       isAuthenticated: true,
     })
 
-    expect(await screen.findByRole('heading', { name: /executive dashboard/i }, { timeout: 15000 })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /executive summary/i }, { timeout: 15000 })).toBeInTheDocument()
   }, 20000)
 
   it('redirects authenticated user away from /login to respective portal via GuestRoute', async () => {

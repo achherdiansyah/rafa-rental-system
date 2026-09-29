@@ -23,6 +23,9 @@ const UnauthorizedPage = lazy(() => import('@/pages/UnauthorizedPage'))
 const UserPortalPlaceholder = lazy(() => import('@/pages/UserPortalPlaceholder'))
 const OwnerPortalPlaceholder = lazy(() => import('@/pages/OwnerPortalPlaceholder'))
 const OwnerPricingPage = lazy(() => import('@/features/equipment/pages/OwnerPricingPage'))
+const OwnerExecutiveSummaryPage = lazy(() => import('@/features/reporting/pages/OwnerExecutiveSummaryPage'))
+const OwnerRevenueReportPage = lazy(() => import('@/features/reporting/pages/OwnerRevenueReportPage'))
+const AdminCmsPage = lazy(() => import('@/features/cms/pages/AdminCmsPage'))
 const AdminEquipmentMasterPage = lazy(() => import('@/features/equipment/pages/AdminEquipmentMasterPage'))
 const AdminEquipmentUnitsPage = lazy(() => import('@/features/equipment/pages/AdminEquipmentUnitsPage'))
 const AdminBankAccountsPage = lazy(() => import('@/features/bank/pages/AdminBankAccountsPage'))
@@ -111,14 +114,15 @@ export const AppRoutes: React.FC = () => {
               <Route path="refunds" element={<AdminRefundsPage />} />
               <Route path="outstanding" element={<AdminOutstandingPage />} />
               <Route path="notifications" element={<AdminNotificationsPage />} />
+              <Route path="cms" element={<AdminCmsPage />} />
             </Route>
           </Route>
 
           {/* 3.3 Owner Portal (/owner/*) - Restricted exclusively to OWNER */}
           <Route element={<RoleRoute allowedRoles={['OWNER']} />}>
             <Route path="/owner" element={<OwnerLayout />}>
-              <Route index element={<OwnerPortalPlaceholder />} />
-              <Route path="revenue" element={<OwnerPortalPlaceholder />} />
+              <Route index element={<OwnerExecutiveSummaryPage />} />
+              <Route path="revenue" element={<OwnerRevenueReportPage />} />
               <Route path="pricing" element={<OwnerPricingPage />} />
               <Route path="audit" element={<OwnerPortalPlaceholder />} />
               <Route path="settings" element={<AdminBankAccountsPage />} />

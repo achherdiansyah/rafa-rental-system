@@ -22,23 +22,21 @@ class TimesheetPolicy
     }
 
     /**
-     * Operator / owner-of-rental (USER) or ADMIN can create a timesheet entry.
+     * Timesheet input is an ADMIN operational task (based on field/operator
+     * daily report). User/PIC confirms + signs; Owner is read-only.
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->isAdmin();
     }
 
     /**
-     * Submit timesheet: own rental (USER) or staff.
+     * Submit (DRAFT/REJECTED → SUBMITTED = menunggu konfirmasi user) is an
+     * ADMIN action after inputting the record.
      */
     public function submit(User $user, Timesheet $timesheet): bool
     {
-        if ($user->isAdmin() || $user->isOwner()) {
-            return true;
-        }
-
-        return (int) $user->id === (int) $timesheet->rentalDetail?->rental?->booking?->user_id;
+        return $user->isAdmin();
     }
 
     /**

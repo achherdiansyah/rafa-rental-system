@@ -144,4 +144,36 @@ describe('Booking UI Suite', () => {
       expect(screen.getByText(/gagal memuat booking/i)).toBeInTheDocument()
     })
   })
+
+  it('renders a badge for every valid lifecycle status (no fallback for valid states)', async () => {
+    const statuses = [
+      'DRAFT',
+      'PENDING_APPROVAL',
+      'APPROVED',
+      'PAYMENT_PENDING',
+      'CONFIRMED',
+      'DISPATCHED',
+      'ARRIVED',
+      'ONGOING',
+      'COMPLETED',
+      'REJECTED',
+      'CANCELLED',
+      'EXPIRED',
+    ] as const
+
+    vi.mocked(bookingService.getBookings).mockResolvedValue({
+      success: true,
+      message: 'OK',
+      data: statuses.map((status, i) => ({ ...mockBooking, id: i + 1, booking_code: `RFA-BKG-${i}`, status })),
+      meta: { current_page: 1, per_page: 10, total: statuses.length, last_page: 1 },
+    } as any)
+
+    renderComponent()
+
+    for (const status of statuses) {
+      expect(await screen.findByText(status)).toBeInTheDocument()
+    }
+    // The removed alias SUBMITTED must never surface as a booking status
+    expect(screen.queryByText('SUBMITTED')).not.toBeInTheDocument()
+  })
 })

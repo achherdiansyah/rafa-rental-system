@@ -14,9 +14,14 @@ import { EmptyState } from '@/components/feedback/EmptyState'
 import { Pagination } from '@/components/data-display/Pagination'
 import { useToast } from '@/hooks/useToast'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useLatestCall } from '@/hooks/useLatestCall'
+import { useAuth } from '@/hooks/useAuth'
+import { PageHeader } from '@/components/ui/PageHeader'
 
 export const UserProjectLocationsPage: React.FC = () => {
   const { success: showSuccessToast, error: showErrorToast } = useToast()
+  const { run } = useLatestCall()
+  const { isAuthenticated } = useAuth()
 
   const [locations, setLocations] = useState<ProjectLocation[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -49,28 +54,37 @@ export const UserProjectLocationsPage: React.FC = () => {
   const loadLocations = async (page = currentPage, search = debouncedSearch) => {
     setIsLoading(true)
     try {
-      const res = await projectLocationService.getLocations(page, 9, search)
-      if (res.success && res.data) {
-        setLocations(res.data)
-        if (res.meta) {
-          setTotalPages(res.meta.last_page)
-          setCurrentPage(res.meta.current_page)
+      const out = await run(async () => {
+        const res = await projectLocationService.getLocations(page, 9, search)
+        if (res.success && res.data) {
+          setLocations(res.data)
+          if (res.meta) {
+            setTotalPages(res.meta.last_page)
+            setCurrentPage(res.meta.current_page)
+          }
         }
+      })
+      if (out === null) {
+        // stale/in-flight result: DON'T touch the list state, but still let the
+        // spinner terminate (a newer call re-arms it) so loading can never stick.
+        setIsLoading(false)
+        return
       }
-    } catch {
-      showErrorToast('Gagal memuat daftar lokasi proyek.')
-    } finally {
       setIsLoading(false)
+    } catch {
+      setIsLoading(false)
+      showErrorToast('Gagal memuat daftar lokasi proyek.')
     }
   }
 
+  // Single effect for every list trigger (auth ready / search / page change).
+  // Fetches only after authentication is confirmed so a reload can never
+  // fire the list request before the customer context is ready.
   useEffect(() => {
-    loadLocations(1, debouncedSearch)
-  }, [debouncedSearch])
-
-  useEffect(() => {
-    loadLocations(currentPage, debouncedSearch)
-  }, [currentPage])
+    if (!isAuthenticated) return
+    loadLocations()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, debouncedSearch, currentPage])
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
@@ -91,10 +105,25 @@ export const UserProjectLocationsPage: React.FC = () => {
     setIsSubmitting(true)
     try {
       if (editingLocation) {
-        await projectLocationService.updateLocation(editingLocation.id, formData)
+        const res = await projectLocationService.updateLocation(editingLocation.id, formData)
+        // No fake success: toast only when the backend confirms an id
+        if (!res?.data?.id) {
+          const invalid = new Error('Respons tidak valid dari server.')
+          ;(invalid as Error & { isInvalidResponse?: boolean }).isInvalidResponse = true
+          throw invalid
+        }
         showSuccessToast('Lokasi proyek berhasil diperbarui.')
       } else {
-        await projectLocationService.createLocation(formData)
+        const res = await projectLocationService.createLocation(formData)
+        // Persistence proof: created resource must carry its id back
+        if (!res?.data?.id) {
+          const invalid = new Error('Respons tidak valid dari server.')
+          ;(invalid as Error & { isInvalidResponse?: boolean }).isInvalidResponse = true
+          throw invalid
+        }
+        // Apply the freshly created record immediately (optimistic) so the list
+        // is never empty while the follow-up GET refetches the full page.
+        setLocations((prev) => [res.data!, ...prev.filter((l) => l.id !== res.data!.id)])
         showSuccessToast('Lokasi proyek berhasil didaftarkan.')
       }
       setIsModalOpen(false)
@@ -102,8 +131,10 @@ export const UserProjectLocationsPage: React.FC = () => {
     } catch (err: any) {
       if (err?.response?.data?.errors) {
         setErrors(err.response.data.errors)
+      } else if ((err as Error & { isInvalidResponse?: boolean })?.isInvalidResponse) {
+        showErrorToast('Lokasi tersimpan di server namun respons tidak valid. Muat ulang halaman untuk memastikan data tampil.')
       } else {
-        showErrorToast('Terjadi kesalahan saat menyimpan lokasi proyek.')
+        showErrorToast(err?.message || 'Terjadi kesalahan saat menyimpan lokasi proyek.')
       }
     } finally {
       setIsSubmitting(false)
@@ -158,16 +189,16 @@ export const UserProjectLocationsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Lokasi Proyek</h2>
-          <p className="text-sm text-slate-500">Kelola daftar lokasi pengerjaan proyek untuk pengiriman armada.</p>
-        </div>
-        <Button onClick={openCreateModal} className="gap-2 shrink-0">
-          <Plus size={16} />
-          Tambah Lokasi Baru
-        </Button>
-      </div>
+      <PageHeader
+        title="Lokasi Proyek"
+        subtitle="Kelola daftar lokasi pengerjaan proyek untuk pengiriman armada."
+        actions={
+          <Button onClick={openCreateModal} className="gap-2 shrink-0">
+            <Plus size={16} />
+            Tambah Lokasi Baru
+          </Button>
+        }
+      />
 
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row gap-3">
@@ -237,6 +268,8 @@ export const UserProjectLocationsPage: React.FC = () => {
                     variant="outline"
                     size="sm"
                     className="text-rose-600 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-700"
+                    aria-label={`Hapus lokasi ${loc.project_name}`}
+                    title="Hapus Lokasi"
                     onClick={() => {
                       setLocationToDelete(loc)
                       setIsDeleteDialogOpen(true)
