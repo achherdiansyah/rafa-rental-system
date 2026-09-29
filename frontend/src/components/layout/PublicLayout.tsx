@@ -2,6 +2,7 @@ import React, { useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Navbar } from './Navbar'
 import { CmsProvider, useCms } from '@/features/cms/CmsContext'
+import { useHashScroll } from '@/hooks/useHashScroll'
 
 function BrandFooter() {
   const cms = useCms()
@@ -32,6 +33,7 @@ function FaviconSync() {
 }
 
 export const PublicLayout: React.FC = () => {
+  useHashScroll()
   return (
     <CmsProvider>
       <FaviconSync />

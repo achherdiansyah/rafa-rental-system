@@ -40,7 +40,7 @@ export const HomePage: React.FC = () => {
   return (
     <div className="space-y-16">
       {/* HERO — split layout */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center py-10">
+      <section id="home" className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center py-10 scroll-mt-24">
         <div className="space-y-5 max-w-xl">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold border border-slate-200">
             <HardHat size={14} className="text-slate-500" /> {companyLabel}
@@ -72,7 +72,7 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* EQUIPMENT CATEGORIES */}
-      <section className="space-y-6" id="equipment">
+      <section className="space-y-6 scroll-mt-24" id="equipment">
         <div>
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Kategori Alat Berat</h2>
           <p className="text-sm text-slate-500 mt-1">Pilih kategori armada sesuai kebutuhan proyek Anda.</p>
@@ -106,7 +106,7 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* ABOUT */}
-      <section className="space-y-4" id="about">
+      <section className="space-y-4 scroll-mt-24" id="about">
         <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Tentang Kami</h2>
         <p className="text-slate-600 max-w-3xl leading-relaxed">
           {cms.about || 'Perusahaan penyedia layanan sewa alat berat untuk proyek konstruksi, tambang, dan infrastruktur — dengan proses transparan dan monitoring operasional presisi.'}
@@ -138,7 +138,7 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* CONTACT */}
-      <section className="space-y-4" id="contact">
+      <section className="space-y-4 scroll-mt-24" id="contact">
         <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Kontak</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
           <div className="flex items-center gap-3 text-slate-600">
