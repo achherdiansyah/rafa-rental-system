@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { HardHat, ArrowRight, Truck, ChevronRight } from 'lucide-react'
+import { HardHat, ArrowRight, Truck, ChevronRight, Tractor, Container, Box, Wrench } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { equipmentService } from '@/features/equipment/services/equipmentService'
@@ -18,6 +18,12 @@ import {
 import type { EquipmentType, EquipmentModel } from '@/types/equipment'
 
 const idr = (n: number): string => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n || 0)
+
+const CATEGORY_ICON = { Excavator: Truck, Bulldozer: Tractor, 'Wheel Loader': Container, 'Dump Truck': Truck, Crane: Wrench, Compactor: Box } as Record<string, typeof Truck>
+const categoryIcon = (name: string) => {
+  const Icon = CATEGORY_ICON[name] ?? Truck
+  return <Icon size={20} />
+}
 
 export const HomePage: React.FC = () => {
   const cms = useCms()
@@ -66,13 +72,13 @@ export const HomePage: React.FC = () => {
           loading="eager"
           decoding="async"
         />
-        <div className="absolute inset-0 bg-white/45" aria-hidden="true" />
+        <div className="absolute inset-0 bg-black/45" aria-hidden="true" />
         <div className="relative z-10 max-w-2xl pt-20 pb-28 pl-6 sm:pl-16 lg:pl-28 pr-6">
-          <p className="text-sm font-semibold tracking-wide text-slate-600">{companyLabel}</p>
-          <h1 className="mt-4 text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.05]">
+          <p className="text-sm font-semibold tracking-wide text-white">{companyLabel}</p>
+          <h1 className="mt-4 text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.05]">
             {heroTitle}
           </h1>
-          <p className="mt-5 text-lg text-slate-700 leading-relaxed max-w-xl">{heroSubtitle}</p>
+          <p className="mt-5 text-lg text-slate-100 leading-relaxed max-w-xl">{heroSubtitle}</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link to={ctaLink}>
               <Button size="lg" variant="accent" rightIcon={<ArrowRight size={18} />}>{ctaText}</Button>
@@ -85,12 +91,12 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* STATISTICS — lightweight strip */}
-      <section className="border-y border-slate-200 py-10" aria-label="Statistik perusahaan">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
+      <section className="border-y border-slate-200 bg-white py-12" aria-label="Statistik perusahaan">
+        <div className="grid grid-cols-2 gap-y-10 lg:grid-cols-4 lg:divide-x lg:divide-slate-100">
           {stats.map((s) => (
-            <div key={s.label}>
-              <p className="text-4xl font-extrabold text-slate-900 tracking-tight">{s.value}</p>
-              <p className="text-sm text-slate-500 mt-1">{s.label}</p>
+            <div key={s.label} className="text-center px-4">
+              <p className="text-4xl lg:text-5xl font-extrabold text-accent-500 tracking-tight">{s.value}</p>
+              <p className="mt-2 text-sm font-medium uppercase tracking-wide text-slate-500">{s.label}</p>
             </div>
           ))}
         </div>
@@ -106,8 +112,8 @@ export const HomePage: React.FC = () => {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {types.map((t) => (
               <Link key={t.id} to="/app/equipment">
-                <Card className="p-5 flex items-center gap-3 hoverable">
-                  <div className="w-11 h-11 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center shrink-0"><Truck size={20} /></div>
+                <Card className="p-5 flex items-center gap-3 hoverable shadow-md hover:shadow-xl">
+                  <div className="w-11 h-11 rounded-xl bg-accent-50 text-accent-500 flex items-center justify-center shrink-0">{categoryIcon(t.name)}</div>
                   <div className="min-w-0">
                     <p className="font-semibold text-slate-900 truncate">{t.name}</p>
                     <p className="text-xs text-slate-400 truncate">{t.description || 'Alat berat untuk proyek'}</p>
@@ -119,8 +125,8 @@ export const HomePage: React.FC = () => {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {categories.map((c) => (
-              <Card key={c} className="p-5 flex items-center gap-3 hoverable">
-                <div className="w-11 h-11 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center shrink-0"><Truck size={20} /></div>
+              <Card key={c} className="p-5 flex items-center gap-3 hoverable shadow-md hover:shadow-xl">
+                <div className="w-11 h-11 rounded-xl bg-accent-50 text-accent-500 flex items-center justify-center shrink-0">{categoryIcon(c)}</div>
                 <p className="font-semibold text-slate-900">{c}</p>
               </Card>
             ))}
@@ -146,7 +152,7 @@ export const HomePage: React.FC = () => {
               const price = model.prices && model.prices.length > 0 ? Math.min(...model.prices.map((p) => p.base_rate)) : null
               return (
                 <Link key={model.id} to="/app/equipment" className="group">
-                  <Card className="h-full p-0 overflow-hidden hoverable">
+                  <Card className="h-full p-0 overflow-hidden hoverable shadow-md hover:shadow-xl">
                     <div className="aspect-[4/3] bg-slate-100 flex items-center justify-center overflow-hidden">
                       {photo ? <img src={photo} alt={`${model.brand} ${model.model_name}`} className="w-full h-full object-cover" loading="lazy" /> : <Truck size={40} className="text-slate-300" />}
                     </div>
@@ -170,7 +176,7 @@ export const HomePage: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {featuredFallback.map((f) => (
-              <Card key={f.model} className="p-0 overflow-hidden hoverable">
+              <Card key={f.model} className="p-0 overflow-hidden hoverable shadow-md hover:shadow-xl">
                 <div className="aspect-[4/3] bg-slate-100 flex items-center justify-center text-slate-300"><Truck size={40} /></div>
                 <div className="p-5 space-y-2">
                   <h3 className="font-semibold text-slate-900">{f.model}</h3>
