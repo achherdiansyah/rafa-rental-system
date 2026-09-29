@@ -63,7 +63,7 @@ describe('HomePage CMS sync', () => {
     renderHome()
 
     expect(await screen.findByText('Sewa Alat Berat untuk Proyek Anda')).toBeInTheDocument()
-    expect(screen.getByText('Cari Equipment')).toBeInTheDocument()
+    expect(screen.getAllByText('Cari Equipment').length).toBeGreaterThanOrEqual(1)
     const img = screen.getByAltText('Armada alat berat RAFA Rental') as HTMLImageElement
     expect(img.src).toContain('hero-equipment.svg')
     expect(screen.queryByText('Gambar Armada')).not.toBeInTheDocument()

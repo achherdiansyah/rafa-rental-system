@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { HardHat, ArrowRight, ShieldCheck, Clock, CheckCircle, Truck, Mail, MapPin, ChevronRight } from 'lucide-react'
+import { HardHat, ArrowRight, Truck, ChevronRight, Wrench, Users, MapPinned, Headset } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { equipmentService } from '@/features/equipment/services/equipmentService'
@@ -21,6 +21,20 @@ const FEATURED_FALLBACK: Array<{ model: string; brand: string; price: string }> 
   { model: 'Bulldozer D65', brand: 'Komatsu', price: 'Rp 1.800.000 / hari' },
   { model: 'Crane RT50', brand: 'Tadano', price: 'Rp 3.000.000 / hari' },
   { model: 'Compactor BW211', brand: 'Bomag', price: 'Rp 1.000.000 / hari' },
+]
+
+const BENEFITS_DEFAULT: Array<{ icon: React.ReactNode; title: string; desc: string }> = [
+  { icon: <Wrench size={18} />, title: 'Armada Terawat', desc: 'Unit menjalani perawatan berkala dan inspeksi kelayakan.' },
+  { icon: <Users size={18} />, title: 'Operator Berpengalaman', desc: 'Didukung operator bersertifikasi dan berpengalaman.' },
+  { icon: <MapPinned size={18} />, title: 'Pengiriman ke Lokasi', desc: 'Mobilisasi armada tepat waktu ke lokasi proyek Anda.' },
+  { icon: <Headset size={18} />, title: 'Dukungan Operasional', desc: 'Penanganan cepat saat kendala operasional di lapangan.' },
+]
+
+const NAV: Array<{ label: string; href: string }> = [
+  { label: 'Beranda', href: '/' },
+  { label: 'Equipment', href: '/#equipment' },
+  { label: 'Tentang Kami', href: '/#about' },
+  { label: 'Kontak', href: '/#contact' },
 ]
 
 const idr = (n: number): string => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n || 0)
@@ -45,6 +59,8 @@ export const HomePage: React.FC = () => {
     }
   }, [])
 
+  const brandName = cms.brand_name || 'RAFA Rental'
+  const brandLogo = cms.brand_logo || null
   const companyLabel = cms.brand_name || 'CV SUMBER MAKMUR RAFA'
   const heroTitle = cms.hero_title || 'Sewa Alat Berat untuk Proyek Anda'
   const heroSubtitle =
@@ -53,26 +69,26 @@ export const HomePage: React.FC = () => {
   const ctaText = cms.hero_cta_text || 'Cari Equipment'
   const ctaLink = cms.hero_cta_link || '/app/equipment'
   const heroImage = cms.hero_image || '/hero-equipment.svg'
-  const ctaSection = cms.cta_section || 'Hubungi tim kami untuk kebutuhan armada dan penawaran sewa terbaik.'
-  const footerText = cms.footer || 'PT RAFA Rental Nusantara. All rights reserved.'
+
+  const aboutText =
+    cms.about ||
+    'Perusahaan penyedia layanan sewa alat berat untuk proyek konstruksi, tambang, dan infrastruktur — dengan proses transparan dan monitoring operasional presisi.'
+  const ctaSection = cms.cta_section || 'Temukan armada yang sesuai kebutuhan pekerjaan Anda.'
+  const footerNote = cms.footer || 'PT RAFA Rental Nusantara. All rights reserved.'
 
   return (
     <div className="space-y-16">
-      {/* HERO — 45/55 split, image dominant */}
+      {/* HERO — 45/55 split */}
       <section id="home" className="grid grid-cols-1 lg:grid-cols-[45fr_55fr] gap-10 lg:gap-14 items-center py-10 lg:py-16 scroll-mt-24">
         <div className="space-y-6 max-w-xl">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 text-slate-500 text-xs font-semibold tracking-wide border border-slate-200">
             <HardHat size={14} className="text-slate-400" /> {companyLabel}
           </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.05]">
-            {heroTitle}
-          </h1>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.05]">{heroTitle}</h1>
           <p className="text-lg text-slate-600 leading-relaxed max-w-lg">{heroSubtitle}</p>
           <div className="flex flex-wrap gap-3 pt-1">
             <Link to={ctaLink}>
-              <Button size="lg" rightIcon={<ArrowRight size={18} />}>
-                {ctaText}
-              </Button>
+              <Button size="lg" rightIcon={<ArrowRight size={18} />}>{ctaText}</Button>
             </Link>
             <Link to="/#equipment">
               <Button variant="outline" size="lg">Lihat Katalog</Button>
@@ -80,15 +96,8 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
         <div className="relative">
-          <div
-            className="absolute inset-0 -z-10 rounded-[2rem] bg-gradient-to-b from-slate-100 via-white to-transparent"
-            aria-hidden="true"
-          />
-          <img
-            src={heroImage}
-            alt="Armada alat berat RAFA Rental"
-            className="w-full aspect-[5/4] object-contain lg:aspect-[6/5]" 
-          />
+          <div className="absolute inset-0 -z-10 rounded-[2rem] bg-gradient-to-b from-slate-100 via-white to-transparent" aria-hidden="true" />
+          <img src={heroImage} alt="Armada alat berat RAFA Rental" className="w-full aspect-[5/4] object-contain lg:aspect-[6/5]" />
         </div>
       </section>
 
@@ -113,24 +122,22 @@ export const HomePage: React.FC = () => {
         {types.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {types.map((t) => (
-              <Card key={t.id} className="p-5 flex items-center gap-3 hoverable">
-                <div className="w-11 h-11 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
-                  <Truck size={20} />
-                </div>
-                <div className="min-w-0">
-                  <p className="font-semibold text-slate-900 truncate">{t.name}</p>
-                  <p className="text-xs text-slate-400 truncate">{t.description || 'Alat berat untuk proyek'}</p>
-                </div>
-              </Card>
+              <Link key={t.id} to="/app/equipment">
+                <Card className="p-5 flex items-center gap-3 hoverable">
+                  <div className="w-11 h-11 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center shrink-0"><Truck size={20} /></div>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-slate-900 truncate">{t.name}</p>
+                    <p className="text-xs text-slate-400 truncate">{t.description || 'Alat berat untuk proyek'}</p>
+                  </div>
+                </Card>
+              </Link>
             ))}
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {['Excavator', 'Bulldozer', 'Wheel Loader', 'Dump Truck', 'Crane', 'Compactor'].map((c) => (
               <Card key={c} className="p-5 flex items-center gap-3 hoverable">
-                <div className="w-11 h-11 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
-                  <Truck size={20} />
-                </div>
+                <div className="w-11 h-11 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center shrink-0"><Truck size={20} /></div>
                 <p className="font-semibold text-slate-900">{c}</p>
               </Card>
             ))}
@@ -158,16 +165,10 @@ export const HomePage: React.FC = () => {
                 <Link key={model.id} to="/app/equipment" className="group">
                   <Card className="h-full p-0 overflow-hidden hoverable">
                     <div className="aspect-[4/3] bg-slate-100 flex items-center justify-center overflow-hidden">
-                      {photo ? (
-                        <img src={photo} alt={`${model.brand} ${model.model_name}`} className="w-full h-full object-cover" loading="lazy" />
-                      ) : (
-                        <Truck size={40} className="text-slate-300" />
-                      )}
+                      {photo ? <img src={photo} alt={`${model.brand} ${model.model_name}`} className="w-full h-full object-cover" loading="lazy" /> : <Truck size={40} className="text-slate-300" />}
                     </div>
                     <div className="p-5 space-y-2">
-                      <h3 className="font-semibold text-slate-900 group-hover:text-primary-700 transition-colors">
-                        {model.model_name}
-                      </h3>
+                      <h3 className="font-semibold text-slate-900 group-hover:text-primary-700 transition-colors">{model.model_name}</h3>
                       <p className="text-sm text-slate-500">{model.brand}</p>
                       <div className="flex items-center justify-between pt-1">
                         {price !== null ? (
@@ -175,9 +176,7 @@ export const HomePage: React.FC = () => {
                         ) : (
                           <span className="text-xs text-slate-400">Cek tarif</span>
                         )}
-                        {typeof model.units_count === 'number' && (
-                          <span className="text-xs text-slate-400">{model.units_count} unit</span>
-                        )}
+                        {typeof model.units_count === 'number' && <span className="text-xs text-slate-400">{model.units_count} unit</span>}
                       </div>
                     </div>
                   </Card>
@@ -189,9 +188,7 @@ export const HomePage: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {FEATURED_FALLBACK.map((f) => (
               <Card key={f.model} className="p-0 overflow-hidden hoverable">
-                <div className="aspect-[4/3] bg-slate-100 flex items-center justify-center text-slate-300">
-                  <Truck size={40} />
-                </div>
+                <div className="aspect-[4/3] bg-slate-100 flex items-center justify-center text-slate-300"><Truck size={40} /></div>
                 <div className="p-5 space-y-2">
                   <h3 className="font-semibold text-slate-900">{f.model}</h3>
                   <p className="text-sm text-slate-500">{f.brand}</p>
@@ -203,53 +200,87 @@ export const HomePage: React.FC = () => {
         )}
       </section>
 
-      {/* ABOUT */}
-      <section className="space-y-4 scroll-mt-24" id="about">
-        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Tentang Kami</h2>
-        <p className="text-slate-600 max-w-3xl leading-relaxed">
-          {cms.about || 'Perusahaan penyedia layanan sewa alat berat untuk proyek konstruksi, tambang, dan infrastruktur — dengan proses transparan dan monitoring operasional presisi.'}
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-          {[
-            { icon: <Clock size={20} />, title: 'Alokasi Cepat 24 Jam', desc: 'Persetujuan booking dan penerbitan invoice dengan batas waktu jelas.' },
-            { icon: <ShieldCheck size={20} />, title: 'Unit Fisik Terinspeksi', desc: 'Seluruh unit melalui uji kelayakan sebelum mobilisasi dan tervalidasi BAST.' },
-            { icon: <CheckCircle size={20} />, title: 'Perhitungan Jam Nyata', desc: 'Penagihan Hour Meter akurat berbasis timesheet tervalidasi.' },
-          ].map((f) => (
-            <Card key={f.title} className="p-6 hoverable">
-              <div className="w-10 h-10 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center mb-3">{f.icon}</div>
-              <h3 className="font-semibold text-slate-900">{f.title}</h3>
-              <p className="text-sm text-slate-500 mt-1">{f.desc}</p>
-            </Card>
+      {/* ABOUT — split text (CMS) + visual */}
+      <section id="about" className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center scroll-mt-24">
+        <div className="space-y-4 max-w-xl">
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Tentang Kami</h2>
+          <p className="text-slate-600 leading-relaxed">{aboutText}</p>
+          <Link to="/app/equipment">
+            <Button variant="outline">Lihat Armada Kami</Button>
+          </Link>
+        </div>
+        {heroImage && (
+          <div className="relative">
+            <div className="absolute inset-0 -z-10 rounded-[2rem] bg-slate-100" aria-hidden="true" />
+            <img src={heroImage} alt={cms.about ? 'Tentang RAFA Rental' : 'Armada RAFA Rental'} className="w-full aspect-[5/4] object-contain" loading="lazy" />
+          </div>
+        )}
+      </section>
+
+      {/* BENEFITS */}
+      <section className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Keunggulan Kami</h2>
+          <p className="text-sm text-slate-500 mt-1">{cms.services ? 'Layanan dan keunggulan untuk kelancaran proyek Anda.' : 'Alasan memilih layanan sewa armada kami.'}</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {BENEFITS_DEFAULT.map((b) => (
+            <div key={b.title} className="space-y-3">
+              <div className="w-10 h-10 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center">{b.icon}</div>
+              <h3 className="font-semibold text-slate-900">{b.title}</h3>
+              <p className="text-sm text-slate-500 leading-relaxed">{b.desc}</p>
+            </div>
           ))}
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="card-surface p-10 text-center space-y-4">
-        <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">{cms.hero_cta_text ? 'Siap Memulai Proyek Anda?' : 'Siap Memulai Proyek Anda?'}</h2>
-        <p className="text-slate-600 max-w-2xl mx-auto leading-relaxed">{ctaSection}</p>
-        <div className="flex justify-center gap-3 pt-2">
-          <Link to="/register">
-            <Button size="lg" leftIcon={<HardHat size={17} />}>Daftar Sekarang</Button>
+      {/* CTA band */}
+      <section className="bg-slate-900 rounded-2xl px-8 py-12 sm:px-12 text-center space-y-4">
+        <h2 className="text-3xl font-extrabold text-white tracking-tight">Butuh alat berat untuk proyek Anda?</h2>
+        <p className="text-slate-300 max-w-2xl mx-auto leading-relaxed">{ctaSection}</p>
+        <div className="flex justify-center pt-2">
+          <Link to="/app/equipment">
+            <Button size="lg" variant="accent" rightIcon={<ArrowRight size={18} />}>Cari Equipment</Button>
           </Link>
         </div>
       </section>
 
-      {/* CONTACT */}
-      <section className="space-y-4 scroll-mt-24" id="contact">
-        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Kontak</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
-          <div className="flex items-center gap-3 text-slate-600">
-            <Mail size={18} className="text-slate-400" /> cs@rafarental.com
-          </div>
-          <div className="flex items-center gap-3 text-slate-600">
-            <MapPin size={18} className="text-slate-400" /> Jakarta, Indonesia
-          </div>
+      {/* CONTACT — minimal, no invented company info */}
+      <section id="contact" className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center scroll-mt-24">
+        <div className="space-y-3">
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Kontak</h2>
+          <p className="text-slate-600 max-w-md leading-relaxed">Siap memulai? Gunakan akun Anda untuk melakukan pemesanan, atau daftar untuk mulai menyewa armada.</p>
+        </div>
+        <div className="flex flex-wrap gap-3 lg:justify-end">
+          <Link to="/login">
+            <Button variant="outline" size="lg">Masuk Akun</Button>
+          </Link>
+          <Link to="/register">
+            <Button size="lg">Daftar Sekarang</Button>
+          </Link>
         </div>
       </section>
 
-      <footer className="border-t border-slate-200 pt-8 pb-4 text-center text-sm text-slate-400">
-        &copy; {new Date().getFullYear()} {footerText}
+      {/* FOOTER — minimalist */}
+      <footer className="border-t border-slate-200 pt-10 pb-4 space-y-8">
+        <div className="flex flex-col md:flex-row items-start justify-between gap-8">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-600 text-white overflow-hidden">
+              {brandLogo ? <img src={brandLogo} alt={brandName} className="w-full h-full object-contain p-1 bg-white" /> : <HardHat size={20} />}
+            </span>
+            <span className="font-bold text-lg text-slate-900">{brandName}</span>
+          </div>
+          <nav aria-label="Navigasi footer" className="flex flex-wrap gap-6">
+            {NAV.map((m) => (
+              <Link key={m.href} to={m.href} className="text-sm text-slate-600 hover:text-slate-900 transition-colors">
+                {m.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+        <p className="text-xs text-slate-400">
+          &copy; {new Date().getFullYear()} {footerNote}
+        </p>
       </footer>
     </div>
   )
