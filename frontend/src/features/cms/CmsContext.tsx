@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { cmsService } from './services/cmsService'
 
 type CmsMap = Record<string, string | null>
@@ -12,8 +12,11 @@ const CmsContext = createContext<CmsMap>({})
  */
 export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [cms, setCms] = useState<CmsMap>({})
+  const bootedRef = useRef(false)
 
   useEffect(() => {
+    if (bootedRef.current) return
+    bootedRef.current = true
     let mounted = true
     cmsService
       .getPublic()

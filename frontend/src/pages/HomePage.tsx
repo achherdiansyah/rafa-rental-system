@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { HardHat, ArrowRight, Truck, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
@@ -21,10 +21,13 @@ const idr = (n: number): string => new Intl.NumberFormat('id-ID', { style: 'curr
 
 export const HomePage: React.FC = () => {
   const cms = useCms()
+  const bootedRef = useRef(false)
   const [types, setTypes] = useState<EquipmentType[]>([])
   const [featured, setFeatured] = useState<EquipmentModel[]>([])
 
   useEffect(() => {
+    if (bootedRef.current) return
+    bootedRef.current = true
     let mounted = true
     Promise.all([equipmentService.getTypes(undefined, true), equipmentService.getModels({ per_page: 6, is_active: true })])
       .then(([tRes, mRes]) => {
@@ -72,8 +75,14 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
         <div className="relative">
-          <div className="absolute inset-0 -z-10 rounded-[2rem] bg-gradient-to-b from-slate-100 via-white to-transparent" aria-hidden="true" />
-          <img src={heroImage} alt="Armada alat berat RAFA Rental" className="w-full aspect-[5/4] object-contain lg:aspect-[6/5]" />
+          <div className="absolute inset-0 -z-10 rounded-[2rem] bg-slate-100" aria-hidden="true" />
+          <img
+            src={heroImage}
+            alt="Armada alat berat RAFA Rental"
+            className="w-full aspect-[5/4] object-contain lg:aspect-[6/5]"
+            loading="eager"
+            decoding="async"
+          />
         </div>
       </section>
 
@@ -211,8 +220,8 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* CTA band */}
-      <section className="bg-slate-900 rounded-2xl px-8 py-12 sm:px-12 text-center space-y-4">
-        <h2 className="text-3xl font-extrabold text-white tracking-tight">Butuh alat berat untuk proyek Anda?</h2>
+      <section className="bg-slate-900 rounded-2xl px-5 sm:px-12 py-12 text-center space-y-4">
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Butuh alat berat untuk proyek Anda?</h2>
         <p className="text-slate-300 max-w-2xl mx-auto leading-relaxed">{ctaSection}</p>
         <div className="flex justify-center pt-2">
           <Link to="/app/equipment">
