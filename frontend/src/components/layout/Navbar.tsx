@@ -60,6 +60,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = f
       return
     }
     if (hash) {
+      // keep the URL hash in sync (refresh-safe + active-state) then scroll
+      if (window.location.hash !== `#${hash}`) {
+        window.location.hash = hash
+      }
       scrollToElementId(hash)
     } else if (href === '/') {
       navigate('/')
