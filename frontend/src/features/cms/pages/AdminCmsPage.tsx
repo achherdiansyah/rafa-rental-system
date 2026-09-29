@@ -67,10 +67,16 @@ export const AdminCmsPage: React.FC = () => {
   const saveText = async () => {
     setSaving(true)
     try {
+      let saved = 0
       for (const field of DEFAULT_TEXT) {
-        await cmsService.update(field.key, values[field.key] ?? '')
+        const value = (values[field.key] ?? '').trim()
+        // Backend `value` is required — skip empty fields so fallback stays
+        // in place instead of sending '' which 422s "value field is required".
+        if (value === '') continue
+        await cmsService.update(field.key, value)
+        saved++
       }
-      toastSuccess('Konten landing page berhasil disimpan.')
+      toastSuccess(saved > 0 ? 'Konten landing page berhasil disimpan.' : 'Tidak ada perubahan konten untuk disimpan.')
     } catch (err: any) {
       toastError(err?.message || 'Gagal menyimpan konten.')
     } finally {
