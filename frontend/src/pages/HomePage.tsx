@@ -67,7 +67,7 @@ export const HomePage: React.FC = () => {
           decoding="async"
         />
         <div className="absolute inset-0 bg-white/45" aria-hidden="true" />
-        <div className="relative z-10 max-w-2xl pt-20 pb-28 px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 max-w-2xl pt-20 pb-28 pl-6 sm:pl-16 lg:pl-28 pr-6">
           <p className="text-sm font-semibold tracking-wide text-slate-600">{companyLabel}</p>
           <h1 className="mt-4 text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.05]">
             {heroTitle}

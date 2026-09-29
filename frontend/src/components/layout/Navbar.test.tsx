@@ -30,7 +30,7 @@ describe('Public Navbar — redesign & navigation', () => {
   it('shows default menu links (Beranda/Equipment/Tentang Kami/Kontak) + Masuk/Daftar guest actions', async () => {
     renderNav()
 
-    expect(await screen.findByText('RAFA Rental')).toBeInTheDocument()
+    expect(await screen.findByText('CV SUMBER MAKMUR RAFA')).toBeInTheDocument()
     for (const label of ['Beranda', 'Equipment', 'Tentang Kami', 'Kontak']) {
       expect(screen.getByText(label)).toBeInTheDocument()
     }

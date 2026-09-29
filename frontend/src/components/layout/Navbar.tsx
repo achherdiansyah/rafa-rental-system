@@ -37,7 +37,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = f
   const [mobileOpen, setMobileOpen] = useState(false)
   const mobileRef = useRef<HTMLDivElement>(null)
 
-  const brandName = cms.brand_name || 'RAFA Rental'
+  const brandName = cms.brand_name || 'CV SUMBER MAKMUR RAFA'
   const brandLogo = cms.brand_logo || null
   let cmsMenu: Array<{ label: string; href: string }> = []
   try {
@@ -94,7 +94,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = f
   }
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white">
+    <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white shadow-sm">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         {/* LEFT: logo */}
         <div className="flex items-center gap-3 min-w-0">

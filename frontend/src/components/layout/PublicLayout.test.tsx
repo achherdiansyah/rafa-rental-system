@@ -50,6 +50,6 @@ describe('PublicLayout brand/navbar CMS sync', () => {
 
     renderLayout()
 
-    expect(await screen.findByText('RAFA Rental')).toBeInTheDocument()
+    expect(await screen.findByText('CV SUMBER MAKMUR RAFA')).toBeInTheDocument()
   })
 })
