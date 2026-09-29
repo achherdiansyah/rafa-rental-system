@@ -2,6 +2,7 @@ import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { HardHat, LogOut, User, Menu } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { useCms } from '@/features/cms/CmsContext'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 
@@ -12,7 +13,20 @@ export interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = false }) => {
   const { user, isAuthenticated, logout } = useAuth()
+  const cms = useCms()
   const navigate = useNavigate()
+
+  const brandName = cms.brand_name || 'RAFA Rental'
+  const brandLogo = cms.brand_logo || null
+  let cmsMenu: Array<{ label: string; href: string }> = []
+  try {
+    const parsed = cms.navbar ? JSON.parse(cms.navbar) : []
+    if (Array.isArray(parsed)) {
+      cmsMenu = parsed.filter((m: { label?: unknown; href?: unknown }) => m && typeof m.label === 'string' && typeof m.href === 'string') as Array<{ label: string; href: string }>
+    }
+  } catch {
+    cmsMenu = []
+  }
 
   const handleLogout = () => {
     logout()
@@ -33,14 +47,23 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = f
             </button>
           )}
           <Link to="/" className="flex items-center gap-2.5 font-bold text-lg text-slate-900">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-600 text-white shadow-xs">
-              <HardHat size={20} />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-600 text-white shadow-xs overflow-hidden">
+              {brandLogo ? <img src={brandLogo} alt={brandName} className="w-full h-full object-contain p-1 bg-white" /> : <HardHat size={20} />}
             </div>
-            <span className="hidden sm:inline">RAFA Rental</span>
+            <span className="hidden sm:inline">{brandName}</span>
           </Link>
         </div>
 
         <nav className="flex items-center gap-2 sm:gap-4">
+          {cmsMenu.length > 0 && (
+            <div className="hidden md:flex items-center gap-4 mr-2">
+              {cmsMenu.map((m) => (
+                <Link key={m.href} to={m.href} className="text-sm font-medium text-slate-600 hover:text-slate-900">
+                  {m.label}
+                </Link>
+              ))}
+            </div>
+          )}
           {isAuthenticated && user ? (
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="flex items-center gap-2 text-sm text-slate-700">

@@ -1,25 +1,12 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { Link } from 'react-router-dom'
 import { HardHat, ArrowRight, ShieldCheck, Clock, CheckCircle } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
-import { cmsService } from '@/features/cms/services/cmsService'
+import { useCms } from '@/features/cms/CmsContext'
 
 export const HomePage: React.FC = () => {
-  const [cms, setCms] = useState<Record<string, string | null>>({})
-
-  useEffect(() => {
-    let mounted = true
-    cmsService
-      .getPublic()
-      .then((data) => {
-        if (mounted) setCms(data)
-      })
-      .catch(() => undefined) // landing renders defaults when CMS is empty
-    return () => {
-      mounted = false
-    }
-  }, [])
+  const cms = useCms()
 
   const heroTitle = cms.hero_title || 'Sewa Armada Alat Berat Mudah, Akurat & Transparan'
   const heroSubtitle =

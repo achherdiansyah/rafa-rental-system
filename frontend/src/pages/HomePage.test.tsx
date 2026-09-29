@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { HomePage } from './HomePage'
+import { CmsProvider } from '@/features/cms/CmsContext'
 import { cmsService } from '@/features/cms/services/cmsService'
 
 vi.mock('@/features/cms/services/cmsService', () => ({
@@ -11,7 +12,9 @@ vi.mock('@/features/cms/services/cmsService', () => ({
 const renderHome = () =>
   render(
     <MemoryRouter>
-      <HomePage />
+      <CmsProvider>
+        <HomePage />
+      </CmsProvider>
     </MemoryRouter>
   )
 

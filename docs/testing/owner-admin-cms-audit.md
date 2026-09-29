@@ -43,3 +43,14 @@ Executive Summary ≠ Laporan Pendapatan terbukti (fungsi beda; komponen report 
 OWNER: Executive Summary = PASS · Laporan Pendapatan = PASS · Perbedaan fungsi = PASS
 ADMIN CMS: Brand = PASS · Navbar = PASS · Hero = PASS · Media = PASS · Public sync = PASS · Authorization = PASS
 FINAL: **READY**
+
+## Follow-up — Brand & Navbar full landing integration
+Sebelumnya hanya hero yang otomatis; kini brand/navbar ikut.
+- `CmsProvider` (`features/cms/CmsContext.tsx`) memuat `GET /api/v1/cms/public` sekali untuk layout publik.
+- `PublicLayout` membungkus dengan provider + favicon (link icon) & `document.title` dari `brand_favicon`/`brand_name` + footer `brand_name`.
+- `Navbar` menampilkan `brand_logo` (img, fallback ikon HardHat), `brand_name`, dan menu dari `navbar` JSON; fallback default bila kosong. Tahan di luar provider (layar user/admin) → default.
+- `HomePage` kini via `useCms()` (hero title/subtitle/CTA/hero image tetap).
+- Tests baru `PublicLayout.test` (logo/nama/menu/footer; fallback) + `HomePage.test` memakai provider.
+- Regression: frontend **153 passed (40 files)**, tsc/build/lint PASS.
+
+Jadi: Admin ubah logo/favicon/nama/menu → tersimpan DB → `GET /cms/public` → **Navbar/Landing/Footer ikut berubah** (perlu page-load untuk tab landing yang sudah terbuka; tidak live-push).
