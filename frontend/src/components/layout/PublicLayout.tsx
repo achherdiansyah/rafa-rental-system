@@ -3,6 +3,7 @@ import { Link, Outlet } from 'react-router-dom'
 import { HardHat, MapPin, Phone, Mail, Clock } from 'lucide-react'
 import { Navbar } from './Navbar'
 import { CmsProvider, useCms } from '@/features/cms/CmsContext'
+import { fallbackContent } from '@/features/cms/landingFallbackData'
 import { useHashScroll } from '@/hooks/useHashScroll'
 
 const DEFAULT_NAV = [
@@ -21,11 +22,11 @@ function BrandFooter() {
   const brandLogo = cms.brand_logo || null
   const footerNote = cms.footer || 'PT RAFA Rental Nusantara. All rights reserved.'
   const contact = {
-    address: cms.address,
-    phone: cms.phone,
-    whatsapp: cms.whatsapp,
-    email: cms.email,
-    hours: cms.hours,
+    address: cms.address ?? fallbackContent.address,
+    phone: cms.phone ?? fallbackContent.phone,
+    whatsapp: cms.whatsapp ?? fallbackContent.whatsapp,
+    email: cms.email ?? fallbackContent.email,
+    hours: cms.hours ?? fallbackContent.hours,
   }
   let nav = DEFAULT_NAV
   try {
@@ -97,7 +98,7 @@ function BrandFooter() {
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-slate-100 uppercase tracking-wide">Jam Operasional</h3>
             <p className="flex items-start gap-2.5 text-sm text-slate-400">
-              <Clock size={15} className="mt-0.5 shrink-0 text-slate-500" /> {contact.hours || 'Senin – Jumat, 08.00 – 17.00 WIB'}
+              <Clock size={15} className="mt-0.5 shrink-0 text-slate-500" /> {contact.hours}
             </p>
           </div>
         </div>

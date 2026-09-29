@@ -27,13 +27,13 @@ export const fallbackContent = {
   services: '',
   cta_section: 'Temukan armada yang sesuai kebutuhan pekerjaan Anda.',
   footer: 'PT RAFA Rental Nusantara. All rights reserved.',
-  address: 'Kawasan Industri Cakung, Jakarta Timur, Indonesia',
-  phone: '021-0000-0000',
-  whatsapp: '+62 812-0000-0000',
+  address: 'Jl. Raya Cakung Cilincing, Jakarta Timur, Indonesia',
+  phone: '+62 21 4700 0000',
+  whatsapp: '+62 812 9000 0000',
   email: 'cs@rafarental.com',
   hours: 'Senin – Jumat, 08.00 – 17.00 WIB',
   whatsapp_cta_text: 'Chat WhatsApp',
-  whatsapp_cta_link: 'https://wa.me/6281200000000',
+  whatsapp_cta_link: 'https://wa.me/6281290000000',
 }
 
 export const stats = [
