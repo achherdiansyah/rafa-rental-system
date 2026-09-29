@@ -278,7 +278,7 @@ export const HomePage: React.FC = () => {
         {heroImage && (
           <div className="relative">
             <div className="absolute inset-0 -z-10 rounded-[2rem] bg-slate-100" aria-hidden="true" />
-            <img src={heroImage} alt={cms.about ? 'Tentang RAFA Rental' : 'Armada RAFA Rental'} className="w-full aspect-[5/4] object-contain" loading="lazy" />
+            <img src={heroImage} alt={cms.about ? 'Tentang RAFA Rental' : 'Armada RAFA Rental'} className="w-full aspect-[5/4] object-cover rounded-2xl" loading="lazy" />
           </div>
         )}
       </section>
@@ -292,7 +292,7 @@ export const HomePage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {benefits.map((b) => (
             <div key={b.title} className="space-y-3">
-              <div className="w-10 h-10 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center">{b.icon}</div>
+              <div className="w-10 h-10 rounded-lg bg-accent-50 text-accent-500 flex items-center justify-center">{b.icon}</div>
               <h3 className="font-semibold text-slate-900">{b.title}</h3>
               <p className="text-sm text-slate-500 leading-relaxed">{b.desc}</p>
             </div>
@@ -300,13 +300,13 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* CTA band */}
-      <section className="bg-slate-900 rounded-2xl px-5 sm:px-12 py-12 text-center space-y-4">
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Butuh alat berat untuk proyek Anda?</h2>
-        <p className="text-slate-300 max-w-2xl mx-auto leading-relaxed">{ctaSection}</p>
+      {/* CTA band — kuning selaras */}
+      <section className="bg-accent-400 rounded-2xl px-5 sm:px-12 py-12 text-center space-y-4">
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Butuh alat berat untuk proyek Anda?</h2>
+        <p className="text-slate-800 max-w-2xl mx-auto leading-relaxed">{ctaSection}</p>
         <div className="flex justify-center pt-2">
           <Link to="/app/equipment">
-            <Button size="lg" variant="accent" rightIcon={<ArrowRight size={18} />}>Cari Equipment</Button>
+            <Button size="lg" variant="primary" rightIcon={<ArrowRight size={18} />}>Cari Equipment</Button>
           </Link>
         </div>
       </section>
