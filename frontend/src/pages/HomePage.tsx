@@ -57,32 +57,30 @@ export const HomePage: React.FC = () => {
 
   return (
     <div className="space-y-16">
-      {/* HERO — 45/55 split */}
-      <section id="home" className="grid grid-cols-1 lg:grid-cols-[45fr_55fr] gap-10 lg:gap-14 items-center py-10 lg:py-16 scroll-mt-24">
-        <div className="space-y-6 max-w-xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 text-slate-500 text-xs font-semibold tracking-wide border border-slate-200">
-            <HardHat size={14} className="text-slate-400" /> {companyLabel}
-          </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.05]">{heroTitle}</h1>
-          <p className="text-lg text-slate-600 leading-relaxed max-w-lg">{heroSubtitle}</p>
-          <div className="flex flex-wrap gap-3 pt-1">
+      {/* HERO — full-bleed image + thin white overlay */}
+      <section id="home" className="relative overflow-hidden scroll-mt-24">
+        <img
+          src={heroImage}
+          alt="Armada alat berat RAFA Rental"
+          className="absolute inset-0 w-full h-full object-cover"
+          loading="eager"
+          decoding="async"
+        />
+        <div className="absolute inset-0 bg-white/70" aria-hidden="true" />
+        <div className="relative z-10 max-w-2xl py-24 sm:py-32 px-4 sm:px-6 lg:px-8">
+          <p className="text-sm font-semibold tracking-wide text-slate-600">{companyLabel}</p>
+          <h1 className="mt-4 text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.05]">
+            {heroTitle}
+          </h1>
+          <p className="mt-5 text-lg text-slate-700 leading-relaxed max-w-xl">{heroSubtitle}</p>
+          <div className="mt-8 flex flex-wrap gap-3">
             <Link to={ctaLink}>
-              <Button size="lg" rightIcon={<ArrowRight size={18} />}>{ctaText}</Button>
+              <Button size="lg" variant="accent" rightIcon={<ArrowRight size={18} />}>{ctaText}</Button>
             </Link>
             <Link to="/#equipment">
               <Button variant="outline" size="lg">Lihat Katalog</Button>
             </Link>
           </div>
-        </div>
-        <div className="relative">
-          <div className="absolute inset-0 -z-10 rounded-[2rem] bg-slate-100" aria-hidden="true" />
-          <img
-            src={heroImage}
-            alt="Armada alat berat RAFA Rental"
-            className="w-full aspect-[5/4] object-contain lg:aspect-[6/5]"
-            loading="eager"
-            decoding="async"
-          />
         </div>
       </section>
 
