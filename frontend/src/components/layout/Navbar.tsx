@@ -107,16 +107,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = f
               <Menu size={24} />
             </button>
           )}
-          <Link to="/" className="flex items-center gap-2.5 font-bold text-lg text-slate-900" onClick={() => setMobileOpen(false)}>
-            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-600 text-white shadow-btn overflow-hidden">
+          <Link to="/" className="flex items-center gap-2.5 font-bold text-lg text-slate-900 min-w-0" onClick={() => setMobileOpen(false)}>
+            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-600 text-white shadow-btn overflow-hidden shrink-0">
               {brandLogo ? <img src={brandLogo} alt={brandName} className="w-full h-full object-contain p-1 bg-white" /> : <HardHat size={22} />}
             </span>
-            <span className="hidden sm:inline">{brandName}</span>
+            <span className="hidden sm:inline truncate max-w-[200px]">{brandName}</span>
           </Link>
         </div>
 
         {/* CENTER: menu (desktop) */}
-        <nav aria-label="Navigasi utama" className="hidden lg:flex items-center gap-8">
+        <nav aria-label="Navigasi utama" className="hidden lg:flex items-center gap-6 xl:gap-8">
           {menu.map((m) => {
             const active = isCurrentHash(location.pathname, location.hash, m.href)
             return (
