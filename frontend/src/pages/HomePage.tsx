@@ -1,25 +1,43 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { HardHat, ArrowRight, ShieldCheck, Clock, CheckCircle, Truck, Mail, MapPin } from 'lucide-react'
+import { HardHat, ArrowRight, ShieldCheck, Clock, CheckCircle, Truck, Mail, MapPin, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { equipmentService } from '@/features/equipment/services/equipmentService'
 import { useCms } from '@/features/cms/CmsContext'
-import type { EquipmentType } from '@/types/equipment'
+import type { EquipmentType, EquipmentModel } from '@/types/equipment'
+
+const STATS: Array<{ value: string; label: string }> = [
+  { value: '100+', label: 'Unit Alat Berat' },
+  { value: '50+', label: 'Proyek Terlayani' },
+  { value: '100%', label: 'Kualitas Terjaga' },
+  { value: '24/7', label: 'Dukungan Pelanggan' },
+]
+
+const FEATURED_FALLBACK: Array<{ model: string; brand: string; price: string }> = [
+  { model: 'Excavator PC200', brand: 'Komatsu', price: 'Rp 1.500.000 / hari' },
+  { model: 'Wheel Loader WA320', brand: 'Komatsu', price: 'Rp 1.200.000 / hari' },
+  { model: 'Dump Truck HD785', brand: 'Komatsu', price: 'Rp 2.500.000 / hari' },
+  { model: 'Bulldozer D65', brand: 'Komatsu', price: 'Rp 1.800.000 / hari' },
+  { model: 'Crane RT50', brand: 'Tadano', price: 'Rp 3.000.000 / hari' },
+  { model: 'Compactor BW211', brand: 'Bomag', price: 'Rp 1.000.000 / hari' },
+]
+
+const idr = (n: number): string => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n || 0)
 
 export const HomePage: React.FC = () => {
   const cms = useCms()
   const [types, setTypes] = useState<EquipmentType[]>([])
+  const [featured, setFeatured] = useState<EquipmentModel[]>([])
 
   useEffect(() => {
     let mounted = true
-    equipmentService
-      .getTypes(undefined, true)
-      .then((res) => {
-        if (mounted) {
-          const list = (res.data as unknown as EquipmentType[]) ?? []
-          setTypes(Array.isArray(list) ? list : [])
-        }
+    Promise.all([equipmentService.getTypes(undefined, true), equipmentService.getModels({ per_page: 6, is_active: true })])
+      .then(([tRes, mRes]) => {
+        if (!mounted) return
+        const list = (tRes.data as unknown as EquipmentType[]) ?? []
+        setTypes(Array.isArray(list) ? list : [])
+        setFeatured(mRes.data ?? [])
       })
       .catch(() => undefined)
     return () => {
@@ -74,6 +92,18 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
+      {/* STATISTICS — lightweight strip */}
+      <section className="border-y border-slate-200 py-10" aria-label="Statistik perusahaan">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
+          {STATS.map((s) => (
+            <div key={s.label}>
+              <p className="text-4xl font-extrabold text-slate-900 tracking-tight">{s.value}</p>
+              <p className="text-sm text-slate-500 mt-1">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* EQUIPMENT CATEGORIES */}
       <section className="space-y-6 scroll-mt-24" id="equipment">
         <div>
@@ -102,6 +132,71 @@ export const HomePage: React.FC = () => {
                   <Truck size={20} />
                 </div>
                 <p className="font-semibold text-slate-900">{c}</p>
+              </Card>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* FEATURED EQUIPMENT */}
+      <section className="space-y-6" aria-label="Armada unggulan">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Armada Unggulan</h2>
+            <p className="text-sm text-slate-500 mt-1">Pilihan armada populer untuk kebutuhan proyek Anda.</p>
+          </div>
+          <Link to="/app/equipment" className="text-sm font-medium text-primary-700 hover:text-primary-800 inline-flex items-center gap-1">
+            Lihat Semua <ChevronRight size={15} />
+          </Link>
+        </div>
+        {featured.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {featured.map((model) => {
+              const photo = model.attachments?.find((a) => a.document_type === 'EQUIPMENT_PHOTO')?.url
+              const price = model.prices && model.prices.length > 0 ? Math.min(...model.prices.map((p) => p.base_rate)) : null
+              return (
+                <Link key={model.id} to="/app/equipment" className="group">
+                  <Card className="h-full p-0 overflow-hidden hoverable">
+                    <div className="aspect-[4/3] bg-slate-100 flex items-center justify-center overflow-hidden">
+                      {photo ? (
+                        <img src={photo} alt={`${model.brand} ${model.model_name}`} className="w-full h-full object-cover" loading="lazy" />
+                      ) : (
+                        <Truck size={40} className="text-slate-300" />
+                      )}
+                    </div>
+                    <div className="p-5 space-y-2">
+                      <h3 className="font-semibold text-slate-900 group-hover:text-primary-700 transition-colors">
+                        {model.model_name}
+                      </h3>
+                      <p className="text-sm text-slate-500">{model.brand}</p>
+                      <div className="flex items-center justify-between pt-1">
+                        {price !== null ? (
+                          <span className="font-mono font-bold text-slate-900">{idr(price)}<span className="text-xs text-slate-400 font-normal"> / jam</span></span>
+                        ) : (
+                          <span className="text-xs text-slate-400">Cek tarif</span>
+                        )}
+                        {typeof model.units_count === 'number' && (
+                          <span className="text-xs text-slate-400">{model.units_count} unit</span>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                </Link>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {FEATURED_FALLBACK.map((f) => (
+              <Card key={f.model} className="p-0 overflow-hidden hoverable">
+                <div className="aspect-[4/3] bg-slate-100 flex items-center justify-center text-slate-300">
+                  <Truck size={40} />
+                </div>
+                <div className="p-5 space-y-2">
+                  <h3 className="font-semibold text-slate-900">{f.model}</h3>
+                  <p className="text-sm text-slate-500">{f.brand}</p>
+                  <p className="font-mono font-bold text-slate-900 pt-1">{f.price}</p>
+                </div>
               </Card>
             ))}
           </div>

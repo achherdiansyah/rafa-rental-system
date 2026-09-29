@@ -11,7 +11,7 @@ vi.mock('@/features/cms/services/cmsService', () => ({
 }))
 
 vi.mock('@/features/equipment/services/equipmentService', () => ({
-  equipmentService: { getTypes: vi.fn() },
+  equipmentService: { getTypes: vi.fn(), getModels: vi.fn() },
 }))
 
 const renderHome = () =>
@@ -30,6 +30,12 @@ describe('HomePage CMS sync', () => {
       success: true,
       message: 'ok',
       data: [],
+    } as never)
+    vi.mocked(equipmentService.getModels).mockResolvedValue({
+      success: true,
+      message: 'ok',
+      data: [],
+      meta: { current_page: 1, per_page: 6, total: 0, last_page: 1 } as never,
     } as never)
   })
 
@@ -61,5 +67,27 @@ describe('HomePage CMS sync', () => {
     const img = screen.getByAltText('Armada alat berat RAFA Rental') as HTMLImageElement
     expect(img.src).toContain('hero-equipment.svg')
     expect(screen.queryByText('Gambar Armada')).not.toBeInTheDocument()
+  })
+
+  it('renders the statistics strip using the specified constants', async () => {
+    vi.mocked(cmsService.getPublic).mockResolvedValue({})
+
+    renderHome()
+
+    expect(await screen.findByText('Unit Alat Berat')).toBeInTheDocument()
+    expect(screen.getByText('100+')).toBeInTheDocument()
+    expect(screen.getByText('Proyek Terlayani')).toBeInTheDocument()
+    expect(screen.getByText('Dukungan Pelanggan')).toBeInTheDocument()
+  })
+
+  it('shows the featured-equipment fallback list when the API returns no data', async () => {
+    vi.mocked(cmsService.getPublic).mockResolvedValue({})
+
+    renderHome()
+
+    // fallback rows (specified constants; no invented availability)
+    expect(await screen.findByText('Excavator PC200')).toBeInTheDocument()
+    expect(screen.getByText('Dump Truck HD785')).toBeInTheDocument()
+    expect(screen.getByText('Rp 2.500.000 / hari')).toBeInTheDocument()
   })
 })
