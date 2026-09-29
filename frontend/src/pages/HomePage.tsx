@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { HardHat, ArrowRight, Truck, ChevronRight, Tractor, Container, Box, Wrench } from 'lucide-react'
+import { HardHat, ArrowRight, Truck, ChevronRight, ChevronLeft, Tractor, Container, Box, Wrench } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { equipmentService } from '@/features/equipment/services/equipmentService'
@@ -75,6 +75,7 @@ const categoryIcon = (name: string) => {
 export const HomePage: React.FC = () => {
   const cms = useCms()
   const bootedRef = useRef(false)
+  const featuredScroll = useRef<HTMLDivElement>(null)
   const [types, setTypes] = useState<EquipmentType[]>([])
   const [featured, setFeatured] = useState<EquipmentModel[]>([])
 
@@ -107,6 +108,50 @@ export const HomePage: React.FC = () => {
   const aboutText = cms.about ?? fallbackContent.about
   const ctaSection = cms.cta_section ?? fallbackContent.cta_section
   const footerNote = cms.footer ?? fallbackContent.footer
+
+  const featuredCards =
+    featured.length > 0
+      ? featured.map((model) => {
+          const photo = model.attachments?.find((a) => a.document_type === 'EQUIPMENT_PHOTO')?.url
+          const price = model.prices && model.prices.length > 0 ? Math.min(...model.prices.map((p) => p.base_rate)) : null
+          return {
+            key: String(model.id),
+            node: (
+              <Link to="/app/equipment" className="group">
+                <Card className="h-full p-0 overflow-hidden hoverable shadow-md hover:shadow-xl">
+                  <div className="aspect-[4/3] bg-slate-100 flex items-center justify-center overflow-hidden">
+                    {photo ? <img src={photo} alt={`${model.brand} ${model.model_name}`} className="w-full h-full object-cover" loading="lazy" /> : <Truck size={40} className="text-slate-300" />}
+                  </div>
+                  <div className="p-5 space-y-2">
+                    <h3 className="font-semibold text-slate-900 group-hover:text-primary-700 transition-colors">{model.model_name}</h3>
+                    <p className="text-sm text-slate-500">{model.brand}</p>
+                    <div className="flex items-center justify-between pt-1">
+                      {price !== null ? (
+                        <span className="font-mono font-bold text-slate-900">{idr(price)}<span className="text-xs text-slate-400 font-normal"> / jam</span></span>
+                      ) : (
+                        <span className="text-xs text-slate-400">Cek tarif</span>
+                      )}
+                      {typeof model.units_count === 'number' && <span className="text-xs text-slate-400">{model.units_count} unit</span>}
+                    </div>
+                  </div>
+                </Card>
+              </Link>
+            ),
+          }
+        })
+      : featuredFallback.map((f) => ({
+          key: f.model,
+          node: (
+            <Card className="h-full p-0 overflow-hidden hoverable shadow-md hover:shadow-xl">
+              <div className="aspect-[4/3] bg-slate-100 flex items-center justify-center text-slate-300"><Truck size={40} /></div>
+              <div className="p-5 space-y-2">
+                <h3 className="font-semibold text-slate-900">{f.model}</h3>
+                <p className="text-sm text-slate-500">{f.brand}</p>
+                <p className="font-mono font-bold text-slate-900 pt-1">{f.price}</p>
+              </div>
+            </Card>
+          ),
+        }))
 
   return (
     <div className="space-y-16">
@@ -194,48 +239,31 @@ export const HomePage: React.FC = () => {
             Lihat Semua <ChevronRight size={15} />
           </Link>
         </div>
-        {featured.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {featured.map((model) => {
-              const photo = model.attachments?.find((a) => a.document_type === 'EQUIPMENT_PHOTO')?.url
-              const price = model.prices && model.prices.length > 0 ? Math.min(...model.prices.map((p) => p.base_rate)) : null
-              return (
-                <Link key={model.id} to="/app/equipment" className="group">
-                  <Card className="h-full p-0 overflow-hidden hoverable shadow-md hover:shadow-xl">
-                    <div className="aspect-[4/3] bg-slate-100 flex items-center justify-center overflow-hidden">
-                      {photo ? <img src={photo} alt={`${model.brand} ${model.model_name}`} className="w-full h-full object-cover" loading="lazy" /> : <Truck size={40} className="text-slate-300" />}
-                    </div>
-                    <div className="p-5 space-y-2">
-                      <h3 className="font-semibold text-slate-900 group-hover:text-primary-700 transition-colors">{model.model_name}</h3>
-                      <p className="text-sm text-slate-500">{model.brand}</p>
-                      <div className="flex items-center justify-between pt-1">
-                        {price !== null ? (
-                          <span className="font-mono font-bold text-slate-900">{idr(price)}<span className="text-xs text-slate-400 font-normal"> / jam</span></span>
-                        ) : (
-                          <span className="text-xs text-slate-400">Cek tarif</span>
-                        )}
-                        {typeof model.units_count === 'number' && <span className="text-xs text-slate-400">{model.units_count} unit</span>}
-                      </div>
-                    </div>
-                  </Card>
-                </Link>
-              )
-            })}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {featuredFallback.map((f) => (
-              <Card key={f.model} className="p-0 overflow-hidden hoverable shadow-md hover:shadow-xl">
-                <div className="aspect-[4/3] bg-slate-100 flex items-center justify-center text-slate-300"><Truck size={40} /></div>
-                <div className="p-5 space-y-2">
-                  <h3 className="font-semibold text-slate-900">{f.model}</h3>
-                  <p className="text-sm text-slate-500">{f.brand}</p>
-                  <p className="font-mono font-bold text-slate-900 pt-1">{f.price}</p>
-                </div>
-              </Card>
+<div className="relative">
+          <button
+            type="button"
+            aria-label="Armada sebelumnya"
+            onClick={() => featuredScroll.current?.scrollBy({ left: -340, behavior: 'smooth' })}
+            className="absolute -left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white border border-slate-200 shadow-md text-slate-600 hover:text-slate-900 flex items-center justify-center cursor-pointer"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <div ref={featuredScroll} className="flex gap-4 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-2">
+            {featuredCards.map((c) => (
+              <div key={c.key} className="w-[290px] sm:w-[320px] shrink-0 snap-start">
+                {c.node}
+              </div>
             ))}
           </div>
-        )}
+          <button
+            type="button"
+            aria-label="Armada berikutnya"
+            onClick={() => featuredScroll.current?.scrollBy({ left: 340, behavior: 'smooth' })}
+            className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white border border-slate-200 shadow-md text-slate-600 hover:text-slate-900 flex items-center justify-center cursor-pointer"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
       </section>
 
       {/* ABOUT — split text (CMS) + visual */}

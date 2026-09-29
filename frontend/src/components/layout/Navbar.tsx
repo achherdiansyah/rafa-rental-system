@@ -94,7 +94,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = f
   }
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white shadow-sm">
+    <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white/70 backdrop-blur-md shadow-sm">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         {/* LEFT: logo */}
         <div className="flex items-center gap-3 min-w-0">
