@@ -58,7 +58,7 @@ export const HomePage: React.FC = () => {
   return (
     <div className="space-y-16">
       {/* HERO — full-bleed image + thin white overlay */}
-      <section id="home" className="relative overflow-hidden scroll-mt-24">
+      <section id="home" className="relative overflow-hidden scroll-mt-24 w-screen left-1/2 -translate-x-1/2 -mt-8">
         <img
           src={heroImage}
           alt="Armada alat berat RAFA Rental"
@@ -67,7 +67,7 @@ export const HomePage: React.FC = () => {
           decoding="async"
         />
         <div className="absolute inset-0 bg-white/45" aria-hidden="true" />
-        <div className="relative z-10 max-w-2xl py-24 sm:py-32 px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 max-w-2xl pt-20 pb-28 px-4 sm:px-6 lg:px-8">
           <p className="text-sm font-semibold tracking-wide text-slate-600">{companyLabel}</p>
           <h1 className="mt-4 text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.05]">
             {heroTitle}
