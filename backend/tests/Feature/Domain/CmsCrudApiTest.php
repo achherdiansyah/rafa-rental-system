@@ -87,25 +87,22 @@ class CmsCrudApiTest extends TestCase
         ])->assertForbidden();
     }
 
-    public function test_replace_media_and_disable_hides_from_public(): void
+    public function test_re_upload_reactivates_a_disabled_media_slot(): void
     {
         $admin = User::factory()->admin()->create();
         Sanctum::actingAs($admin);
 
-        $this->putJson('/api/v1/admin/cms/hero_subtitle', ['value' => 'v1'])->assertOk();
-        $this->putJson('/api/v1/admin/cms/hero_subtitle', ['value' => 'v2 updated'])->assertOk();
-        $this->assertEquals('v2 updated', $this->getJson('/api/v1/cms/public')->json('data.hero_subtitle'));
-
-        $this->deleteJson('/api/v1/admin/cms/hero_subtitle')->assertOk();
-        $this->assertNull($this->getJson('/api/v1/cms/public')->json('data.hero_subtitle'));
-
-        // replace image
+        // upload, then disable (delete)
         $this->postJson('/api/v1/admin/cms/hero_image/media', [
             'media' => UploadedFile::fake()->image('hero1.jpg', 1200, 600),
         ])->assertOk();
+        $this->deleteJson('/api/v1/admin/cms/hero_image')->assertOk();
+        $this->assertNull($this->getJson('/api/v1/cms/public')->json('data.hero_image'));
+
+        // re-upload must reactivate and surface on the public landing
         $this->postJson('/api/v1/admin/cms/hero_image/media', [
             'media' => UploadedFile::fake()->image('hero2.jpg', 1200, 600),
         ])->assertOk();
-        $this->assertNotEmpty($this->getJson('/api/v1/cms/public')->json('data.hero_image'));
+        $this->assertStringContainsString('/storage/', $this->getJson('/api/v1/cms/public')->json('data.hero_image'));
     }
 }

@@ -73,7 +73,7 @@ class CmsController extends ApiController
 
         $setting = CmsSetting::updateOrCreate(
             ['key' => $key],
-            array_merge($data, ['updated_by' => $user->id])
+            array_merge($data, ['is_active' => $data['is_active'] ?? true, 'updated_by' => $user->id])
         );
 
         return $this->success($setting->fresh()->only(['key', 'value', 'is_active']), 'Konten landing page berhasil disimpan.');
@@ -105,6 +105,7 @@ class CmsController extends ApiController
 
             $file->storeAs('', $path, 'public');
             $setting->value = $path;
+            $setting->is_active = true; // reactivate a previously-disabled slot on upload
             $setting->updated_by = $user->id;
             $setting->save();
 
