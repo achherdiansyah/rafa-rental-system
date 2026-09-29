@@ -64,8 +64,22 @@ body {
   min-height: 100vh;
   background-color: #fafbfc;
   color: var(--color-slate-900);
+  font-family: var(--font-sans);
+  font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography hierarchy — Inter Bold (headings), Semibold (labels), Regular (body) */
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-sans);
+  font-weight: 700;
+}
+label {
+  font-weight: 600;
 }
 
 html {
