@@ -126,7 +126,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = f
                 onClick={() => go(m.href)}
                 className={cn(
                   'text-[15px] font-medium transition-colors cursor-pointer py-2 border-b-2 -mb-0.5 hover:text-slate-900',
-                  active ? 'text-primary-700 border-primary-600' : 'text-slate-600 border-transparent hover:text-slate-900'
+                  active ? 'text-accent-600 border-accent-500' : 'text-slate-600 border-transparent hover:text-slate-900'
                 )}
               >
                 {m.label}
@@ -170,14 +170,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = f
             </>
           ) : (
             <>
+              <Link to="/register">
+                <Button variant="outline" size="sm" className="h-9 px-4 text-[15px] font-medium rounded-lg">
+                  Daftar
+                </Button>
+              </Link>
               <Link to="/login">
                 <Button variant="accent" size="sm" className="h-9 px-4 text-[15px] font-medium rounded-lg">
                   Masuk
-                </Button>
-              </Link>
-              <Link to="/register">
-                <Button variant="primary" size="sm" className="h-9 px-4 text-[15px] font-medium rounded-lg">
-                  Daftar
                 </Button>
               </Link>
               <button
@@ -206,7 +206,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = f
                 className={cn(
                   'block w-full text-left px-3 py-2.5 rounded-lg font-medium transition-colors cursor-pointer',
                   isCurrentHash(location.pathname, location.hash, m.href)
-                    ? 'bg-primary-50 text-primary-700'
+                    ? 'bg-accent-50 text-accent-700'
                     : 'text-slate-700 hover:bg-slate-50'
                 )}
               >

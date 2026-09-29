@@ -69,6 +69,6 @@ describe('Public Navbar — redesign & navigation', () => {
     renderNav('/')
 
     const active = (await screen.findByText('Beranda')).closest('button')
-    expect(active?.className).toContain('text-primary-700')
+    expect(active?.className).toContain('text-accent-600')
   })
 })
