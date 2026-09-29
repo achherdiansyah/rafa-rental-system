@@ -111,7 +111,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = f
             <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-600 text-white shadow-btn overflow-hidden shrink-0">
               {brandLogo ? <img src={brandLogo} alt={brandName} className="w-full h-full object-contain p-1 bg-white" /> : <HardHat size={22} />}
             </span>
-            <span className="hidden sm:inline truncate max-w-[200px]">{brandName}</span>
+            <span className="hidden sm:inline whitespace-nowrap">{brandName}</span>
           </Link>
         </div>
 
