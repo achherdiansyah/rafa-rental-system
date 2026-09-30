@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { HardHat, LogOut, User, Menu, X } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useCms } from '@/features/cms/CmsContext'
+import { cmsService } from '@/features/cms/services/cmsService'
 import { NotificationBell } from '@/features/notification/NotificationBell'
 import { useLocation } from 'react-router-dom'
 import { scrollToElementId } from '@/hooks/useHashScroll'
@@ -35,16 +36,34 @@ const isCurrentHash = (pathname: string, hash: string, href: string): boolean =>
 export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = false, hideMenu = false }) => {
   const { user, isAuthenticated, logout } = useAuth()
   const cms = useCms()
+  const [localCms, setLocalCms] = useState<Record<string, string | null>>({})
   const navigate = useNavigate()
   const location = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
   const mobileRef = useRef<HTMLDivElement>(null)
 
-  const brandName = cms.brand_name || 'CV SUMBER MAKMUR RAFA'
-  const brandLogo = cms.brand_logo || null
+  // Internal layouts (Admin/User/Owner) render outside CmsProvider — hydrate the
+  // published CMS content here so the navbar brand/logo matches the CMS upload.
+  const active = Object.keys(cms).length > 0 ? cms : localCms
+  useEffect(() => {
+    if (Object.keys(cms).length > 0) return
+    let mounted = true
+    cmsService
+      .getPublic()
+      .then((d) => {
+        if (mounted) setLocalCms(d)
+      })
+      .catch(() => undefined)
+    return () => {
+      mounted = false
+    }
+  }, [cms])
+
+  const brandName = active.brand_name || 'CV SUMBER MAKMUR RAFA'
+  const brandLogo = active.brand_logo || null
   let cmsMenu: Array<{ label: string; href: string }> = []
   try {
-    const parsed = cms.navbar ? JSON.parse(cms.navbar) : []
+    const parsed = active.navbar ? JSON.parse(active.navbar) : []
     if (Array.isArray(parsed)) {
       cmsMenu = parsed.filter(
         (m: { label?: unknown; href?: unknown }) => m && typeof m.label === 'string' && typeof m.href === 'string'
