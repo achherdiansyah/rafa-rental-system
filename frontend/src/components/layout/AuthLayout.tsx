@@ -33,8 +33,8 @@ function AuthShell() {
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-white">
       {/* LEFT — visual panel (desktop only) */}
       <div className="hidden lg:flex flex-col justify-center p-8 lg:p-12">
-        <div className="relative h-full min-h-[70vh] rounded-3xl overflow-hidden">
-          <img src={heroImage} alt="Armada alat berat" className="absolute inset-0 w-full h-full object-cover object-left" />
+        <div className="relative h-full min-h-[70vh] rounded-r-2xl overflow-hidden">
+          <img src={heroImage} alt="Armada alat berat" className="absolute inset-0 w-full h-full object-cover object-right" />
           <div className="absolute inset-0 bg-black/35" aria-hidden="true" />
         </div>
       </div>
