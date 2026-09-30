@@ -106,7 +106,7 @@ describe('Frontend End-to-End Authentication Journey', () => {
     fireEvent.click(screen.getByRole('button', { name: /masuk/i }))
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /dashboard operasional/i })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: /selamat datang/i })).toBeInTheDocument()
     }, { timeout: 10000 })
 
     expect(screen.getAllByText('Admin Utama')[0]).toBeInTheDocument()
