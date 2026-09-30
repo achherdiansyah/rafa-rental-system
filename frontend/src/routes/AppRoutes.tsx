@@ -21,10 +21,10 @@ const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 const ForbiddenPage = lazy(() => import('@/pages/ForbiddenPage'))
 const UnauthorizedPage = lazy(() => import('@/pages/UnauthorizedPage'))
 const UserDashboardPage = lazy(() => import('@/features/dashboard/pages/UserDashboardPage'))
-const OwnerPortalPlaceholder = lazy(() => import('@/pages/OwnerPortalPlaceholder'))
 const OwnerPricingPage = lazy(() => import('@/features/equipment/pages/OwnerPricingPage'))
 const OwnerExecutiveSummaryPage = lazy(() => import('@/features/reporting/pages/OwnerExecutiveSummaryPage'))
 const OwnerRevenueReportPage = lazy(() => import('@/features/reporting/pages/OwnerRevenueReportPage'))
+const OwnerAuditTrailPage = lazy(() => import('@/features/reporting/pages/OwnerAuditTrailPage'))
 const AdminCmsPage = lazy(() => import('@/features/cms/pages/AdminCmsPage'))
 const AdminEquipmentMasterPage = lazy(() => import('@/features/equipment/pages/AdminEquipmentMasterPage'))
 const AdminEquipmentUnitsPage = lazy(() => import('@/features/equipment/pages/AdminEquipmentUnitsPage'))
@@ -124,7 +124,7 @@ export const AppRoutes: React.FC = () => {
             <Route path="/owner" element={<OwnerLayout />}>
               <Route index element={<OwnerExecutiveSummaryPage />} />
               <Route path="revenue" element={<OwnerRevenueReportPage />} />
-              <Route path="audit" element={<OwnerPortalPlaceholder />} />
+              <Route path="audit" element={<OwnerAuditTrailPage />} />
               <Route path="settings" element={<AdminBankAccountsPage />} />
             </Route>
           </Route>
