@@ -68,6 +68,7 @@ export const LoginPage: React.FC = () => {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="nama@perusahaan.com"
+        className="border-accent-300 focus:border-accent-400"
       />
 
       <PasswordInput
@@ -76,6 +77,7 @@ export const LoginPage: React.FC = () => {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         placeholder="••••••••"
+        className="border-accent-300 focus:border-accent-400"
       />
 
       <div className="flex items-center justify-between text-sm">
