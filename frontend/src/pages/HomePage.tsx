@@ -10,8 +10,6 @@ import { scrollToElementId } from '@/hooks/useHashScroll'
 import { fallbackHero, fallbackContent, categories, featuredFallback, benefits } from '@/features/cms/landingFallbackData'
 import type { EquipmentType, EquipmentModel } from '@/types/equipment'
 
-const idr = (n: number): string => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n || 0)
-
 const STATS: Array<{ count?: number; suffix?: string; staticText?: string; label: string }> = [
   { count: 5, suffix: '+', label: 'Unit Alat Berat' },
   { count: 30, suffix: '+', label: 'Proyek Terlayani' },
@@ -159,28 +157,13 @@ export const HomePage: React.FC = () => {
     waLink: cms.whatsapp_cta_link ?? fallbackContent.whatsapp_cta_link,
   }
 
-  const hasPhoto = (m: EquipmentModel) => Boolean(m.attachments?.some((a) => a.document_type === 'EQUIPMENT_PHOTO' && a.url))
+  const hasPhoto = (m: EquipmentModel) => Boolean(m.attachments?.find((a) => a.url))
   const orderedFeatured = [...featured.filter(hasPhoto), ...featured.filter((m) => !hasPhoto(m))].slice(0, 8)
-
-  const unitLabel = (type?: string) => {
-    switch (type) {
-      case 'DAILY':
-        return ' / hari'
-      case 'MONTHLY':
-        return ' / bulan'
-      case 'LUMP_SUM':
-        return ''
-      default:
-        return ' / jam'
-    }
-  }
 
   const featuredCards =
     featured.length > 0
       ? orderedFeatured.map((model) => {
-          const photo = model.attachments?.find((a) => a.document_type === 'EQUIPMENT_PHOTO')?.url
-          const price = model.prices && model.prices.length > 0 ? Math.min(...model.prices.map((p) => p.base_rate)) : null
-          const priceType = model.prices && model.prices.length > 0 ? model.prices[0].price_type : undefined
+          const photo = model.attachments?.find((a) => a.url && a.document_type === 'EQUIPMENT_PHOTO')?.url ?? model.attachments?.find((a) => a.url)?.url
           return {
             key: String(model.id),
             node: (
@@ -189,17 +172,10 @@ export const HomePage: React.FC = () => {
                   <div className="aspect-[4/3] bg-slate-100 flex items-center justify-center overflow-hidden">
                     {photo ? <img src={photo} alt={`${model.brand} ${model.model_name}`} className="w-full h-full object-cover" loading="lazy" /> : <Truck size={40} className="text-slate-300" />}
                   </div>
-                  <div className="p-5 space-y-2">
+                  <div className="p-5 space-y-1.5">
                     <h3 className="font-semibold text-slate-900 group-hover:text-primary-700 transition-colors">{model.model_name}</h3>
                     <p className="text-sm text-slate-500">{model.brand}</p>
-                    <div className="flex items-center justify-between pt-1">
-                      {price !== null ? (
-                        <span className="font-mono font-bold text-slate-900">{idr(price)}<span className="text-xs text-slate-400 font-normal">{unitLabel(priceType)}</span></span>
-                      ) : (
-                        <span className="text-xs text-slate-400">Cek tarif</span>
-                      )}
-                      {typeof model.units_count === 'number' && <span className="text-xs text-slate-400">{model.units_count} unit</span>}
-                    </div>
+                    {typeof model.units_count === 'number' && <p className="text-xs text-slate-400 pt-1">{model.units_count} unit</p>}
                   </div>
                 </Card>
               </Link>
@@ -211,10 +187,9 @@ export const HomePage: React.FC = () => {
           node: (
             <Card className="h-full p-0 overflow-hidden hoverable shadow-md hover:shadow-xl">
               <div className="aspect-[4/3] bg-slate-100 flex items-center justify-center text-slate-300"><Truck size={40} /></div>
-              <div className="p-5 space-y-2">
+              <div className="p-5 space-y-1.5">
                 <h3 className="font-semibold text-slate-900">{f.model}</h3>
                 <p className="text-sm text-slate-500">{f.brand}</p>
-                <p className="font-mono font-bold text-slate-900 pt-1">{f.price}</p>
               </div>
             </Card>
           ),
