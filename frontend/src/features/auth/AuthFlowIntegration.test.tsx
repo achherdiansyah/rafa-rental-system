@@ -65,7 +65,7 @@ describe('Frontend End-to-End Authentication Journey', () => {
     expect(screen.getAllByText('USER')[0]).toBeInTheDocument()
 
     // 5. User clicks logout button
-    const logoutBtn = screen.getByRole('button', { name: /logout/i })
+    const logoutBtn = screen.getAllByRole('button', { name: /keluar/i })[0]
     fireEvent.click(logoutBtn)
 
     // 6. User is redirected back to login page and storage is cleared

@@ -163,11 +163,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = f
         <div className="flex items-center gap-2 shrink-0">
           {isAuthenticated && user ? (
             hideMenu ? (
-              /* Internal (Admin): identity + logout at the far right */
+              /* Internal layouts (Admin/User/Owner): identity + notif + logout */
               <>
                 <div className="flex items-center gap-2.5 text-sm text-slate-700 mr-1">
                   <User size={16} className="text-slate-400" />
                   <span className="font-medium">{user.name}</span>
+                  <Badge
+                    variant={user.role === 'OWNER' ? 'warning' : user.role === 'ADMIN' ? 'success' : 'secondary'}
+                    size="sm"
+                  >
+                    {user.role}
+                  </Badge>
                 </div>
                 <NotificationBell />
                 <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-1.5 text-rose-600 hover:bg-rose-50 hover:text-rose-700">
