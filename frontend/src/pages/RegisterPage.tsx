@@ -144,7 +144,7 @@ export const RegisterPage: React.FC = () => {
         />
       </div>
 
-      <Button type="submit" size="lg" isLoading={isLoading} className="w-full mt-2">
+      <Button type="submit" variant="accent" size="lg" isLoading={isLoading} className="w-full mt-2">
         Daftar Sekarang
       </Button>
 
