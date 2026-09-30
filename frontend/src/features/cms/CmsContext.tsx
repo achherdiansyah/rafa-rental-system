@@ -54,9 +54,14 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     load()
     window.addEventListener('focus', load)
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') load()
+    }
+    document.addEventListener('visibilitychange', onVisibility)
     return () => {
       mounted = false
       window.removeEventListener('focus', load)
+      document.removeEventListener('visibilitychange', onVisibility)
     }
   }, [location.pathname])
 

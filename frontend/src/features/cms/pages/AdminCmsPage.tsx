@@ -99,7 +99,7 @@ export const AdminCmsPage: React.FC = () => {
         await cmsService.update(field.key, value)
         saved++
       }
-      toastSuccess(saved > 0 ? 'Konten landing page berhasil disimpan.' : 'Tidak ada perubahan konten untuk disimpan.')
+      toastSuccess(saved > 0 ? 'Konten landing page berhasil disimpan.' : 'Konten teks tidak berubah; media/gambar tersimpan otomatis saat diunggah.')
     } catch (err: any) {
       toastError(err?.message || 'Gagal menyimpan konten.')
     } finally {

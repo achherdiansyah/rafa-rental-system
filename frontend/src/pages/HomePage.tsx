@@ -254,13 +254,14 @@ export const HomePage: React.FC = () => {
     <div className="space-y-16">
       {/* HERO — full-bleed image + thin white overlay */}
       <section id="home" className="relative overflow-hidden scroll-mt-24 w-screen left-1/2 -translate-x-1/2 -mt-8">
-        <img
-          src={heroImage}
-          alt="Armada alat berat RAFA Rental"
-          className="absolute inset-0 w-full h-full object-cover"
-          loading="eager"
-          decoding="async"
-        />
+<img
+            key={heroImage}
+            src={heroImage}
+            alt="Armada alat berat RAFA Rental"
+            className="absolute inset-0 w-full h-full object-cover object-right"
+            loading="eager"
+            decoding="async"
+          />
         <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
         <div className="relative z-10 max-w-2xl pt-20 pb-28 pl-6 sm:pl-16 lg:pl-28 pr-6">
           <Reveal delay={0}>
