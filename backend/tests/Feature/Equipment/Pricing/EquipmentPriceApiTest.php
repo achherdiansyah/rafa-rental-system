@@ -14,12 +14,12 @@ class EquipmentPriceApiTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_owner_can_create_master_price_and_initial_version_is_recorded(): void
+    public function test_admin_can_create_master_price_and_initial_version_is_recorded(): void
     {
-        $owner = User::factory()->owner()->create();
+        $admin = User::factory()->admin()->create();
         $model = EquipmentModel::factory()->create();
 
-        Sanctum::actingAs($owner);
+        Sanctum::actingAs($admin);
 
         $payload = [
             'equipment_model_id' => $model->id,
@@ -57,16 +57,16 @@ class EquipmentPriceApiTest extends TestCase
             'equipment_price_id' => $priceId,
             'old_base_rate' => 0.00,
             'new_base_rate' => 250000.00,
-            'changed_by' => $owner->id,
+            'changed_by' => $admin->id,
         ]);
     }
 
-    public function test_owner_can_update_price_and_new_immutable_version_is_appended(): void
+    public function test_admin_can_update_price_and_new_immutable_version_is_appended(): void
     {
-        $owner = User::factory()->owner()->create();
+        $admin = User::factory()->admin()->create();
         $price = EquipmentPrice::factory()->create(['base_rate' => 250000.00]);
 
-        Sanctum::actingAs($owner);
+        Sanctum::actingAs($admin);
 
         $response = $this->putJson("/api/v1/equipment/prices/{$price->id}", [
             'base_rate' => 300000.00,
@@ -84,7 +84,7 @@ class EquipmentPriceApiTest extends TestCase
             'equipment_price_id' => $price->id,
             'old_base_rate' => 250000.00,
             'new_base_rate' => 300000.00,
-            'changed_by' => $owner->id,
+            'changed_by' => $admin->id,
         ]);
     }
 
@@ -150,13 +150,13 @@ class EquipmentPriceApiTest extends TestCase
         $this->getJson('/api/v1/equipment/prices')->assertStatus(200);
     }
 
-    public function test_admin_cannot_create_or_update_master_price(): void
+    public function test_owner_cannot_create_or_update_master_price(): void
     {
-        $admin = User::factory()->admin()->create();
+        $owner = User::factory()->owner()->create();
         $model = EquipmentModel::factory()->create();
         $price = EquipmentPrice::factory()->create();
 
-        Sanctum::actingAs($admin);
+        Sanctum::actingAs($owner);
 
         $this->postJson('/api/v1/equipment/prices', [
             'equipment_model_id' => $model->id,

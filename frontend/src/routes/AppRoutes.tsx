@@ -113,6 +113,7 @@ export const AppRoutes: React.FC = () => {
               <Route path="payments" element={<AdminPaymentsPage />} />
               <Route path="refunds" element={<AdminRefundsPage />} />
               <Route path="outstanding" element={<AdminOutstandingPage />} />
+              <Route path="pricing" element={<OwnerPricingPage />} />
               <Route path="notifications" element={<AdminNotificationsPage />} />
               <Route path="cms" element={<AdminCmsPage />} />
             </Route>
@@ -123,7 +124,6 @@ export const AppRoutes: React.FC = () => {
             <Route path="/owner" element={<OwnerLayout />}>
               <Route index element={<OwnerExecutiveSummaryPage />} />
               <Route path="revenue" element={<OwnerRevenueReportPage />} />
-              <Route path="pricing" element={<OwnerPricingPage />} />
               <Route path="audit" element={<OwnerPortalPlaceholder />} />
               <Route path="settings" element={<AdminBankAccountsPage />} />
             </Route>

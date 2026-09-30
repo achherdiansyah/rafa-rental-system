@@ -44,7 +44,7 @@ class PermissionMatrixTest extends TestCase
             'view-owner-dashboard' => [false, false, true],
             'view-revenue-reports' => [false, false, true],
             'view-audit-logs' => [false, false, true],
-            'manage-pricing-master' => [false, false, true],
+            'manage-pricing-master' => [false, true, false],
             'approve-refund' => [false, false, true],
             'decommission-equipment' => [false, false, true],
             'deactivate-user' => [false, false, true],

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Outlet } from 'react-router-dom'
-import { LayoutDashboard, TrendingUp, DollarSign, History, Settings } from 'lucide-react'
+import { LayoutDashboard, TrendingUp, History, Settings } from 'lucide-react'
 import { Navbar } from './Navbar'
 import { Sidebar } from './Sidebar'
 import type { SidebarItem } from './Sidebar'
@@ -11,7 +11,6 @@ export const OwnerLayout: React.FC = () => {
   const navItems: SidebarItem[] = [
     { label: 'Executive Summary', href: '/owner', icon: <LayoutDashboard size={18} /> },
     { label: 'Laporan Pendapatan', href: '/owner/revenue', icon: <TrendingUp size={18} /> },
-    { label: 'Master Tarif & Harga', href: '/owner/pricing', icon: <DollarSign size={18} /> },
     { label: 'Audit Trail Logs', href: '/owner/audit', icon: <History size={18} /> },
     { label: 'Rekening & Kontrol', href: '/owner/settings', icon: <Settings size={18} /> },
   ]

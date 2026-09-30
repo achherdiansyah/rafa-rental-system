@@ -83,8 +83,8 @@ class MasterDataAndPricingIntegrationTest extends TestCase
         $unit2Res->assertStatus(201);
         $unit2Id = $unit2Res->json('data.id');
 
-        // 5. OWNER: Configure Master Prices (Non All-in & All-in)
-        Sanctum::actingAs($owner);
+        // 5. ADMIN: Configure Master Prices (Non All-in & All-in)
+        Sanctum::actingAs($admin);
 
         // 5a. Non All-in Price
         $priceNonAllInRes = $this->postJson('/api/v1/equipment/prices', [
@@ -111,7 +111,7 @@ class MasterDataAndPricingIntegrationTest extends TestCase
         ]);
         $priceAllInRes->assertStatus(201);
 
-        // 6. OWNER: Update Non All-in Price to trigger version audit trail
+        // 6. ADMIN: Update Non All-in Price to trigger version audit trail
         $updatePriceRes = $this->putJson("/api/v1/equipment/prices/{$priceNonAllInId}", [
             'base_rate' => 240000.00,
             'minimum_hours' => 8,
@@ -127,7 +127,7 @@ class MasterDataAndPricingIntegrationTest extends TestCase
             'equipment_price_id' => $priceNonAllInId,
             'old_base_rate' => 225000.00,
             'new_base_rate' => 240000.00,
-            'changed_by' => $owner->id,
+            'changed_by' => $admin->id,
         ]);
 
         // 7. ADMIN: Setup Company Bank Account
@@ -194,8 +194,8 @@ class MasterDataAndPricingIntegrationTest extends TestCase
         $this->postJson('/api/v1/equipment/prices', ['equipment_model_id' => $modelId, 'price_type' => 'HOURLY', 'is_all_in' => false, 'base_rate' => 100000, 'minimum_hours' => 8, 'overtime_rate' => 100000, 'effective_date' => '2026-01-01'])->assertStatus(403);
         $this->postJson('/api/v1/bank-accounts', ['bank_name' => 'Illegal', 'account_number' => '000', 'account_name' => 'Illegal'])->assertStatus(403);
 
-        // 10b. Admin cannot mutate prices (Owner-only)
-        Sanctum::actingAs($admin);
+        // 10b. Owner cannot mutate prices (Admin-only authority)
+        Sanctum::actingAs($owner);
         $this->postJson('/api/v1/equipment/prices', ['equipment_model_id' => $modelId, 'price_type' => 'HOURLY', 'is_all_in' => false, 'base_rate' => 100000, 'minimum_hours' => 8, 'overtime_rate' => 100000, 'effective_date' => '2026-01-01'])->assertStatus(403);
         $this->putJson("/api/v1/equipment/prices/{$priceNonAllInId}", ['base_rate' => 999999, 'minimum_hours' => 8, 'overtime_rate' => 999999, 'effective_date' => '2026-01-01'])->assertStatus(403);
 
