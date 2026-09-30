@@ -85,7 +85,7 @@ export const LoginPage: React.FC = () => {
         </Link>
       </div>
 
-      <Button type="submit" size="lg" isLoading={isLoading} className="w-full">
+      <Button type="submit" variant="accent" size="lg" isLoading={isLoading} className="w-full">
         Masuk
       </Button>
 
