@@ -127,7 +127,7 @@ export const HomePage: React.FC = () => {
     if (bootedRef.current) return
     bootedRef.current = true
     let mounted = true
-    Promise.all([equipmentService.getTypes(undefined, true), equipmentService.getModels({ per_page: 6, is_active: true })])
+    Promise.all([equipmentService.getTypes(undefined, true), equipmentService.getModels({ per_page: 12, is_active: true })])
       .then(([tRes, mRes]) => {
         if (!mounted) return
         const list = (tRes.data as unknown as EquipmentType[]) ?? []
@@ -159,9 +159,12 @@ export const HomePage: React.FC = () => {
     waLink: cms.whatsapp_cta_link ?? fallbackContent.whatsapp_cta_link,
   }
 
+  const hasPhoto = (m: EquipmentModel) => Boolean(m.attachments?.some((a) => a.document_type === 'EQUIPMENT_PHOTO' && a.url))
+  const orderedFeatured = [...featured.filter(hasPhoto), ...featured.filter((m) => !hasPhoto(m))].slice(0, 8)
+
   const featuredCards =
     featured.length > 0
-      ? featured.map((model) => {
+      ? orderedFeatured.map((model) => {
           const photo = model.attachments?.find((a) => a.document_type === 'EQUIPMENT_PHOTO')?.url
           const price = model.prices && model.prices.length > 0 ? Math.min(...model.prices.map((p) => p.base_rate)) : null
           return {

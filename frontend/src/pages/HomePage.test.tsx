@@ -115,4 +115,31 @@ describe('HomePage CMS sync', () => {
     const img = screen.getByAltText('Armada alat berat RAFA Rental') as HTMLImageElement
     expect(img.src).toContain('hero-equipment.svg')
   })
+
+  it('renders featured equipment from master data API (models with photos first)', async () => {
+    vi.mocked(cmsService.getPublic).mockResolvedValue({})
+    vi.mocked(equipmentService.getModels).mockResolvedValue({
+      success: true,
+      message: 'ok',
+      data: [
+        {
+          id: 9,
+          brand: 'Komatsu',
+          model_name: 'WA320',
+          capacity_value: 4,
+          capacity_unit: 'ton',
+          is_active: true,
+          attachments: [{ document_type: 'EQUIPMENT_PHOTO', url: 'http://s/storage/x.jpg' }],
+          prices: [],
+        },
+        { id: 10, brand: 'Tadano', model_name: 'RT50', capacity_value: 50, capacity_unit: 'ton', is_active: true, attachments: [], prices: [] },
+      ],
+      meta: { current_page: 1, per_page: 12, total: 2, last_page: 1 } as never,
+    } as never)
+
+    renderHome()
+
+    expect(await screen.findByText('WA320')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Komatsu WA320' })).toBeInTheDocument()
+  })
 })
