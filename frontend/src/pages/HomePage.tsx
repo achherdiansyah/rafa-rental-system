@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Truck, ChevronRight, ChevronLeft, Tractor, Container, Box, Wrench, MapPin, Phone, Mail, Clock, MessageCircle } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
@@ -121,22 +121,42 @@ export const HomePage: React.FC = () => {
   const [types, setTypes] = useState<EquipmentType[]>([])
   const [featured, setFeatured] = useState<EquipmentModel[]>([])
 
-  useEffect(() => {
-    if (bootedRef.current) return
-    bootedRef.current = true
-    let mounted = true
+  const loadEquipmentData = useCallback(() => {
     Promise.all([equipmentService.getTypes(undefined, true), equipmentService.getModels({ per_page: 12, is_active: true })])
       .then(([tRes, mRes]) => {
-        if (!mounted) return
         const list = (tRes.data as unknown as EquipmentType[]) ?? []
         setTypes(Array.isArray(list) ? list : [])
         setFeatured(mRes.data ?? [])
       })
       .catch(() => undefined)
+  }, [])
+
+  useEffect(() => {
+    if (bootedRef.current) return
+    bootedRef.current = true
+    let mounted = true
+    const load = () => {
+      Promise.all([equipmentService.getTypes(undefined, true), equipmentService.getModels({ per_page: 12, is_active: true })])
+        .then(([tRes, mRes]) => {
+          if (!mounted) return
+          const list = (tRes.data as unknown as EquipmentType[]) ?? []
+          setTypes(Array.isArray(list) ? list : [])
+          setFeatured(mRes.data ?? [])
+        })
+        .catch(() => undefined)
+    }
+    load()
     return () => {
       mounted = false
     }
   }, [])
+
+  // Refetch equipment on tab focus so photos uploaded from the Admin CMS /
+  // Master Armada page appear in this section immediately on returning.
+  useEffect(() => {
+    window.addEventListener('focus', loadEquipmentData)
+    return () => window.removeEventListener('focus', loadEquipmentData)
+  }, [loadEquipmentData])
 
   const companyLabel = cms.brand_name ?? fallbackHero.eyebrow
   const heroTitle = cms.hero_title ?? fallbackHero.title
