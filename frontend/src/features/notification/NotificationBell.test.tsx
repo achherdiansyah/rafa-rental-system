@@ -2,8 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { NotificationBell } from './NotificationBell'
+import { AuthProvider } from '@/app/AuthContext'
 import { notificationService } from './services/notificationService'
 import type { InAppNotification } from '@/types/notification'
+
+vi.mock('@/features/auth/services/authService', () => ({
+  authService: { getMe: vi.fn(), login: vi.fn(), logout: vi.fn(), register: vi.fn(), requestPasswordReset: vi.fn(), resetPassword: vi.fn() },
+}))
 
 vi.mock('./services/notificationService', () => ({
   notificationService: { unreadCount: vi.fn(), getNotifications: vi.fn(), markRead: vi.fn(), markAllRead: vi.fn() },
@@ -24,7 +29,9 @@ const unread: InAppNotification = {
 const renderBell = () =>
   render(
     <MemoryRouter>
-      <NotificationBell />
+      <AuthProvider>
+        <NotificationBell />
+      </AuthProvider>
     </MemoryRouter>
   )
 

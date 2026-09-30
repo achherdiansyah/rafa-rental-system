@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bell, ChevronRight } from 'lucide-react'
 import { cn } from '@/utils/cn'
+import { useAuth } from '@/hooks/useAuth'
 import { notificationService } from './services/notificationService'
 import type { InAppNotification } from '@/types/notification'
 
@@ -31,20 +32,22 @@ function timeAgo(iso: string): string {
   return `${Math.floor(h / 24)} hari`
 }
 
-const targetFor = (item: InAppNotification): string => {
+const targetFor = (item: InAppNotification, base: string): string => {
   if (item.link) return item.link
   const t = item.type || ''
-  if (/PAYMENT/i.test(t)) return '/admin/payments'
-  if (/TIMESHEET/i.test(t)) return '/admin/timesheets'
-  if (/REFUND/i.test(t)) return '/admin/refunds'
-  if (/INVOICE/i.test(t)) return '/admin/invoices'
-  if (/BOOKING/i.test(t)) return '/admin/bookings'
-  if (/OUTSTANDING/i.test(t)) return '/admin/outstanding'
-  return '/admin/notifications'
+  if (/PAYMENT/i.test(t)) return `${base}/payments`
+  if (/TIMESHEET/i.test(t)) return `${base}/timesheets`
+  if (/REFUND/i.test(t)) return `${base}/refunds`
+  if (/INVOICE/i.test(t)) return `${base}/invoices`
+  if (/BOOKING/i.test(t)) return `${base}/bookings`
+  if (/OUTSTANDING/i.test(t)) return `${base}/outstanding`
+  return `${base}/notifications`
 }
 
 export const NotificationBell: React.FC = () => {
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const base = user?.role === 'ADMIN' || user?.role === 'OWNER' ? '/admin' : '/app'
   const [open, setOpen] = useState(false)
   const [count, setCount] = useState(0)
   const [items, setItems] = useState<InAppNotification[]>([])
@@ -96,7 +99,7 @@ export const NotificationBell: React.FC = () => {
 
   const openItem = async (item: InAppNotification) => {
     setOpen(false)
-    navigate(targetFor(item))
+    navigate(targetFor(item, base))
     if (!item.read_at) {
       try {
         await notificationService.markRead(item.id)
@@ -195,7 +198,7 @@ export const NotificationBell: React.FC = () => {
             type="button"
             onClick={() => {
               setOpen(false)
-              navigate('/admin/notifications')
+              navigate(`${base}/notifications`)
             }}
             className="w-full flex items-center justify-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700 px-4 py-3 border-t border-slate-100 hover:bg-primary-50/40 cursor-pointer"
           >
