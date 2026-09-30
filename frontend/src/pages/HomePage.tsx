@@ -7,6 +7,7 @@ import { Reveal } from '@/components/ui/Reveal'
 import { equipmentService } from '@/features/equipment/services/equipmentService'
 import { useCms } from '@/features/cms/CmsContext'
 import { scrollToElementId } from '@/hooks/useHashScroll'
+import { getThumb, cacheThumb } from '@/utils/image'
 import { fallbackHero, fallbackContent, categories, featuredFallback, benefits } from '@/features/cms/landingFallbackData'
 import type { EquipmentType, EquipmentModel } from '@/types/equipment'
 
@@ -213,7 +214,18 @@ export const HomePage: React.FC = () => {
               <Link to="/app/equipment" className="group">
                 <Card className="h-full p-0 overflow-hidden hoverable shadow-md hover:shadow-xl">
                   <div className="aspect-[4/3] bg-slate-100 flex items-center justify-center overflow-hidden">
-                    {photo ? <img src={photo} alt={`${model.brand} ${model.model_name}`} className="w-full h-full object-cover" loading="lazy" /> : <Truck size={40} className="text-slate-300" />}
+                    {photo ? (
+                      <img
+                        src={getThumb(photo) ?? photo}
+                        alt={`${model.brand} ${model.model_name}`}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                        onLoad={() => cacheThumb(photo)}
+                      />
+                    ) : (
+                      <Truck size={40} className="text-slate-300" />
+                    )}
                   </div>
                   <div className="p-5 space-y-1.5">
                     <h3 className="font-semibold text-slate-900 group-hover:text-primary-700 transition-colors">{model.model_name}</h3>
