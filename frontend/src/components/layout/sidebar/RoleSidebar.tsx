@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import { ChevronDown, ChevronsLeft, ChevronsRight, LogOut, X, HardHat } from 'lucide-react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { ChevronDown, ChevronsLeft, ChevronsRight, LogOut, X } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { useAuth } from '@/hooks/useAuth'
-import { useCms } from '@/features/cms/CmsContext'
-import { useNavigate } from 'react-router-dom'
 
 export interface SidebarItem {
   label: string
@@ -119,13 +117,11 @@ function MenuGroup({
 
 export const RoleSidebar: React.FC<RoleSidebarProps> = ({ groups, title = 'Portal', isOpen = false, onClose }) => {
   const { user, logout } = useAuth()
-  const cms = useCms()
   const navigate = useNavigate()
   const [collapsed, setCollapsed] = useState(false)
 
   const brand = user?.role === 'ADMIN' ? 'Admin' : user?.role === 'OWNER' ? 'Owner' : 'Customer'
-  const brandName = cms.brand_name || 'RAFA Rental'
-  const brandLogo = cms.brand_logo || null
+  const brandName = 'CV SUMBER MAKMUR RAFA'
 
   const handleLogout = () => {
     logout()
@@ -136,16 +132,11 @@ export const RoleSidebar: React.FC<RoleSidebarProps> = ({ groups, title = 'Porta
   const body = (
     <div className="flex h-full flex-col bg-white border-r border-slate-200">
       {/* Brand */}
-      <div className={cn('relative flex items-center gap-2.5 px-4 h-16 shrink-0', collapsed ? 'justify-center' : '')}>
-        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-600 text-white overflow-hidden shrink-0">
-          {brandLogo ? <img src={brandLogo} alt={brandName} className="w-full h-full object-contain p-1 bg-white" /> : <HardHat size={20} />}
-        </span>
-        {!collapsed && (
-          <div className="min-w-0">
-            <p className="font-bold text-slate-900 leading-tight truncate">{brandName}</p>
-            <p className="text-[11px] text-slate-400">{title} · {brand}</p>
-          </div>
-        )}
+      <div className={cn('relative flex items-center gap-2 px-4 h-16 shrink-0', collapsed ? 'justify-center' : '')}>
+        <div className={cn('min-w-0', collapsed && 'hidden')}>
+          <p className="font-bold text-slate-900 leading-tight truncate">{brandName}</p>
+          <p className="text-[11px] text-slate-400">{title} · {brand}</p>
+        </div>
         {onClose && (
           <button onClick={onClose} aria-label="Tutup navigasi" className="md:hidden ml-auto text-slate-400 hover:text-slate-600 rounded-md p-1 cursor-pointer">
             <X size={18} />
