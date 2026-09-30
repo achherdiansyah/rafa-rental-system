@@ -166,33 +166,40 @@ export const AdminDashboardPage: React.FC = () => {
     : []
 
   return (
-    <div className="space-y-8 max-w-7xl">
-      {/* Header */}
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+    <div className="space-y-6 max-w-7xl">
+      {/* Welcome banner */}
+      <section className="card-surface p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent-100 text-accent-700">
-              <LayoutDashboard size={18} />
-            </span>
-            Dashboard Operasional
-          </h2>
-          <p className="text-sm text-slate-500 mt-1">KPI ringkasan dari laporan agregat (read-only).</p>
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Selamat Datang, Admin Operasional</h2>
+          <p className="text-sm text-slate-500 mt-1">Pantau aktivitas rental, armada, timesheet, dan keuangan dalam satu dashboard.</p>
         </div>
-        {/* Date filter — compact group */}
-        <div className="flex flex-wrap items-end gap-2">
-          <div className="flex flex-wrap items-end gap-2 rounded-xl border border-slate-200 bg-white p-1.5">
-            <Input label="Dari" type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-40 min-h-9" />
-            <span className="hidden sm:inline text-slate-300 pb-2.5">—</span>
-            <Input label="Sampai" type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-40 min-h-9" />
+        <span className="hidden sm:flex h-11 w-11 items-center justify-center rounded-lg bg-accent-100 text-accent-700 shrink-0">
+          <LayoutDashboard size={20} />
+        </span>
+      </section>
+
+      {/* Date filter — horizontal compact bar */}
+      <section className="card-surface px-4 py-3">
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="space-y-1">
+            <label className="block text-[11px] font-semibold uppercase tracking-wide text-slate-400">Dari</label>
+            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-44 min-h-9" aria-label="Tanggal dari" />
           </div>
-          <Button variant="primary" size="sm" className="gap-1.5" onClick={apply}>
-            <CalendarRange size={14} /> Terapkan
-          </Button>
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => load({})}>
-            <RefreshCw size={14} /> Reset
-          </Button>
+          <span className="hidden sm:inline text-slate-300 pb-2">—</span>
+          <div className="space-y-1">
+            <label className="block text-[11px] font-semibold uppercase tracking-wide text-slate-400">Sampai</label>
+            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-44 min-h-9" aria-label="Tanggal sampai" />
+          </div>
+          <div className="flex items-end gap-2">
+            <Button variant="primary" size="sm" className="gap-1.5" onClick={apply}>
+              <CalendarRange size={14} /> Terapkan
+            </Button>
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => load({})}>
+              <RefreshCw size={14} /> Reset
+            </Button>
+          </div>
         </div>
-      </div>
+      </section>
 
       {apiError && <Alert variant="danger" title="Gagal Memuat Dashboard">{apiError}</Alert>}
 
