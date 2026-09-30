@@ -43,7 +43,7 @@ function AuthShell() {
           <div className="text-center mb-8">
             <HeaderBrand />
           </div>
-          <div className="bg-white py-8 px-6 shadow-sm border border-slate-200 rounded-2xl sm:px-10">
+          <div className="bg-white py-8 px-6 shadow-lg shadow-slate-200/70 border border-accent-300 rounded-2xl sm:px-10 fade-in-up">
             <Outlet />
           </div>
         </div>
