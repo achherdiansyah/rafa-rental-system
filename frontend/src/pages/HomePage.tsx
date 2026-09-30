@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/Card'
 import { Reveal } from '@/components/ui/Reveal'
 import { equipmentService } from '@/features/equipment/services/equipmentService'
 import { useCms } from '@/features/cms/CmsContext'
+import { scrollToElementId } from '@/hooks/useHashScroll'
 import { fallbackHero, fallbackContent, categories, featuredFallback, benefits } from '@/features/cms/landingFallbackData'
 import type { EquipmentType, EquipmentModel } from '@/types/equipment'
 
@@ -229,9 +230,17 @@ export const HomePage: React.FC = () => {
               <Link to={ctaLink}>
                 <Button size="lg" variant="accent" rightIcon={<ArrowRight size={18} />}>{ctaText}</Button>
               </Link>
-              <Link to="/#equipment">
-                <Button variant="outline" size="lg" className="bg-white/10 border-white/60 text-white hover:bg-white/20 hover:text-white">Lihat Katalog</Button>
-              </Link>
+              <a
+                href="#equipment"
+                onClick={(e) => {
+                  e.preventDefault()
+                  scrollToElementId('equipment')
+                }}
+              >
+                <Button variant="outline" size="lg" className="bg-white/10 border-white/60 text-white hover:bg-white/20 hover:text-white">
+                  Lihat Katalog
+                </Button>
+              </a>
             </div>
           </Reveal>
         </div>

@@ -25,8 +25,15 @@ export function useHashScroll() {
   useEffect(() => {
     const hash = location.hash.replace('#', '')
     if (!hash) return
+    let raf = 0
+    let timer = 0
     // wait for the target section to render on first paint / route change
-    const raf = requestAnimationFrame(() => scrollToElementId(hash))
-    return () => cancelAnimationFrame(raf)
+    raf = requestAnimationFrame(() => scrollToElementId(hash))
+    // fallback for late-layout images
+    timer = window.setTimeout(() => scrollToElementId(hash), 150)
+    return () => {
+      cancelAnimationFrame(raf)
+      clearTimeout(timer)
+    }
   }, [location.pathname, location.hash])
 }
