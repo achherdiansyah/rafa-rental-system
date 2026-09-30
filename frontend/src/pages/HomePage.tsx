@@ -143,7 +143,7 @@ export const HomePage: React.FC = () => {
   const heroTitle = cms.hero_title ?? fallbackHero.title
   const heroSubtitle = cms.hero_subtitle ?? fallbackHero.subtitle
   const ctaText = cms.hero_cta_text ?? fallbackHero.cta_text
-  const ctaLink = cms.hero_cta_link ?? fallbackHero.cta_link
+  const ctaLink = '/app/equipment' // arahkan selalu ke catalog existing
   const heroImage = cms.hero_image ?? fallbackHero.image
 
   const aboutText = cms.about ?? fallbackContent.about
@@ -395,7 +395,7 @@ export const HomePage: React.FC = () => {
                 </p>
               </div>
               <a href={contact.waLink} target="_blank" rel="noreferrer" className="inline-block">
-                <Button size="lg" leftIcon={<MessageCircle size={18} />}>Hubungi via WhatsApp</Button>
+                <Button size="lg" variant="accent" leftIcon={<MessageCircle size={18} />}>Hubungi via WhatsApp</Button>
               </a>
             </div>
           </Reveal>
