@@ -167,13 +167,13 @@ export const AdminDashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-7xl">
-      {/* Welcome banner */}
-      <section className="card-surface p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+{/* Welcome banner */}
+      <section className="rounded-2xl border border-accent-200 bg-accent-50 p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-slate-900 tracking-tight">Selamat Datang, Admin Operasional</h2>
-          <p className="text-sm text-slate-500 mt-1">Pantau aktivitas rental, armada, timesheet, dan keuangan dalam satu dashboard.</p>
+          <p className="text-sm text-slate-600 mt-1">Pantau aktivitas rental, armada, timesheet, dan keuangan dalam satu dashboard.</p>
         </div>
-        <span className="hidden sm:flex h-11 w-11 items-center justify-center rounded-lg bg-accent-100 text-accent-700 shrink-0">
+        <span className="hidden sm:flex h-11 w-11 items-center justify-center rounded-lg bg-accent-200 text-accent-700 shrink-0">
           <LayoutDashboard size={20} />
         </span>
       </section>
