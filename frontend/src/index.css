@@ -152,6 +152,7 @@ body {
 .auth-form textarea:focus,
 .auth-form select:focus {
   border-color: var(--color-accent-400);
+  box-shadow: none; /* hilangkan ring/border biru, pertahankan kuning saja */
 }
 
 /* Accessible focus ring */
