@@ -142,7 +142,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = f
         {/* RIGHT: actions */}
         <div className="flex items-center gap-2 shrink-0">
           {isAuthenticated && user ? (
-            <>
+            hideMenu ? (
+              /* Internal (Admin): identity only — logout lives in the sidebar */
+              <div className="flex items-center gap-2 text-sm text-slate-700">
+                <User size={16} className="text-slate-400" />
+                <span className="font-medium">{user.name}</span>
+              </div>
+            ) : (
+              <>
               <span className="hidden md:flex items-center gap-2 text-sm text-slate-700">
                 <User size={16} className="text-slate-400" />
                 <span className="font-medium">{user.name}</span>
@@ -156,11 +163,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = f
                     <Button variant="ghost" size="sm">Portal User</Button>
                   </Link>
                 )}
-                {user.role === 'ADMIN' && (
-                  <Link to="/admin" onClick={() => setMobileOpen(false)}>
-                    <Button variant="ghost" size="sm">Admin Operasional</Button>
-                  </Link>
-                )}
                 {user.role === 'OWNER' && (
                   <Link to="/owner" onClick={() => setMobileOpen(false)}>
                     <Button variant="ghost" size="sm">Owner Exec</Button>
@@ -171,7 +173,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = f
                 <LogOut size={16} className="sm:mr-1.5" />
                 <span className="hidden sm:inline">Logout</span>
               </Button>
-            </>
+              </>
+            )
           ) : (
             <>
               <Link to="/register">
