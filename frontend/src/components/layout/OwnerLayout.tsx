@@ -8,7 +8,7 @@ export const OwnerLayout: React.FC = () => {
   const [isMobileOpen, setIsMobileOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-slate-50 flex flex-col" data-role="owner">
       <Navbar showMenuToggle hideMenu onMenuToggle={() => setIsMobileOpen((prev) => !prev)} />
       <div className="flex flex-1">
         <RoleSidebar

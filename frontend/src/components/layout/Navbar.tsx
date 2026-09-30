@@ -174,7 +174,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = f
                     </Badge>
                   )}
                 </div>
-                <NotificationBell />
+                {user.role !== 'OWNER' && <NotificationBell />}
                 <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-1.5 text-rose-600 hover:bg-rose-50">
                   <LogOut size={15} />
                   <span className="hidden sm:inline">Keluar</span>
