@@ -178,46 +178,46 @@ body {
 }
 
 /* ADMIN role: map primary-blue surfaces to the landing's golden accent */
-[data-role='admin'] .bg-primary-50 {
+[data-role='admin'] .bg-primary-50, [data-role='user'] .bg-primary-50 {
   background-color: var(--color-accent-50);
 }
-[data-role='admin'] .bg-primary-100 {
+[data-role='admin'] .bg-primary-100, [data-role='user'] .bg-primary-100 {
   background-color: var(--color-accent-100);
 }
-[data-role='admin'] .bg-primary-600 {
+[data-role='admin'] .bg-primary-600, [data-role='user'] .bg-primary-600 {
   background-color: var(--color-accent-400);
 }
-[data-role='admin'] .hover\:bg-primary-700:hover {
+[data-role='admin'] .hover\:bg-primary-700:hover, [data-role='user'] .hover\:bg-primary-700:hover {
   background-color: var(--color-accent-500);
 }
-[data-role='admin'] .active\:bg-primary-800:active {
+[data-role='admin'] .active\:bg-primary-800:active, [data-role='user'] .active\:bg-primary-800:active {
   background-color: var(--color-accent-600);
 }
-[data-role='admin'] .text-primary-600 {
+[data-role='admin'] .text-primary-600, [data-role='user'] .text-primary-600 {
   color: var(--color-accent-600);
 }
-[data-role='admin'] .text-primary-700 {
+[data-role='admin'] .text-primary-700, [data-role='user'] .text-primary-700 {
   color: var(--color-accent-700);
 }
-[data-role='admin'] .hover\:text-primary-700:hover {
+[data-role='admin'] .hover\:text-primary-700:hover, [data-role='user'] .hover\:text-primary-700:hover {
   color: var(--color-accent-700);
 }
-[data-role='admin'] .hover\:text-primary-800:hover {
+[data-role='admin'] .hover\:text-primary-800:hover, [data-role='user'] .hover\:text-primary-800:hover {
   color: var(--color-accent-700);
 }
-[data-role='admin'] .border-primary-200 {
+[data-role='admin'] .border-primary-200, [data-role='user'] .border-primary-200 {
   border-color: var(--color-accent-200);
 }
-[data-role='admin'] .border-primary-300 {
+[data-role='admin'] .border-primary-300, [data-role='user'] .border-primary-300 {
   border-color: var(--color-accent-300);
 }
-[data-role='admin'] .border-primary-600 {
+[data-role='admin'] .border-primary-600, [data-role='user'] .border-primary-600 {
   border-color: var(--color-accent-400);
 }
-[data-role='admin'] .ring-primary-600 {
+[data-role='admin'] .ring-primary-600, [data-role='user'] .ring-primary-600 {
   --tw-ring-color: var(--color-accent-400);
 }
-[data-role='admin'] .focus-visible\:ring-primary-600:focus-visible {
+[data-role='admin'] .focus-visible\:ring-primary-600:focus-visible, [data-role='user'] .focus-visible\:ring-primary-600:focus-visible {
   --tw-ring-color: var(--color-accent-400);
 }
 .auth-form input,
