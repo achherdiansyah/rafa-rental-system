@@ -79,8 +79,10 @@ export const equipmentService = {
   },
 
   uploadModelPhoto: async (modelId: number, file: File): Promise<EquipmentAttachment> => {
+    const { compressImage } = await import('@/utils/image')
+    const prepared = await compressImage(file)
     const formData = new FormData()
-    formData.append('photo', file)
+    formData.append('photo', prepared)
 
     const res = await api.post<EquipmentAttachment>(
       `/equipment/models/${modelId}/photos`,

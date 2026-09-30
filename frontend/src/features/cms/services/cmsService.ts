@@ -27,8 +27,10 @@ export const cmsService = {
   },
 
   async uploadMedia(key: string, file: File): Promise<string> {
+    const { compressImage } = await import('@/utils/image')
+    const prepared = await compressImage(file)
     const formData = new FormData()
-    formData.append('media', file)
+    formData.append('media', prepared)
     const response = await api.post<{ url: string }>(`/admin/cms/${key}/media`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })

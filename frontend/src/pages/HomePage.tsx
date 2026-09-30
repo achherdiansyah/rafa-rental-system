@@ -125,10 +125,33 @@ export const HomePage: React.FC = () => {
     Promise.all([equipmentService.getTypes(undefined, true), equipmentService.getModels({ per_page: 12, is_active: true })])
       .then(([tRes, mRes]) => {
         const list = (tRes.data as unknown as EquipmentType[]) ?? []
+        const models = mRes.data ?? []
         setTypes(Array.isArray(list) ? list : [])
-        setFeatured(mRes.data ?? [])
+        setFeatured(models)
+        try {
+          localStorage.setItem(
+            'rafa_equipment_cache',
+            JSON.stringify({ types: Array.isArray(list) ? list : [], models })
+          )
+        } catch {
+          /* ignore */
+        }
       })
       .catch(() => undefined)
+  }, [])
+
+  // Hydrate instantly from cache (like CMS) so reloads render fast
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('rafa_equipment_cache')
+      if (raw) {
+        const cached = JSON.parse(raw) as { types?: EquipmentType[]; models?: EquipmentModel[] }
+        if (Array.isArray(cached.types)) setTypes(cached.types)
+        if (Array.isArray(cached.models)) setFeatured(cached.models)
+      }
+    } catch {
+      /* ignore */
+    }
   }, [])
 
   useEffect(() => {
