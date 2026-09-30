@@ -61,8 +61,8 @@ describe('Frontend End-to-End Authentication Journey', () => {
     }, { timeout: 15000 })
 
     // 4. Navbar shows user info
-    expect(screen.getByText('Rian Pratama')).toBeInTheDocument()
-    expect(screen.getByText('USER')).toBeInTheDocument()
+    expect(screen.getAllByText('Rian Pratama')[0]).toBeInTheDocument()
+    expect(screen.getAllByText('USER')[0]).toBeInTheDocument()
 
     // 5. User clicks logout button
     const logoutBtn = screen.getByRole('button', { name: /logout/i })
@@ -109,8 +109,8 @@ describe('Frontend End-to-End Authentication Journey', () => {
       expect(screen.getByRole('heading', { name: /dashboard operasional/i })).toBeInTheDocument()
     }, { timeout: 10000 })
 
-    expect(screen.getByText('Admin Utama')).toBeInTheDocument()
-    expect(screen.getByText('ADMIN')).toBeInTheDocument()
+    expect(screen.getAllByText('Admin Utama')[0]).toBeInTheDocument()
+    expect(screen.getAllByText('ADMIN')[0]).toBeInTheDocument()
   }, 15000)
 
   it('owner login redirects directly to Executive Dashboard (/owner)', async () => {
@@ -147,7 +147,7 @@ describe('Frontend End-to-End Authentication Journey', () => {
       expect(screen.getByRole('heading', { name: /executive summary/i })).toBeInTheDocument()
     }, { timeout: 10000 })
 
-    expect(screen.getByText('Owner Bisnis')).toBeInTheDocument()
-    expect(screen.getByText('OWNER')).toBeInTheDocument()
+    expect(screen.getAllByText('Owner Bisnis')[0]).toBeInTheDocument()
+    expect(screen.getAllByText('OWNER')[0]).toBeInTheDocument()
   }, 15000)
 })

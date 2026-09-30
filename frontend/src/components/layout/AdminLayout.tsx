@@ -1,38 +1,18 @@
 import React, { useState } from 'react'
 import { Outlet } from 'react-router-dom'
-import { LayoutDashboard, CheckSquare, Layers, Truck, Clock, CreditCard, RefreshCw, Building2, ClipboardCheck, Receipt, Users, RadioTower, Table2, PiggyBank, Globe, DollarSign } from 'lucide-react'
 import { Navbar } from './Navbar'
-import { Sidebar } from './Sidebar'
-import type { SidebarItem } from './Sidebar'
+import { RoleSidebar } from './sidebar/RoleSidebar'
+import { adminMenu } from './sidebarNavigation'
 
 export const AdminLayout: React.FC = () => {
   const [isMobileOpen, setIsMobileOpen] = useState(false)
-
-  const navItems: SidebarItem[] = [
-    { label: 'Admin Desk', href: '/admin', icon: <LayoutDashboard size={18} /> },
-    { label: 'Master Armada & Tipe', href: '/admin/equipment', icon: <Layers size={18} /> },
-    { label: 'Alokasi Unit Fisik', href: '/admin/units', icon: <Truck size={18} /> },
-    { label: 'Rekening Perusahaan', href: '/admin/banks', icon: <Building2 size={18} /> },
-    { label: 'Master Tarif & Harga', href: '/admin/pricing', icon: <DollarSign size={18} /> },
-    { label: 'Approval Booking', href: '/admin/bookings', icon: <CheckSquare size={18} /> },
-    { label: 'Ekskusi Rental', href: '/admin/rentals', icon: <ClipboardCheck size={18} /> },
-    { label: 'Validasi Timesheet', href: '/admin/timesheets', icon: <Clock size={18} /> },
-{ label: 'Invoice', href: '/admin/invoices', icon: <Receipt size={18} /> },
-    { label: 'Verifikasi Pembayaran', href: '/admin/payments', icon: <CreditCard size={18} /> },
-    { label: 'Refund', href: '/admin/refunds', icon: <RefreshCw size={18} /> },
-    { label: 'Outstanding', href: '/admin/outstanding', icon: <Users size={18} /> },
-    { label: 'Laporan Operasional', href: '/admin/reports/operational', icon: <Table2 size={18} /> },
-    { label: 'Laporan Finansial', href: '/admin/reports/financial', icon: <PiggyBank size={18} /> },
-    { label: 'Monitor Notifikasi', href: '/admin/notifications', icon: <RadioTower size={18} /> },
-    { label: 'CMS Landing Page', href: '/admin/cms', icon: <Globe size={18} /> },
-  ]
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <Navbar showMenuToggle onMenuToggle={() => setIsMobileOpen((prev) => !prev)} />
       <div className="flex flex-1">
-        <Sidebar
-          items={navItems}
+        <RoleSidebar
+          groups={adminMenu}
           title="Operasional Lapangan"
           isOpen={isMobileOpen}
           onClose={() => setIsMobileOpen(false)}
@@ -44,4 +24,3 @@ export const AdminLayout: React.FC = () => {
     </div>
   )
 }
-
