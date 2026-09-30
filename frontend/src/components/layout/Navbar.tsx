@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { HardHat, LogOut, User, Menu, X } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useCms } from '@/features/cms/CmsContext'
+import { NotificationBell } from '@/features/notification/NotificationBell'
 import { useLocation } from 'react-router-dom'
 import { scrollToElementId } from '@/hooks/useHashScroll'
 import { Button } from '@/components/ui/Button'
@@ -149,6 +150,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = f
                   <User size={16} className="text-slate-400" />
                   <span className="font-medium">{user.name}</span>
                 </div>
+                <NotificationBell />
                 <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-1.5 text-rose-600 hover:bg-rose-50 hover:text-rose-700">
                   <LogOut size={15} />
                   <span className="hidden sm:inline">Keluar</span>

@@ -1,0 +1,209 @@
+import React, { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Bell, ChevronRight } from 'lucide-react'
+import { cn } from '@/utils/cn'
+import { notificationService } from './services/notificationService'
+import type { InAppNotification } from '@/types/notification'
+
+const EVENT_LABEL: Record<string, string> = {
+  BOOKING_SUBMITTED: 'Booking baru perlu persetujuan',
+  BOOKING_APPROVED: 'Booking disetujui',
+  BOOKING_REJECTED: 'Booking ditolak',
+  PAYMENT_SUBMITTED: 'Pembayaran perlu verifikasi',
+  PAYMENT_APPROVED: 'Pembayaran disetujui',
+  PAYMENT_REJECTED: 'Pembayaran ditolak',
+  TIMESHEET_SUBMITTED: 'Timesheet perlu divalidasi',
+  REFUND_PENDING: 'Refund menunggu diproses',
+  INVOICE_OVERDUE: 'Invoice jatuh tempo',
+  OUTSTANDING_REMINDER: 'Pengingat outstanding',
+}
+
+const labelFor = (item: InAppNotification): string =>
+  (item.event && EVENT_LABEL[item.event]) || item.message || item.event || 'Notifikasi'
+
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime()
+  const m = Math.floor(diff / 60000)
+  if (m < 1) return 'baru saja'
+  if (m < 60) return `${m} mnt`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h} jam`
+  return `${Math.floor(h / 24)} hari`
+}
+
+const targetFor = (item: InAppNotification): string => {
+  if (item.link) return item.link
+  const t = item.type || ''
+  if (/PAYMENT/i.test(t)) return '/admin/payments'
+  if (/TIMESHEET/i.test(t)) return '/admin/timesheets'
+  if (/REFUND/i.test(t)) return '/admin/refunds'
+  if (/INVOICE/i.test(t)) return '/admin/invoices'
+  if (/BOOKING/i.test(t)) return '/admin/bookings'
+  if (/OUTSTANDING/i.test(t)) return '/admin/outstanding'
+  return '/admin/notifications'
+}
+
+export const NotificationBell: React.FC = () => {
+  const navigate = useNavigate()
+  const [open, setOpen] = useState(false)
+  const [count, setCount] = useState(0)
+  const [items, setItems] = useState<InAppNotification[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const rootRef = useRef<HTMLDivElement>(null)
+
+  const load = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const [countRes, listRes] = await Promise.all([
+        notificationService.unreadCount(),
+        notificationService.getNotifications({ per_page: 6 }),
+      ])
+      setCount(countRes)
+      setItems(listRes.data ?? [])
+    } catch {
+      setError('Gagal memuat notifikasi.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    load()
+    const onChanged = () => load()
+    window.addEventListener('rafa:notifications-changed', onChanged)
+    window.addEventListener('focus', load)
+    return () => {
+      window.removeEventListener('rafa:notifications-changed', onChanged)
+      window.removeEventListener('focus', load)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
+    const onPointer = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    document.addEventListener('mousedown', onPointer)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.removeEventListener('mousedown', onPointer)
+    }
+  }, [open])
+
+  const openItem = async (item: InAppNotification) => {
+    setOpen(false)
+    navigate(targetFor(item))
+    if (!item.read_at) {
+      try {
+        await notificationService.markRead(item.id)
+        window.dispatchEvent(new CustomEvent('rafa:notifications-changed'))
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
+  const markAll = async () => {
+    try {
+      await notificationService.markAllRead()
+      window.dispatchEvent(new CustomEvent('rafa:notifications-changed'))
+    } catch {
+      /* ignore */
+    }
+  }
+
+  return (
+    <div ref={rootRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-label={open ? 'Tutup notifikasi' : `Notifikasi, ${count} belum dibaca`}
+        aria-expanded={open}
+        className="relative p-2 rounded-md text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors cursor-pointer"
+      >
+        <Bell size={19} />
+        {count > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center min-w-[17px] h-[17px] px-1 rounded-full text-[10px] font-bold text-white bg-rose-500">
+            {count > 9 ? '9+' : count}
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          aria-label="Notifikasi"
+          className="absolute right-0 top-11 w-80 sm:w-96 rounded-xl border border-slate-200 bg-white shadow-lg overflow-hidden z-50"
+        >
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+            <p className="text-sm font-semibold text-slate-900">Notifikasi</p>
+            <button
+              type="button"
+              onClick={markAll}
+              className="text-xs text-primary-600 hover:text-primary-700 font-medium px-2 py-1 rounded-md hover:bg-primary-50 cursor-pointer"
+            >
+              Tandai dibaca
+            </button>
+          </div>
+
+          <div className="max-h-80 overflow-y-auto divide-y divide-slate-50">
+            {loading ? (
+              <div className="px-4 py-8 text-center text-sm text-slate-400">Memuat…</div>
+            ) : error ? (
+              <div className="px-4 py-8 text-center text-sm text-rose-500">{error}</div>
+            ) : items.length === 0 ? (
+              <div className="px-4 py-10 text-center space-y-2">
+                <Bell size={22} className="mx-auto text-slate-300" />
+                <p className="text-sm text-slate-400">Belum ada notifikasi.</p>
+              </div>
+            ) : (
+              items.map((item) => {
+                const unread = !item.read_at
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => openItem(item)}
+                    className="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <span
+                        className={cn(
+                          'mt-1.5 w-2 h-2 rounded-full shrink-0',
+                          unread ? 'bg-primary-500' : 'bg-transparent'
+                        )}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className={cn('text-sm truncate', unread ? 'font-semibold text-slate-800' : 'text-slate-600')}>
+                          {labelFor(item)}
+                        </p>
+                        <p className="text-xs text-slate-400 mt-0.5">{timeAgo(item.created_at)}</p>
+                      </div>
+                      <ChevronRight size={14} className="text-slate-300 mt-1 shrink-0" />
+                    </div>
+                  </button>
+                )
+              })
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false)
+              navigate('/admin/notifications')
+            }}
+            className="w-full flex items-center justify-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700 px-4 py-3 border-t border-slate-100 hover:bg-primary-50/40 cursor-pointer"
+          >
+            Lihat semua <ChevronRight size={14} />
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+export default NotificationBell
