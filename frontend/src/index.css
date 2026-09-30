@@ -141,6 +141,40 @@ body {
   animation: fade-in-up 0.5s ease-out both;
 }
 
+/* Scroll reveal (lightweight) */
+.reveal {
+  opacity: 0;
+  transform: translateY(26px) scale(0.985);
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+.reveal.reveal-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Typing caret */
+@keyframes caret-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+.type-caret {
+  display: inline-block;
+  margin-left: 2px;
+  color: var(--color-accent-400);
+  animation: caret-blink 0.9s steps(1) infinite;
+  transition: opacity 0.3s ease;
+}
+.type-caret.done {
+  opacity: 0;
+  animation: none;
+}
+
 /* Auth form fields: neutral border, yellow only on focus */
 .auth-form input,
 .auth-form textarea,
