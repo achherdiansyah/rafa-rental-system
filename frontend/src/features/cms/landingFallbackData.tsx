@@ -46,12 +46,12 @@ export const stats = [
 export const categories = ['Excavator', 'Bulldozer', 'Wheel Loader', 'Dump Truck', 'Crane', 'Compactor']
 
 export const featuredFallback: Array<{ model: string; brand: string; price: string }> = [
-  { model: 'Excavator PC200', brand: 'Komatsu', price: 'Rp 1.500.000 / hari' },
-  { model: 'Wheel Loader WA320', brand: 'Komatsu', price: 'Rp 1.200.000 / hari' },
-  { model: 'Dump Truck HD785', brand: 'Komatsu', price: 'Rp 2.500.000 / hari' },
-  { model: 'Bulldozer D65', brand: 'Komatsu', price: 'Rp 1.800.000 / hari' },
-  { model: 'Crane RT50', brand: 'Tadano', price: 'Rp 3.000.000 / hari' },
-  { model: 'Compactor BW211', brand: 'Bomag', price: 'Rp 1.000.000 / hari' },
+  { model: 'Excavator PC200', brand: 'Komatsu', price: 'Rp 1.500.000 / jam' },
+  { model: 'Wheel Loader WA320', brand: 'Komatsu', price: 'Rp 1.200.000 / jam' },
+  { model: 'Dump Truck HD785', brand: 'Komatsu', price: 'Rp 2.500.000 / jam' },
+  { model: 'Bulldozer D65', brand: 'Komatsu', price: 'Rp 1.800.000 / jam' },
+  { model: 'Crane RT50', brand: 'Tadano', price: 'Rp 3.000.000 / jam' },
+  { model: 'Compactor BW211', brand: 'Bomag', price: 'Rp 1.000.000 / jam' },
 ]
 
 export const benefits: Array<{ icon: React.ReactNode; title: string; desc: string }> = [

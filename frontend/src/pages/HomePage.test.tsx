@@ -94,7 +94,7 @@ describe('HomePage CMS sync', () => {
     // fallback rows (specified constants; no invented availability)
     expect(await screen.findByText('Excavator PC200')).toBeInTheDocument()
     expect(screen.getByText('Dump Truck HD785')).toBeInTheDocument()
-    expect(screen.getByText('Rp 2.500.000 / hari')).toBeInTheDocument()
+    expect(screen.getByText('Rp 2.500.000 / jam')).toBeInTheDocument()
   })
 
   it('CASE B — partial CMS: fills fallback only for missing CMS fields', async () => {

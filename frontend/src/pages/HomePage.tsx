@@ -162,11 +162,25 @@ export const HomePage: React.FC = () => {
   const hasPhoto = (m: EquipmentModel) => Boolean(m.attachments?.some((a) => a.document_type === 'EQUIPMENT_PHOTO' && a.url))
   const orderedFeatured = [...featured.filter(hasPhoto), ...featured.filter((m) => !hasPhoto(m))].slice(0, 8)
 
+  const unitLabel = (type?: string) => {
+    switch (type) {
+      case 'DAILY':
+        return ' / hari'
+      case 'MONTHLY':
+        return ' / bulan'
+      case 'LUMP_SUM':
+        return ''
+      default:
+        return ' / jam'
+    }
+  }
+
   const featuredCards =
     featured.length > 0
       ? orderedFeatured.map((model) => {
           const photo = model.attachments?.find((a) => a.document_type === 'EQUIPMENT_PHOTO')?.url
           const price = model.prices && model.prices.length > 0 ? Math.min(...model.prices.map((p) => p.base_rate)) : null
+          const priceType = model.prices && model.prices.length > 0 ? model.prices[0].price_type : undefined
           return {
             key: String(model.id),
             node: (
@@ -180,7 +194,7 @@ export const HomePage: React.FC = () => {
                     <p className="text-sm text-slate-500">{model.brand}</p>
                     <div className="flex items-center justify-between pt-1">
                       {price !== null ? (
-                        <span className="font-mono font-bold text-slate-900">{idr(price)}<span className="text-xs text-slate-400 font-normal"> / jam</span></span>
+                        <span className="font-mono font-bold text-slate-900">{idr(price)}<span className="text-xs text-slate-400 font-normal">{unitLabel(priceType)}</span></span>
                       ) : (
                         <span className="text-xs text-slate-400">Cek tarif</span>
                       )}
