@@ -145,11 +145,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = f
             hideMenu ? (
               /* Internal (Admin): identity + logout at the far right */
               <>
-                <div className="flex items-center gap-2 text-sm text-slate-700">
+                <div className="flex items-center gap-2.5 text-sm text-slate-700 mr-1">
                   <User size={16} className="text-slate-400" />
                   <span className="font-medium">{user.name}</span>
                 </div>
-                <Button variant="outline" size="sm" onClick={handleLogout} className="gap-1.5">
+                <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-1.5 text-rose-600 hover:bg-rose-50 hover:text-rose-700">
                   <LogOut size={15} />
                   <span className="hidden sm:inline">Keluar</span>
                 </Button>
