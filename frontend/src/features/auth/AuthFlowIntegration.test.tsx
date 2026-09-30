@@ -57,7 +57,7 @@ describe('Frontend End-to-End Authentication Journey', () => {
 
     // 3. User should land on Customer Portal (/app)
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /portal pelanggan/i })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: /selamat datang/i })).toBeInTheDocument()
     }, { timeout: 15000 })
 
     // 4. Navbar shows user info

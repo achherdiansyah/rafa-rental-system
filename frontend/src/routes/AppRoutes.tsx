@@ -20,7 +20,7 @@ const ProfilePage = lazy(() => import('@/pages/ProfilePage'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 const ForbiddenPage = lazy(() => import('@/pages/ForbiddenPage'))
 const UnauthorizedPage = lazy(() => import('@/pages/UnauthorizedPage'))
-const UserPortalPlaceholder = lazy(() => import('@/pages/UserPortalPlaceholder'))
+const UserDashboardPage = lazy(() => import('@/features/dashboard/pages/UserDashboardPage'))
 const OwnerPortalPlaceholder = lazy(() => import('@/pages/OwnerPortalPlaceholder'))
 const OwnerPricingPage = lazy(() => import('@/features/equipment/pages/OwnerPricingPage'))
 const OwnerExecutiveSummaryPage = lazy(() => import('@/features/reporting/pages/OwnerExecutiveSummaryPage'))
@@ -79,7 +79,7 @@ export const AppRoutes: React.FC = () => {
           {/* 3.1 Customer Portal (/app/*) - Restricted to USER */}
           <Route element={<RoleRoute allowedRoles={['USER']} />}>
             <Route path="/app" element={<UserLayout />}>
-              <Route index element={<UserPortalPlaceholder />} />
+              <Route index element={<UserDashboardPage />} />
               <Route path="equipment" element={<EquipmentCatalogPage />} />
               <Route path="equipment/:id" element={<EquipmentDetailPage />} />
               <Route path="recommendations" element={<RecommendationPage />} />

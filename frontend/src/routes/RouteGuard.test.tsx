@@ -55,7 +55,7 @@ describe('Route Guard & Access Control', () => {
     renderWithAuth('/app', { isChecking: true, status: 'checking' })
 
     expect(screen.getByText(/memeriksa autentikasi/i)).toBeInTheDocument()
-    expect(screen.queryByText(/portal pelanggan/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/selamat datang/i)).not.toBeInTheDocument()
   })
 
   it('allows authenticated USER to access customer portal /app', async () => {
@@ -67,7 +67,7 @@ describe('Route Guard & Access Control', () => {
       isAuthenticated: true,
     })
 
-    expect(await screen.findByRole('heading', { name: /portal pelanggan/i }, { timeout: 15000 })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /selamat datang/i }, { timeout: 15000 })).toBeInTheDocument()
   }, 20000)
 
   it('blocks authenticated USER from accessing /admin and redirects to /forbidden', async () => {
@@ -130,7 +130,7 @@ expect(await screen.findByRole('heading', { name: /selamat datang/i }, {
     })
 
     // GuestRoute redirects USER to /app
-    expect(await screen.findByRole('heading', { name: /portal pelanggan/i })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /selamat datang/i })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: /masuk akun/i })).not.toBeInTheDocument()
   })
 })
