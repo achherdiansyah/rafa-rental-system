@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { LayoutDashboard, Truck, Sparkles, MapPin, CalendarCheck, Receipt, ChevronRight, Wallet } from 'lucide-react'
+import { LayoutDashboard, Truck, Sparkles, MapPin, CalendarCheck, ChevronRight } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { bookingService } from '@/features/booking/services/bookingService'
 import { rentalService } from '@/features/rental/services/rentalService'
@@ -66,13 +66,12 @@ export const UserDashboardPage: React.FC = () => {
     const loadAll = async () => {
       setError(null)
       try {
-        const [b, r, i, l, n, c] = (await Promise.allSettled([
+        const [b, r, i, l, n] = (await Promise.allSettled([
           bookingService.getBookings({ per_page: 5 }),
           rentalService.getRentals({ per_page: 5 }),
           invoiceService.getInvoices({ per_page: 6 }),
           projectLocationService.getLocations(1, 6),
           notificationService.getNotifications({ per_page: 6 }),
-          notificationService.unreadCount(),
         ])) as PromiseSettledResult<any>[]
 
         if (!mounted) return
