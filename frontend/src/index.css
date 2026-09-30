@@ -141,11 +141,13 @@ body {
   animation: fade-in-up 0.5s ease-out both;
 }
 
-/* Scroll reveal (lightweight) */
+/* Scroll reveal (lightweight, more dramatic) */
 .reveal {
   opacity: 0;
-  transform: translateY(26px) scale(0.985);
-  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translateY(46px) scale(0.92);
+  transition:
+    opacity 0.75s ease,
+    transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity, transform;
 }
 .reveal.reveal-visible {

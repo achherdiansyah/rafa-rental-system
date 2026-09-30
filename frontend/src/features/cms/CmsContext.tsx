@@ -6,14 +6,37 @@ type CmsMap = Record<string, string | null>
 
 const CmsContext = createContext<CmsMap>({})
 
+const CACHE_KEY = 'rafa_cms_cache'
+
+function readCache(): CmsMap {
+  if (typeof localStorage === 'undefined') return {}
+  try {
+    const raw = localStorage.getItem(CACHE_KEY)
+    if (!raw) return {}
+    const parsed = JSON.parse(raw) as CmsMap
+    return parsed && typeof parsed === 'object' ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
+function writeCache(data: CmsMap) {
+  if (typeof localStorage === 'undefined') return
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(data))
+  } catch {
+    /* storage unavailable — ignore */
+  }
+}
+
 /**
- * Loads published landing-page content. Refetches on every route change and
- * when the tab regains focus so edits saved from the Admin CMS panel are
- * reflected on the public landing page. Tolerant: components rendered OUTSIDE
- * a provider read unset keys and fall back to defaults.
+ * Loads published landing-page content. Initial state is hydrated synchronously
+ * from localStorage so the navbar logo & hero image render instantly on reload,
+ * then refetched on mount/route change/tab focus. Tolerant: components rendered
+ * OUTSIDE a provider read unset keys and fall back to defaults.
  */
 export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [cms, setCms] = useState<CmsMap>({})
+  const [cms, setCms] = useState<CmsMap>(() => readCache())
   const location = useLocation()
 
   useEffect(() => {
@@ -22,9 +45,12 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       cmsService
         .getPublic()
         .then((data) => {
-          if (mounted) setCms(data)
+          if (mounted) {
+            setCms(data)
+            writeCache(data)
+          }
         })
-        .catch(() => undefined)
+        .catch(() => undefined) // keep cached/defaults on transient failures
     }
     load()
     window.addEventListener('focus', load)
