@@ -136,7 +136,7 @@ export const RoleSidebar: React.FC<RoleSidebarProps> = ({ groups, title = 'Porta
   const body = (
     <div className="flex h-full flex-col bg-white border-r border-slate-200">
       {/* Brand */}
-      <div className={cn('flex items-center gap-2.5 px-4 h-16 shrink-0', collapsed ? 'justify-center' : '')}>
+      <div className={cn('relative flex items-center gap-2.5 px-4 h-16 shrink-0', collapsed ? 'justify-center' : '')}>
         <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-600 text-white overflow-hidden shrink-0">
           {brandLogo ? <img src={brandLogo} alt={brandName} className="w-full h-full object-contain p-1 bg-white" /> : <HardHat size={20} />}
         </span>
@@ -151,6 +151,16 @@ export const RoleSidebar: React.FC<RoleSidebarProps> = ({ groups, title = 'Porta
             <X size={18} />
           </button>
         )}
+        {/* Desktop collapse toggle — icon only, at the top */}
+        <button
+          type="button"
+          onClick={() => setCollapsed((c) => !c)}
+          aria-label={collapsed ? 'Perluas menu' : 'Ciutkan menu'}
+          title={collapsed ? 'Perluas menu' : 'Ciutkan menu'}
+          className="hidden md:flex items-center justify-center text-slate-400 hover:text-slate-700 rounded-md p-1.5 cursor-pointer ml-auto"
+        >
+          {collapsed ? <ChevronsRight size={18} /> : <ChevronsLeft size={18} />}
+        </button>
       </div>
 
       {/* Menu area */}
@@ -192,16 +202,6 @@ export const RoleSidebar: React.FC<RoleSidebarProps> = ({ groups, title = 'Porta
           <LogOut size={19} className="shrink-0" />
           {!collapsed && <span>Keluar</span>}
         </button>
-        {/* Desktop collapse toggle */}
-        <button
-          type="button"
-          onClick={() => setCollapsed((c) => !c)}
-          aria-label={collapsed ? 'Perluas menu' : 'Ciutkan menu'}
-          className="hidden md:flex items-center gap-3 rounded-md text-sm text-slate-500 hover:bg-slate-50 h-[42px] px-3 w-full justify-center cursor-pointer"
-        >
-          {collapsed ? <ChevronsRight size={18} /> : <ChevronsLeft size={18} />}
-          {!collapsed && <span>Ciutkan</span>}
-        </button>
       </div>
     </div>
   )
@@ -209,7 +209,7 @@ export const RoleSidebar: React.FC<RoleSidebarProps> = ({ groups, title = 'Porta
   return (
     <>
       {/* Desktop */}
-      <aside className={cn('hidden md:block shrink-0 transition-[width] duration-200', collapsed ? 'w-[72px]' : 'w-[256px]')}>
+      <aside className={cn('hidden md:block shrink-0 sticky top-20 h-[calc(100vh-5rem)] transition-[width] duration-200', collapsed ? 'w-[72px]' : 'w-[256px]')}>
         {body}
       </aside>
 
