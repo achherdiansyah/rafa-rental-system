@@ -9,7 +9,7 @@ export const AdminLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col" data-role="admin">
-      <Navbar showMenuToggle onMenuToggle={() => setIsMobileOpen((prev) => !prev)} />
+      <Navbar showMenuToggle hideMenu onMenuToggle={() => setIsMobileOpen((prev) => !prev)} />
       <div className="flex flex-1">
         <RoleSidebar
           groups={adminMenu}

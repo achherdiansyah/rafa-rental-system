@@ -12,6 +12,8 @@ import { cn } from '@/utils/cn'
 export interface NavbarProps {
   onMenuToggle?: () => void
   showMenuToggle?: boolean
+  /** Internal layouts (e.g. Admin) hide the public landing menu entirely. */
+  hideMenu?: boolean
 }
 
 const DEFAULT_MENU: Array<{ label: string; href: string }> = [
@@ -29,7 +31,7 @@ const isCurrentHash = (pathname: string, hash: string, href: string): boolean =>
   return current === target
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = false }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = false, hideMenu = false }) => {
   const { user, isAuthenticated, logout } = useAuth()
   const cms = useCms()
   const navigate = useNavigate()
@@ -116,7 +118,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = f
         </div>
 
         {/* CENTER: menu (desktop) */}
-        <nav aria-label="Navigasi utama" className="hidden lg:flex items-center gap-6 xl:gap-8">
+        {!hideMenu && (
+          <nav aria-label="Navigasi utama" className="hidden lg:flex items-center gap-6 xl:gap-8">
           {menu.map((m) => {
             const active = isCurrentHash(location.pathname, location.hash, m.href)
             return (
@@ -134,6 +137,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = f
             )
           })}
         </nav>
+        )}
 
         {/* RIGHT: actions */}
         <div className="flex items-center gap-2 shrink-0">
@@ -154,7 +158,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = f
                 )}
                 {user.role === 'ADMIN' && (
                   <Link to="/admin" onClick={() => setMobileOpen(false)}>
-                    <Button variant="ghost" size="sm">Admin Desk</Button>
+                    <Button variant="ghost" size="sm">Admin Operasional</Button>
                   </Link>
                 )}
                 {user.role === 'OWNER' && (
