@@ -141,11 +141,11 @@ body {
   animation: fade-in-up 0.5s ease-out both;
 }
 
-/* Auth form fields: yellow accent border with smooth transition */
+/* Auth form fields: neutral border, yellow only on focus */
 .auth-form input,
 .auth-form textarea,
 .auth-form select {
-  border-color: var(--color-accent-300);
+  border-color: var(--color-slate-300);
   transition: border-color 200ms ease, box-shadow 200ms ease;
 }
 .auth-form input:focus,
