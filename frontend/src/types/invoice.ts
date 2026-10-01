@@ -1,7 +1,7 @@
 import type { BankAccount } from './bank'
 
 export type InvoiceStatus = 'DRAFT' | 'ISSUED' | 'UNPAID' | 'PARTIALLY_PAID' | 'PAID' | 'OVERPAID' | 'OVERDUE' | 'CANCELLED'
-export type InvoiceType = 'DAILY_WORK' | 'MOB_DEMOB' | 'ADJUSTMENT' | 'OTHER'
+export type InvoiceType = 'RENTAL_PREPAYMENT' | 'DAILY_WORK' | 'MOB_DEMOB' | 'ADJUSTMENT' | 'OTHER'
 export type PaymentStatus = 'PENDING' | 'SUBMITTED' | 'APPROVED' | 'REJECTED'
 
 export interface InvoiceDetail {
@@ -73,6 +73,7 @@ export interface BankOption {
 }
 
 export const invoiceTypeLabel: Record<InvoiceType, string> = {
+  RENTAL_PREPAYMENT: 'Sewa Awal',
   DAILY_WORK: 'Sewa Harian',
   MOB_DEMOB: 'MOB/DEMOB',
   ADJUSTMENT: 'Penyesuaian',
