@@ -150,11 +150,7 @@ class UatWorkflowTest extends TestCase
         $this->assertEquals(RentalStatus::COMPLETED->value, Rental::find($rentalId)->status->value);
 
         // ---------- 8) Invoice DAILY_WORK (8h x 150k) ----------
-        $dailyInvoice = $this->postJson('/api/v1/invoices', [
-            'booking_id' => $bookingId,
-            'invoice_type' => 'DAILY_WORK',
-        ])->assertCreated()->json('data.id');
-        $this->postJson("/api/v1/invoices/{$dailyInvoice}/issue")->assertOk();
+        $dailyInvoice = Invoice::where('booking_id', $bookingId)->where('invoice_type', 'DAILY_WORK')->firstOrFail()->id;
         $this->assertEqualsWithDelta(1200000.0, (float) Invoice::find($dailyInvoice)->grand_total, 0.01);
 
         // ---------- 9) Payment: partial then full verification ----------
@@ -184,11 +180,7 @@ class UatWorkflowTest extends TestCase
         $this->assertEquals(InvoiceStatus::PAID->value, Invoice::find($dailyInvoice)->fresh()->status->value);
 
         // ---------- 10) Overpayment (MOB/DEMOB) → refund settlement ----------
-        $mobInvoice = $this->postJson('/api/v1/invoices', [
-            'booking_id' => $bookingId,
-            'invoice_type' => 'MOB_DEMOB',
-        ])->assertCreated()->json('data.id');
-        $this->postJson("/api/v1/invoices/{$mobInvoice}/issue")->assertOk();
+        $mobInvoice = Invoice::where('booking_id', $bookingId)->where('invoice_type', 'MOB_DEMOB')->firstOrFail()->id;
         // 400k + 250k = 650k; bayar 900k → overpay 250k
         Sanctum::actingAs($user);
         $overPayment = $this->postJson("/api/v1/invoices/{$mobInvoice}/payments", [

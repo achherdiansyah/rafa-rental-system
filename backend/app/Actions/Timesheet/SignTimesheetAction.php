@@ -20,7 +20,7 @@ class SignTimesheetAction
     public function execute(Timesheet $timesheet, UploadedFile $file, User $signer): Attachment
     {
         return DB::transaction(function () use ($timesheet, $file, $signer) {
-            if (! in_array($timesheet->status->value, ['DRAFT', 'SUBMITTED'], true)) {
+            if (! in_array($timesheet->status->value, ['DRAFT', 'SUBMITTED', 'APPROVED'], true)) {
                 throw new BusinessRuleException(
                     'Tanda tangan hanya dapat dilampirkan pada timesheet DRAFT atau SUBMITTED.'
                 );

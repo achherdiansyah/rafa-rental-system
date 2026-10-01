@@ -56,6 +56,14 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Daily Billing & Outstanding Rules
+    |--------------------------------------------------------------------------
+    | Maximum allowed unpaid daily work invoices before operations are blocked.
+    */
+    'max_outstanding_days' => 3,
+
+    /*
+    |--------------------------------------------------------------------------
     | Unavailable Physical Unit Statuses
     |--------------------------------------------------------------------------
     | Units in these states can never be allocated to a new rental.

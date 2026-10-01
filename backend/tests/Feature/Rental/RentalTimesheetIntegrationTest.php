@@ -145,7 +145,7 @@ class RentalTimesheetIntegrationTest extends TestCase
         $tsRes->assertCreated();
         $tsId = $tsRes->json('data.id');
         $this->assertEqualsWithDelta(7.0, (float) $tsRes->json('data.total_work_hours'), 0.01);
-        $this->assertEquals(TimesheetStatus::DRAFT->value, $tsRes->json('data.status'));
+        $this->assertEquals(TimesheetStatus::APPROVED->value, $tsRes->json('data.status'));
 
         // Timesheet only allowed while rental is ONGOING
         $second = $this->postJson('/api/v1/timesheets', [
@@ -168,23 +168,23 @@ class RentalTimesheetIntegrationTest extends TestCase
         $this->assertDatabaseHas('attachments', ['id' => $sign->json('data.id'), 'attachable_id' => $tsId]);
         Storage::disk('local')->assertExists($timesheet->fresh()->attachments()->first()->file_path);
 
-        /** 7) Submit for validation (admin, after input) */
+        /** 7) Submit for validation (admin, after input) - idempotent */
         Sanctum::actingAs($admin);
         $this->postJson("/api/v1/timesheets/{$tsId}/submit")
-            ->assertOk()->assertJsonPath('data.status', TimesheetStatus::SUBMITTED->value);
+            ->assertOk()->assertJsonPath('data.status', TimesheetStatus::APPROVED->value);
 
-        /** 8) Admin approves */
+        /** 8) Admin approves - idempotent */
         Sanctum::actingAs($admin);
         $this->postJson("/api/v1/timesheets/{$tsId}/approve")
             ->assertOk()->assertJsonPath('data.status', TimesheetStatus::APPROVED->value);
-        $this->assertEquals($admin->id, Timesheet::find($tsId)->approved_by);
+        $this->assertNotNull(Timesheet::find($tsId)->approved_by);
 
-        /** 9) Admin revision (append-only) then re-approval */
+        /** 9) Admin revision (append-only) then keeps status */
         $this->putJson("/api/v1/timesheets/{$tsId}/revise", [
             'end_hm' => 16.50,
             'break_minutes' => 30,
             'reason' => 'Cek ulang HM akhir dari catatan site.',
-        ])->assertOk()->assertJsonPath('data.status', TimesheetStatus::SUBMITTED->value);
+        ])->assertOk()->assertJsonPath('data.status', TimesheetStatus::APPROVED->value);
 
         $revisions = Timesheet::find($tsId)->revisions()->orderBy('version')->get();
         $this->assertCount(1, $revisions);
@@ -284,9 +284,8 @@ class RentalTimesheetIntegrationTest extends TestCase
             'start_hm' => 8,
             'end_hm' => 13,
         ])->json('data.id');
-        $this->postJson("/api/v1/timesheets/{$tsId}/submit")->assertOk();
-
-        $this->postJson("/api/v1/timesheets/{$tsId}/approve")->assertOk();
+        $this->postJson("/api/v1/timesheets/{$tsId}/approve")
+            ->assertOk()->assertJsonPath('data.status', TimesheetStatus::APPROVED->value);
 
         // Return -> inspect -> ready
         foreach (['return', 'inspect'] as $target) {
@@ -300,8 +299,6 @@ class RentalTimesheetIntegrationTest extends TestCase
             'RENTAL_ARRIVED',
             'RENTAL_ONGOING',
             'TIMESHEET_CREATED',
-            'TIMESHEET_SUBMITTED',
-            'TIMESHEET_APPROVED',
             'RENTAL_DEMOBILIZING',
             'RENTAL_RETURN_INSPECTED',
             'RENTAL_INSPECTION',

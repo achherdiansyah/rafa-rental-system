@@ -19,6 +19,10 @@ class ValidateTimesheetAction
     public function approve(User $admin, Timesheet $timesheet): Timesheet
     {
         return DB::transaction(function () use ($admin, $timesheet) {
+            if ($timesheet->status === TimesheetStatus::APPROVED) {
+                return $timesheet;
+            }
+
             if ($timesheet->status !== TimesheetStatus::SUBMITTED) {
                 throw new InvalidStateTransitionException(
                     'Transisi tidak valid: hanya timesheet SUBMITTED yang dapat disetujui.'
@@ -55,9 +59,9 @@ class ValidateTimesheetAction
     public function reject(User $admin, Timesheet $timesheet, string $reason): Timesheet
     {
         return DB::transaction(function () use ($admin, $timesheet, $reason) {
-            if ($timesheet->status !== TimesheetStatus::SUBMITTED) {
+            if (! in_array($timesheet->status, [TimesheetStatus::SUBMITTED, TimesheetStatus::APPROVED], true)) {
                 throw new InvalidStateTransitionException(
-                    'Transisi tidak valid: hanya timesheet SUBMITTED yang dapat ditolak.'
+                    'Transisi tidak valid: hanya timesheet SUBMITTED atau APPROVED yang dapat ditolak.'
                 );
             }
 

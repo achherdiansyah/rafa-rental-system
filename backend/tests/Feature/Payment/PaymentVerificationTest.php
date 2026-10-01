@@ -86,23 +86,17 @@ class PaymentVerificationTest extends TestCase
             'start_hm' => 8,
             'end_hm' => 8 + $hours,
         ])->json('data.id');
-        Sanctum::actingAs($admin);
-        $this->postJson("/api/v1/timesheets/{$tsId}/submit")->assertOk();
-        $this->postJson("/api/v1/timesheets/{$tsId}/approve")->assertOk();
 
         foreach (['return', 'inspect'] as $target) {
             $this->postJson("/api/v1/rentals/{$rentalId}/{$target}")->assertOk();
         }
         $this->postJson("/api/v1/rentals/{$rentalId}/ready", ['result' => 'READY'])->assertOk();
 
-        Sanctum::actingAs($admin);
-        $invoiceId = $this->postJson('/api/v1/invoices', [
-            'booking_id' => $booking->id,
-            'invoice_type' => InvoiceType::DAILY_WORK->value,
-        ])->json('data.id');
-        $this->postJson("/api/v1/invoices/{$invoiceId}/issue")->assertOk();
+        $invoice = Invoice::where('booking_id', $booking->id)
+            ->where('invoice_type', InvoiceType::DAILY_WORK->value)
+            ->firstOrFail();
 
-        return [$owner, Invoice::findOrFail($invoiceId)];
+        return [$owner, $invoice];
     }
 
     private function submit(User $as, Invoice $invoice, float $amount, string $reference, ?float $dueBefore = null): Payment

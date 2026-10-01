@@ -57,6 +57,10 @@ class PricingCalculatorService
         // Rental subtotal = dailyRate * durationDays * physical quantity
         $rentalSubtotal = $dailyRate * $durationDays * $input->quantity;
 
+        // Overtime snapshot: only when legacy data has none (falls back to base rate).
+        // Per FIX-PHASE-1: hours > 8 are billed at overtime_rate from master data.
+        $overtimeRate = (float) ($price->overtime_rate > 0 ? $price->overtime_rate : $price->base_rate);
+
         // MOB & DEMOB are calculated strictly per physical unit.
         // Source: master price (mob_cost/demob_cost) by default; cart may override per unit.
         $mobRatePerUnit = $input->mobRatePerUnit > 0 ? $input->mobRatePerUnit : (float) $price->mob_cost;
@@ -75,6 +79,7 @@ class PricingCalculatorService
             durationDays: $durationDays,
             isAllIn: $input->isAllIn,
             hourlyRate: $hourlyRate,
+            overtimeRate: $overtimeRate,
             dailyRate: $dailyRate,
             rentalSubtotal: $rentalSubtotal,
             mobRatePerUnit: $mobRatePerUnit,

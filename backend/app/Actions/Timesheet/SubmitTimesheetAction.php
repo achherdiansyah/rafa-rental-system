@@ -20,6 +20,10 @@ class SubmitTimesheetAction
     public function execute(User $actor, Timesheet $timesheet): Timesheet
     {
         return DB::transaction(function () use ($actor, $timesheet) {
+            if ($timesheet->status === TimesheetStatus::APPROVED) {
+                return $timesheet;
+            }
+
             if (! in_array($timesheet->status, [TimesheetStatus::DRAFT, TimesheetStatus::REJECTED], true)) {
                 throw new InvalidStateTransitionException(
                     'Transisi tidak valid: hanya timesheet DRAFT/REJECTED yang dapat disubmit.'

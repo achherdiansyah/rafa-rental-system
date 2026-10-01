@@ -43,6 +43,18 @@ class CreateInvoiceAction
                 );
             }
 
+            // Duplicate guard: MOB/DEMOB is auto-issued at booking approval and
+            // DAILY_WORK at timesheet save; refuse manual duplicates (FIX PHASE 1).
+            $existing = Invoice::where('booking_id', $booking->id)
+                ->where('invoice_type', $type)
+                ->exists();
+
+            if ($existing) {
+                throw new BusinessRuleException(
+                    'Invoice tipe '.$type->value.' untuk booking ini sudah diterbitkan; tidak boleh duplikat.'
+                );
+            }
+
             /** @var Rental|null $rental */
             $rental = Rental::where('booking_id', $booking->id)->first();
             if (! $rental || $rental->status !== RentalStatus::COMPLETED) {

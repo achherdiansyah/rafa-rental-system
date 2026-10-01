@@ -90,9 +90,9 @@ export const UserTimesheetsPage: React.FC = () => {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Timesheet Harian</h2>
-        <p className="text-sm text-slate-500 mt-1">
-          Lihat catatan pekerjaan aktual dan konfirmasi timesheet proyek Anda.
-        </p>
+<p className="text-sm text-slate-500 mt-1">
+          Lihat catatan pekerjaan aktual operator, jam meter, dan tagihan harian proyek Anda.
+          </p>
       </div>
 
       {apiError && (

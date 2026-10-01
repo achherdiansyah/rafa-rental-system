@@ -76,19 +76,15 @@ class PaymentSubmissionTest extends TestCase
             $this->postJson("/api/v1/rentals/{$rentalId}/{$target}")->assertOk();
         }
 
-        // Record + approve timesheet while rental is ONGOING
+        // Record timesheet while rental is ONGOING (auto-approved and invoice auto-created)
         $rental = Rental::findOrFail($rentalId);
-        $tsId = null;
         Sanctum::actingAs($admin);
-        $tsId = $this->postJson('/api/v1/timesheets', [
+        $this->postJson('/api/v1/timesheets', [
             'rental_detail_id' => $rental->details()->first()->id,
             'report_date' => now()->toDateString(),
             'start_hm' => 8,
             'end_hm' => 16,
-        ])->json('data.id');
-        $this->postJson("/api/v1/timesheets/{$tsId}/submit")->assertOk();
-
-        $this->postJson("/api/v1/timesheets/{$tsId}/approve")->assertOk();
+        ])->assertCreated();
 
         // Return -> inspect -> READY
         foreach (['return', 'inspect'] as $target) {
@@ -96,15 +92,12 @@ class PaymentSubmissionTest extends TestCase
         }
         $this->postJson("/api/v1/rentals/{$rentalId}/ready", ['result' => 'READY'])->assertOk();
 
-        // Create + issue DAILY_WORK invoice
-        Sanctum::actingAs($admin);
-        $invoiceId = $this->postJson('/api/v1/invoices', [
-            'booking_id' => $booking->id,
-            'invoice_type' => InvoiceType::DAILY_WORK->value,
-        ])->json('data.id');
-        $this->postJson("/api/v1/invoices/{$invoiceId}/issue")->assertOk();
+        // Issue auto-created DAILY_WORK invoice
+        $invoice = Invoice::where('booking_id', $booking->id)
+            ->where('invoice_type', InvoiceType::DAILY_WORK->value)
+            ->firstOrFail();
 
-        return [$owner, Invoice::findOrFail($invoiceId)];
+        return [$owner, $invoice];
     }
 
     private function submitPayment(User $as, Invoice $invoice, array $overrides = [], ?int $bankId = null): array

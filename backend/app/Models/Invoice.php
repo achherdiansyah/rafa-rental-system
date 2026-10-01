@@ -17,6 +17,7 @@ class Invoice extends Model
     protected $fillable = [
         'invoice_number',
         'booking_id',
+        'timesheet_id',
         'invoice_type',
         'due_at',
         'issued_at',
@@ -46,6 +47,11 @@ class Invoice extends Model
     public function booking(): BelongsTo
     {
         return $this->belongsTo(Booking::class);
+    }
+
+    public function timesheet(): BelongsTo
+    {
+        return $this->belongsTo(Timesheet::class);
     }
 
     public function details(): HasMany

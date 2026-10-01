@@ -57,26 +57,26 @@ class ReportingIntegrationTest extends TestCase
         $rentalB = $this->rentalWithHours($bob, $projectB, $unitB, $model, 12.75, RentalStatus::ONGOING->value);
 
         // Invoices: Alice partial (paid 300k/Qty via approved) + Bob outstanding
-        $invoiceA = Invoice::factory()->create(['booking_id' => $rentalA['booking']->id, 'status' => 'PARTIALLY_PAID', 'grand_total' => 1000000, 'paid_amount' => 300000]);
-        Payment::factory()->create(['invoice_id' => $invoiceA->id, 'status' => PaymentStatus::APPROVED, 'amount' => 300000]);
-        Payment::factory()->create(['invoice_id' => $invoiceA->id, 'status' => PaymentStatus::REJECTED, 'amount' => 50000]);
+        $invoiceA = Invoice::factory()->create(['booking_id' => $rentalA['booking']->id, 'status' => 'PARTIALLY_PAID', 'grand_total' => 1000000, 'paid_amount' => 300000, 'created_at' => '2026-09-15']);
+        Payment::factory()->create(['invoice_id' => $invoiceA->id, 'status' => PaymentStatus::APPROVED, 'amount' => 300000, 'created_at' => '2026-09-16']);
+        Payment::factory()->create(['invoice_id' => $invoiceA->id, 'status' => PaymentStatus::REJECTED, 'amount' => 50000, 'created_at' => '2026-09-16']);
 
-        $invoiceB = Invoice::factory()->create(['booking_id' => $rentalB['booking']->id, 'status' => 'OVERDUE', 'grand_total' => 500000, 'paid_amount' => 0]);
-        $invoiceOver = Invoice::factory()->create(['booking_id' => $rentalA['booking']->id, 'status' => 'OVERPAID', 'grand_total' => 800000, 'paid_amount' => 800000, 'overpayment_amount' => 200000]);
-        Payment::factory()->create(['invoice_id' => $invoiceOver->id, 'status' => PaymentStatus::APPROVED, 'amount' => 1000000]);
-        Refund::factory()->create(['invoice_id' => $invoiceOver->id, 'source' => 'OVERPAYMENT', 'status' => 'COMPLETED', 'amount' => 200000]);
+        $invoiceB = Invoice::factory()->create(['booking_id' => $rentalB['booking']->id, 'status' => 'OVERDUE', 'grand_total' => 500000, 'paid_amount' => 0, 'created_at' => '2026-09-15']);
+        $invoiceOver = Invoice::factory()->create(['booking_id' => $rentalA['booking']->id, 'status' => 'OVERPAID', 'grand_total' => 800000, 'paid_amount' => 800000, 'overpayment_amount' => 200000, 'created_at' => '2026-09-15']);
+        Payment::factory()->create(['invoice_id' => $invoiceOver->id, 'status' => PaymentStatus::APPROVED, 'amount' => 1000000, 'created_at' => '2026-09-16']);
+        Refund::factory()->create(['invoice_id' => $invoiceOver->id, 'source' => 'OVERPAYMENT', 'status' => 'COMPLETED', 'amount' => 200000, 'created_at' => '2026-09-20']);
 
         return [$alice, $bob];
     }
 
     private function rentalWithHours(User $user, ProjectLocation $project, EquipmentUnit $unit, EquipmentModel $model, float $hours, string $rentalStatus): array
     {
-        $booking = Booking::factory()->create(['user_id' => $user->id, 'status' => BookingStatus::CONFIRMED->value, 'project_location_id' => $project->id]);
+        $booking = Booking::factory()->create(['user_id' => $user->id, 'status' => BookingStatus::CONFIRMED->value, 'project_location_id' => $project->id, 'created_at' => '2026-09-10']);
         $bd = BookingDetail::factory()->create(['booking_id' => $booking->id, 'equipment_model_id' => $model->id, 'quantity' => 1]);
         $assignment = BookingUnitAssignment::factory()->create(['booking_detail_id' => $bd->id, 'equipment_unit_id' => $unit->id, 'status' => 'ASSIGNED', 'is_current' => true, 'assigned_by' => $user->id]);
-        $rental = Rental::factory()->create(['booking_id' => $booking->id, 'status' => $rentalStatus]);
+        $rental = Rental::factory()->create(['booking_id' => $booking->id, 'status' => $rentalStatus, 'created_at' => '2026-09-10']);
         $rd = RentalDetail::factory()->create(['rental_id' => $rental->id, 'assignment_id' => $assignment->id]);
-        Timesheet::factory()->create(['rental_detail_id' => $rd->id, 'status' => TimesheetStatus::APPROVED->value, 'total_work_hours' => $hours, 'report_date' => now()->subDays(3)->toDateString()]);
+        Timesheet::factory()->create(['rental_detail_id' => $rd->id, 'status' => TimesheetStatus::APPROVED->value, 'total_work_hours' => $hours, 'report_date' => '2026-09-12']);
 
         return ['booking' => $booking, 'rental' => $rental, 'rd' => $rd, 'unit' => $unit];
     }

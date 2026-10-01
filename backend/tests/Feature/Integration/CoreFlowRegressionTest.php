@@ -82,7 +82,7 @@ class CoreFlowRegressionTest extends TestCase
         $rental = Rental::findOrFail($rentalId);
         $this->assertEquals(RentalStatus::ONGOING->value, $rental->status->value);
 
-        // 2) Timesheet + approval
+        // 2) Timesheet + approval (auto creates DAILY invoice)
         Sanctum::actingAs($admin);
         $rd = $rental->details()->first();
         $tsid = $this->postJson('/api/v1/timesheets', [
@@ -91,9 +91,6 @@ class CoreFlowRegressionTest extends TestCase
             'start_hm' => 8,
             'end_hm' => 16,
         ])->json('data.id');
-        Sanctum::actingAs($admin);
-        $this->postJson("/api/v1/timesheets/{$tsid}/submit")->assertOk();
-        $this->postJson("/api/v1/timesheets/{$tsid}/approve")->assertOk();
 
         // 3) Return + inspection -> READY
         foreach (['return', 'inspect'] as $t) {
@@ -104,12 +101,10 @@ class CoreFlowRegressionTest extends TestCase
         $this->assertEquals(EquipmentStatus::AVAILABLE->value, $unit->fresh()->status->value);
 
         // 4) Invoice issued (8h x 100k)
-        $invoiceId = $this->postJson('/api/v1/invoices', [
-            'booking_id' => $booking->id,
-            'invoice_type' => InvoiceType::DAILY_WORK->value,
-        ])->assertCreated()->json('data.id');
-        $this->postJson("/api/v1/invoices/{$invoiceId}/issue")->assertOk();
-        $invoice = Invoice::findOrFail($invoiceId);
+        $invoice = Invoice::where('booking_id', $booking->id)
+            ->where('invoice_type', InvoiceType::DAILY_WORK->value)
+            ->firstOrFail();
+        $invoiceId = $invoice->id;
         $this->assertEqualsWithDelta(800000.0, (float) $invoice->grand_total, 0.01);
         $this->assertNotNull($invoice->due_at);
 

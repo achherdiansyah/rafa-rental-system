@@ -86,6 +86,7 @@ class CreateBookingFromCartAction
                     'end_date' => $sourceLine['end_date'],
                     'is_all_in' => $lineResult->isAllIn,
                     'rental_rate_snapshot' => $lineResult->hourlyRate,
+                    'overtime_rate_snapshot' => $lineResult->overtimeRate,
                     'mob_cost_snapshot' => $lineResult->mobRatePerUnit,
                     'demob_cost_snapshot' => $lineResult->demobRatePerUnit,
                     'subtotal' => $lineResult->rentalSubtotal,

@@ -44,7 +44,8 @@ class ReportingQueryServiceTest extends TestCase
         $model = EquipmentModel::factory()->create(['is_active' => true]);
         $unit = EquipmentUnit::factory()->create(['equipment_model_id' => $model->id, 'status' => 'ON_SITE']);
 
-        $booking = Booking::factory()->create(['user_id' => $user->id, 'status' => BookingStatus::CONFIRMED->value, 'project_location_id' => $project->id]);
+        // Dashboard counts bookings in September period: helper booking needs created_at in range
+        $booking = Booking::factory()->create(['user_id' => $user->id, 'status' => BookingStatus::CONFIRMED->value, 'project_location_id' => $project->id, 'created_at' => '2026-09-05']);
         $bookingDetail = BookingDetail::factory()->create(['booking_id' => $booking->id, 'equipment_model_id' => $model->id, 'quantity' => 1]);
         $assignment = BookingUnitAssignment::factory()->create([
             'booking_detail_id' => $bookingDetail->id,
@@ -54,13 +55,13 @@ class ReportingQueryServiceTest extends TestCase
             'assigned_by' => $user->id,
         ]);
 
-        $rental = Rental::factory()->create(['booking_id' => $booking->id, 'status' => RentalStatus::COMPLETED->value]);
+        $rental = Rental::factory()->create(['booking_id' => $booking->id, 'status' => RentalStatus::COMPLETED->value, 'created_at' => '2026-09-05']);
         $detail = RentalDetail::factory()->create(['rental_id' => $rental->id, 'assignment_id' => $assignment->id]);
         Timesheet::factory()->create([
             'rental_detail_id' => $detail->id,
             'status' => TimesheetStatus::APPROVED->value,
             'total_work_hours' => $hours,
-            'report_date' => now()->subDays(3)->toDateString(),
+            'report_date' => '2026-09-12',
         ]);
     }
 

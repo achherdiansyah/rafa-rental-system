@@ -2,6 +2,7 @@
 
 namespace App\Actions\Timesheet;
 
+use App\Actions\Invoice\CreateDailyInvoiceAction;
 use App\Enums\TimesheetStatus;
 use App\Exceptions\BusinessRuleException;
 use App\Exceptions\InvalidStateTransitionException;
@@ -12,6 +13,10 @@ use Illuminate\Support\Facades\DB;
 
 class ReviseTimesheetAction
 {
+    public function __construct(
+        private readonly CreateDailyInvoiceAction $dailyInvoiceAction
+    ) {}
+
     /**
      * Admin correction on an APPROVED timesheet. The OLD values are snapshotted
      * into timesheet_revisions (append-only) BEFORE the update; working hours are
@@ -64,8 +69,10 @@ class ReviseTimesheetAction
                 'breakdown_hours' => $breakdown,
                 'total_work_hours' => $workHours,
                 'notes' => $data['notes'] ?? $timesheet->notes,
-                'status' => TimesheetStatus::SUBMITTED,
+                'status' => TimesheetStatus::APPROVED, // Stays APPROVED under new rules
             ]);
+
+            $this->dailyInvoiceAction->updateForTimesheet($admin, $timesheet);
 
             AuditLogger::log('TIMESHEET_REVISED', $timesheet, [
                 'old_start_hm' => $timesheet->start_hm,

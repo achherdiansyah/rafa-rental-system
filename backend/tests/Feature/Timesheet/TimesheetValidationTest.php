@@ -37,7 +37,7 @@ class TimesheetValidationTest extends TestCase
         Storage::fake('public');
     }
 
-    private function submittedTimesheet(): array
+    private function approvedTimesheet(): array
     {
         $admin = User::factory()->admin()->create();
         $owner = User::factory()->create(['role' => UserRole::USER]);
@@ -61,8 +61,6 @@ class TimesheetValidationTest extends TestCase
         $rental = Rental::factory()->create(['booking_id' => $booking->id, 'status' => RentalStatus::ONGOING]);
         $rentalDetail = RentalDetail::factory()->create(['rental_id' => $rental->id, 'assignment_id' => $assignment->id]);
 
-        // Admin inputs the timesheet from the field/operator report, then
-        // submits it to SUBMITTED (awaiting user confirmation signature).
         Sanctum::actingAs($admin);
         $timesheetId = $this->postJson('/api/v1/timesheets', [
             'rental_detail_id' => $rentalDetail->id,
@@ -73,14 +71,12 @@ class TimesheetValidationTest extends TestCase
             'operator_name' => 'Bambang',
         ])->json('data.id');
 
-        $this->postJson("/api/v1/timesheets/{$timesheetId}/submit")->assertStatus(200);
-
         return [$admin, $owner, Timesheet::find($timesheetId)];
     }
 
     public function test_pic_can_upload_signature_to_private_storage(): void
     {
-        [$admin, $owner, $timesheet] = $this->submittedTimesheet();
+        [$admin, $owner, $timesheet] = $this->approvedTimesheet();
 
         Sanctum::actingAs($owner);
 
@@ -103,7 +99,7 @@ class TimesheetValidationTest extends TestCase
 
     public function test_signature_rejects_invalid_mime(): void
     {
-        [$admin, $owner, $timesheet] = $this->submittedTimesheet();
+        [$admin, $owner, $timesheet] = $this->approvedTimesheet();
 
         Sanctum::actingAs($owner);
 
@@ -115,7 +111,7 @@ class TimesheetValidationTest extends TestCase
 
     public function test_admin_validates_submitted_timesheet(): void
     {
-        [$admin, $owner, $timesheet] = $this->submittedTimesheet();
+        [$admin, $owner, $timesheet] = $this->approvedTimesheet();
 
         Sanctum::actingAs($admin);
 
@@ -128,7 +124,7 @@ class TimesheetValidationTest extends TestCase
 
     public function test_user_cannot_validate_or_revise(): void
     {
-        [$admin, $owner, $timesheet] = $this->submittedTimesheet();
+        [$admin, $owner, $timesheet] = $this->approvedTimesheet();
 
         Sanctum::actingAs($owner);
 
@@ -144,7 +140,7 @@ class TimesheetValidationTest extends TestCase
 
     public function test_admin_rejects_timesheet_with_revision_note(): void
     {
-        [$admin, $owner, $timesheet] = $this->submittedTimesheet();
+        [$admin, $owner, $timesheet] = $this->approvedTimesheet();
 
         Sanctum::actingAs($admin);
 
@@ -164,7 +160,7 @@ class TimesheetValidationTest extends TestCase
 
     public function test_rejected_timesheet_can_be_resubmitted_by_admin(): void
     {
-        [$admin, $owner, $timesheet] = $this->submittedTimesheet();
+        [$admin, $owner, $timesheet] = $this->approvedTimesheet();
 
         Sanctum::actingAs($admin);
         $this->postJson("/api/v1/timesheets/{$timesheet->id}/reject", [
@@ -181,7 +177,7 @@ class TimesheetValidationTest extends TestCase
 
     public function test_admin_correction_snapshots_old_values_and_recalculates(): void
     {
-        [$admin, $owner, $timesheet] = $this->submittedTimesheet();
+        [$admin, $owner, $timesheet] = $this->approvedTimesheet();
 
         // Approve first
         Sanctum::actingAs($admin);
@@ -194,7 +190,7 @@ class TimesheetValidationTest extends TestCase
             'reason' => 'Koreksi HM akhir hasil cek ulang bengkel.',
         ]);
         $res->assertStatus(200)
-            ->assertJsonPath('data.status', TimesheetStatus::SUBMITTED->value);
+            ->assertJsonPath('data.status', TimesheetStatus::APPROVED->value);
 
         $fresh = $timesheet->fresh();
         $this->assertEquals(111.00, (float) $fresh->end_hm);
@@ -210,7 +206,7 @@ class TimesheetValidationTest extends TestCase
 
     public function test_revision_history_lists_append_only_entries(): void
     {
-        [$admin, $owner, $timesheet] = $this->submittedTimesheet();
+        [$admin, $owner, $timesheet] = $this->approvedTimesheet();
 
         Sanctum::actingAs($admin);
         $this->postJson("/api/v1/timesheets/{$timesheet->id}/approve")->assertStatus(200);
@@ -235,12 +231,15 @@ class TimesheetValidationTest extends TestCase
 
     public function test_revision_is_audited(): void
     {
-        [$admin, $owner, $timesheet] = $this->submittedTimesheet();
+        [$admin, $owner, $timesheet] = $this->approvedTimesheet();
 
         Sanctum::actingAs($admin);
-        $this->postJson("/api/v1/timesheets/{$timesheet->id}/approve")->assertStatus(200);
+        $this->putJson("/api/v1/timesheets/{$timesheet->id}/revise", [
+            'end_hm' => 111.00,
+            'reason' => 'Koreksi teraudit.',
+        ])->assertStatus(200);
 
         Log::shouldHaveReceived('info')
-            ->with(\Mockery::pattern('/TIMESHEET_APPROVED/'), \Mockery::type('array'));
+            ->with(\Mockery::pattern('/TIMESHEET_REVISED/'), \Mockery::type('array'));
     }
 }

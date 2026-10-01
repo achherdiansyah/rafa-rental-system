@@ -9,104 +9,93 @@ use App\Models\RentalDetail;
 use App\Models\Timesheet;
 use App\Models\User;
 use App\Support\AuditLogger;
+use App\Actions\Invoice\CreateDailyInvoiceAction;
+use Illuminate\Support\Facades\DB;
 
 class CreateTimesheetAction
 {
-    /**
-     * Create a timesheet entry (operator-filled). Actual working hours are
-     * computed server-side: (end_hm - start_hm) minus break, no rounding —
-     * precision is owned by the DECIMAL(8,2) storage column.
-     *
-     * @param  array<string, mixed>  $data
-     *
-     * @throws BusinessRuleException
-     */
+    public function __construct(
+        private readonly CreateDailyInvoiceAction $createDailyInvoice
+    ) {}
+
     public function execute(User $operator, array $data): Timesheet
     {
-        /** @var RentalDetail|null $rentalDetail */
-        $rentalDetail = RentalDetail::with(['rental.booking'])->find($data['rental_detail_id']);
+        return DB::transaction(function () use ($operator, $data) {
+            /** @var RentalDetail|null $rentalDetail */
+            $rentalDetail = RentalDetail::with(['rental.booking'])->find($data['rental_detail_id']);
 
-        if (! $rentalDetail || ! $rentalDetail->rental) {
-            throw new BusinessRuleException('Rincian rental tidak ditemukan.');
-        }
-
-        // Hanya operator/owner rental atau staff yang boleh mencatat timesheet
-        if (! $operator->isAdmin() && ! $operator->isOwner()) {
-            $ownerId = $rentalDetail->rental->booking?->user_id;
-            if (! $ownerId || (int) $ownerId !== (int) $operator->id) {
-                throw new BusinessRuleException('Timesheet hanya dapat dicatat untuk rental milik akun Anda.');
+            if (! $rentalDetail || ! $rentalDetail->rental) {
+                throw new BusinessRuleException('Rincian rental tidak ditemukan.');
             }
-        }
 
-        // Timesheet hanya boleh untuk rental yang sedang ONGOING
-        if ($rentalDetail->rental->status !== RentalStatus::ONGOING) {
-            throw new BusinessRuleException(
-                'Timesheet hanya dapat dicatat untuk rental yang sedang berstatus ONGOING.'
-            );
-        }
+            if (! $operator->isAdmin() && ! $operator->isOwner()) {
+                throw new BusinessRuleException('Hanya Admin yang dapat menginput timesheet.');
+            }
 
-        // Satu timesheet per unit per tanggal kerja
-        $exists = Timesheet::where('rental_detail_id', $rentalDetail->id)
-            ->where('report_date', $data['report_date'])
-            ->exists();
+            if ($rentalDetail->rental->status !== RentalStatus::ONGOING) {
+                throw new BusinessRuleException('Timesheet hanya dapat dicatat untuk rental yang sedang berstatus ONGOING.');
+            }
 
-        if ($exists) {
-            throw new BusinessRuleException(
-                'Timesheet untuk unit ini pada tanggal tersebut sudah pernah dicatat.'
-            );
-        }
+            $exists = Timesheet::where('rental_detail_id', $rentalDetail->id)
+                ->where('report_date', $data['report_date'])
+                ->exists();
 
-        // Pakai nilai akhir hour meter sebagai referensi konsistensi durasi
-        $startHm = (float) $data['start_hm'];
-        $endHm = (float) $data['end_hm'];
-        $breakMinutes = (int) ($data['break_minutes'] ?? 0);
+            if ($exists) {
+                throw new BusinessRuleException('Timesheet untuk unit ini pada tanggal tersebut sudah pernah dicatat.');
+            }
 
-        $elapsed = $endHm - $startHm;
-        $breakHours = $breakMinutes / 60;
+            $startHm = (float) $data['start_hm'];
+            $endHm = (float) $data['end_hm'];
+            $breakMinutes = (int) ($data['break_minutes'] ?? 0);
 
-        // Dihitung apa adanya (tanpa pembulatan buatan); presisi 2 desimal ditangani kolom DECIMAL(8,2).
-        $workHours = $elapsed - $breakHours;
-        if ($workHours < 0) {
-            throw new BusinessRuleException('Durasi kerja tidak konsisten: melebihi selisih jam meter setelah break.');
-        }
+            $elapsed = $endHm - $startHm;
+            $breakHours = $breakMinutes / 60;
 
-        // Konsistensi: total >= breakdown + standby
-        $breakdown = (float) ($data['breakdown_hours'] ?? 0);
-        $standby = (float) ($data['standby_hours'] ?? 0);
-        if ($workHours < ($breakdown + $standby)) {
-            throw new BusinessRuleException(
-                'Jam kerja aktual tidak konsisten dengan total breakdown + standby.'
-            );
-        }
+            $workHours = $elapsed - $breakHours;
+            if ($workHours < 0) {
+                throw new BusinessRuleException('Durasi kerja tidak konsisten: melebihi selisih jam meter setelah break.');
+            }
 
-        $timesheet = Timesheet::create([
-            'rental_detail_id' => $rentalDetail->id,
-            'report_date' => $data['report_date'],
-            'start_hm' => $startHm,
-            'end_hm' => $endHm,
-            'break_minutes' => $breakMinutes,
-            'total_work_hours' => $workHours,
-            'standby_hours' => $standby,
-            'breakdown_hours' => $breakdown,
-            'operator_name' => $data['operator_name'] ?? $operator->name,
-            'notes' => $data['notes'] ?? null,
-            'signature_reference' => $data['signature_reference'] ?? null,
-            'status' => TimesheetStatus::DRAFT,
-        ]);
+            $breakdown = (float) ($data['breakdown_hours'] ?? 0);
+            $standby = (float) ($data['standby_hours'] ?? 0);
+            if ($workHours < ($breakdown + $standby)) {
+                throw new BusinessRuleException('Jam kerja aktual tidak konsisten dengan total breakdown + standby.');
+            }
 
-        AuditLogger::log('TIMESHEET_CREATED', $timesheet, [], [
-            'rental_detail_id' => $rentalDetail->id,
-            'report_date' => $data['report_date'],
-            'total_work_hours' => $workHours,
-            'created_by' => $operator->id,
-        ]);
+            $timesheet = Timesheet::create([
+                'rental_detail_id' => $rentalDetail->id,
+                'report_date' => $data['report_date'],
+                'start_hm' => $startHm,
+                'end_hm' => $endHm,
+                'break_minutes' => $breakMinutes,
+                'total_work_hours' => $workHours,
+                'standby_hours' => $standby,
+                'breakdown_hours' => $breakdown,
+                'operator_name' => $data['operator_name'] ?? $operator->name,
+                'notes' => $data['notes'] ?? null,
+                'signature_reference' => $data['signature_reference'] ?? null,
+                'status' => TimesheetStatus::APPROVED, // Directly APPROVED
+                'approved_by' => $operator->id,
+            ]);
 
-        $timesheet->load([
-            'rentalDetail.assignment.unit',
-            'rentalDetail.rental.booking.projectLocation',
-            'attachments',
-        ]);
+            AuditLogger::log('TIMESHEET_CREATED', $timesheet, [], [
+                'rental_detail_id' => $rentalDetail->id,
+                'report_date' => $data['report_date'],
+                'total_work_hours' => $workHours,
+                'created_by' => $operator->id,
+                'status' => 'APPROVED',
+            ]);
 
-        return $timesheet;
+            // Auto-create Daily Invoice
+            $this->createDailyInvoice->execute($operator, $timesheet);
+
+            $timesheet->load([
+                'rentalDetail.assignment.unit',
+                'rentalDetail.rental.booking.projectLocation',
+                'attachments',
+            ]);
+
+            return $timesheet;
+        });
     }
 }

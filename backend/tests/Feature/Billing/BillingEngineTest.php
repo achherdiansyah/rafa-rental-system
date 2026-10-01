@@ -259,13 +259,16 @@ class BillingEngineTest extends TestCase
         $rd = $rental->details()->first();
 
         // 7.25h DRAFT (not approved), 10.5h APPROVED
-        Sanctum::actingAs($admin);
-        $tsDraftId = $this->postJson('/api/v1/timesheets', [
+        $tsDraft = Timesheet::factory()->create([
             'rental_detail_id' => $rd->id,
             'report_date' => now()->subDay()->toDateString(),
             'start_hm' => 8,
             'end_hm' => 15.25,
-        ])->json('data.id');
+            'total_work_hours' => 7.25,
+            'status' => TimesheetStatus::DRAFT,
+        ]);
+
+        Sanctum::actingAs($admin);
         $tsApprovedId = $this->postJson('/api/v1/timesheets', [
             'rental_detail_id' => $rd->id,
             'report_date' => now()->toDateString(),
@@ -273,10 +276,7 @@ class BillingEngineTest extends TestCase
             'end_hm' => 18.5,
         ])->json('data.id');
 
-        Sanctum::actingAs($admin);
-        $this->postJson("/api/v1/timesheets/{$tsApprovedId}/submit")->assertOk();
-        $this->postJson("/api/v1/timesheets/{$tsApprovedId}/approve")->assertOk();
-        $this->assertSame(TimesheetStatus::DRAFT->value, Timesheet::find($tsDraftId)->status->value);
+        $this->assertSame(TimesheetStatus::DRAFT->value, Timesheet::find($tsDraft->id)->status->value);
 
         foreach (['return', 'inspect'] as $target) {
             $this->postJson("/api/v1/rentals/{$rentalId}/{$target}")->assertOk();

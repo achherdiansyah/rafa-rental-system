@@ -89,22 +89,18 @@ class BillingPaymentIntegrationTest extends TestCase
             'start_hm' => 8,
             'end_hm' => 8 + $hours,
         ])->json('data.id');
-        Sanctum::actingAs($admin);
-        $this->postJson("/api/v1/timesheets/{$tsId}/submit")->assertOk();
-        $this->postJson("/api/v1/timesheets/{$tsId}/approve")->assertOk();
 
         foreach (['return', 'inspect'] as $t) {
             $this->postJson("/api/v1/rentals/{$rentalId}/{$t}")->assertOk();
         }
         $this->postJson("/api/v1/rentals/{$rentalId}/ready", ['result' => 'READY'])->assertOk();
 
-        $invoiceId = $this->postJson('/api/v1/invoices', [
-            'booking_id' => $booking->id,
-            'invoice_type' => InvoiceType::DAILY_WORK->value,
-        ])->json('data.id');
-        $this->postJson("/api/v1/invoices/{$invoiceId}/issue")->assertOk();
+        // DAILY_WORK is auto-generated upon timesheet creation
+        $invoice = Invoice::where('booking_id', $booking->id)
+            ->where('invoice_type', InvoiceType::DAILY_WORK->value)
+            ->firstOrFail();
 
-        return [$owner, $admin, $booking, Invoice::findOrFail($invoiceId)];
+        return [$owner, $admin, $booking, $invoice];
     }
 
     private function submit(User $owner, Invoice $invoice, float $amount, string $reference): Payment

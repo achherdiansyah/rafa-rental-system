@@ -21,12 +21,6 @@ class ApproveBookingAction
         private readonly InvoiceNumberGenerator $numberGenerator
     ) {}
 
-    /**
-     * Transition PENDING_APPROVAL -> APPROVED and automatically generate
-     * the initial rental prepayment invoice for the customer.
-     *
-     * @throws InvalidStateTransitionException
-     */
     public function execute(User $admin, Booking $booking): Booking
     {
         return DB::transaction(function () use ($admin, $booking) {
@@ -47,54 +41,7 @@ class ApproveBookingAction
                 'payment_deadline_at' => $deadline,
             ]);
 
-            // Auto-create initial prepayment invoice so customer can pay on Tagihan & Bayar
-            $invoiceNumber = $this->numberGenerator->generate();
-
-            $invoice = Invoice::create([
-                'invoice_number' => $invoiceNumber,
-                'booking_id' => $booking->id,
-                'invoice_type' => InvoiceType::RENTAL_PREPAYMENT,
-                'status' => InvoiceStatus::ISSUED,
-                'issued_at' => $approvedAt,
-                'due_at' => $deadline,
-                'subtotal' => $booking->total_amount,
-                'tax_total' => 0.00,
-                'grand_total' => $booking->total_amount,
-                'paid_amount' => 0.00,
-                'overpayment_amount' => 0.00,
-            ]);
-
-            $booking->loadMissing('details.model');
-            foreach ($booking->details as $d) {
-                $modelName = $d->model?->model_name ?? 'Unit Alat Berat';
-                $rateFmt = number_format((float) $d->rental_rate_snapshot, 0, ',', '.');
-                $invoice->details()->create([
-                    'description' => sprintf('Sewa %s (%s unit) @ Rp %s', $modelName, $d->quantity, $rateFmt),
-                    'unit_price' => $d->subtotal,
-                    'quantity' => 1,
-                    'subtotal' => $d->subtotal,
-                ]);
-
-                $mobTotal = (float) $d->mob_cost_snapshot * $d->quantity;
-                if ($mobTotal > 0) {
-                    $invoice->details()->create([
-                        'description' => sprintf('Mobilisasi %s (%s unit)', $modelName, $d->quantity),
-                        'unit_price' => $d->mob_cost_snapshot,
-                        'quantity' => $d->quantity,
-                        'subtotal' => $mobTotal,
-                    ]);
-                }
-
-                $demobTotal = (float) $d->demob_cost_snapshot * $d->quantity;
-                if ($demobTotal > 0) {
-                    $invoice->details()->create([
-                        'description' => sprintf('Demobilisasi %s (%s unit)', $modelName, $d->quantity),
-                        'unit_price' => $d->demob_cost_snapshot,
-                        'quantity' => $d->quantity,
-                        'subtotal' => $demobTotal,
-                    ]);
-                }
-            }
+            $invoice = $this->createMobDemobInvoice($booking, $approvedAt, $deadline);
 
             AuditLogger::log('BOOKING_APPROVED', $booking, [
                 'old_status' => $oldStatus,
@@ -102,16 +49,22 @@ class ApproveBookingAction
             ], [
                 'new_status' => BookingStatus::APPROVED->value,
                 'payment_deadline_at' => $deadline->toIso8601String(),
-                'invoice_id' => $invoice->id,
-                'invoice_number' => $invoice->invoice_number,
+                'invoice_id' => $invoice?->id,
+                'invoice_number' => $invoice?->invoice_number,
             ]);
 
             $booking->load('user');
+
+            $msg = "Booking {$booking->booking_code} disetujui.";
+            if ($invoice) {
+                $msg .= " Tagihan MOB/DEMOB telah diterbitkan.";
+            }
+
             $this->notifications->send(
                 $booking->user,
                 'BOOKING_APPROVED',
                 $booking,
-                "Booking {$booking->booking_code} disetujui. Tagihan telah diterbitkan."
+                $msg
             );
 
             $booking->load([
@@ -123,5 +76,65 @@ class ApproveBookingAction
 
             return $booking;
         });
+    }
+
+    private function createMobDemobInvoice(Booking $booking, $issuedAt, $deadline): ?Invoice
+    {
+        $booking->loadMissing('details.model');
+
+        $subtotal = 0.00;
+        $lines = [];
+
+        foreach ($booking->details as $d) {
+            $modelName = $d->model?->model_name ?? 'Unit Alat Berat';
+            $mobUnit = (float) $d->mob_cost_snapshot;
+            $demobUnit = (float) $d->demob_cost_snapshot;
+
+            if ($mobUnit > 0) {
+                $mobTotal = $mobUnit * $d->quantity;
+                $subtotal += $mobTotal;
+                $lines[] = [
+                    'description' => sprintf('Mobilisasi %s (%s unit)', $modelName, $d->quantity),
+                    'unit_price' => $mobUnit,
+                    'quantity' => $d->quantity,
+                    'subtotal' => $mobTotal,
+                ];
+            }
+
+            if ($demobUnit > 0) {
+                $demobTotal = $demobUnit * $d->quantity;
+                $subtotal += $demobTotal;
+                $lines[] = [
+                    'description' => sprintf('Demobilisasi %s (%s unit)', $modelName, $d->quantity),
+                    'unit_price' => $demobUnit,
+                    'quantity' => $d->quantity,
+                    'subtotal' => $demobTotal,
+                ];
+            }
+        }
+
+        if ($subtotal <= 0 || empty($lines)) {
+            return null;
+        }
+
+        $invoice = Invoice::create([
+            'invoice_number' => $this->numberGenerator->generate(),
+            'booking_id' => $booking->id,
+            'invoice_type' => InvoiceType::MOB_DEMOB,
+            'status' => InvoiceStatus::ISSUED,
+            'issued_at' => $issuedAt,
+            'due_at' => $deadline,
+            'subtotal' => $subtotal,
+            'tax_total' => 0.00,
+            'grand_total' => $subtotal,
+            'paid_amount' => 0.00,
+            'overpayment_amount' => 0.00,
+        ]);
+
+        foreach ($lines as $line) {
+            $invoice->details()->create($line);
+        }
+
+        return $invoice;
     }
 }

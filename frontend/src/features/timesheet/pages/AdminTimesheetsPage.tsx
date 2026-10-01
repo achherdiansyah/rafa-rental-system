@@ -46,7 +46,7 @@ export const AdminTimesheetsPage: React.FC = () => {
 
   const [timesheets, setTimesheets] = useState<Timesheet[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [filter, setFilter] = useState<FilterStatus>('SUBMITTED')
+  const [filter, setFilter] = useState<FilterStatus>('')
   const [actingId, setActingId] = useState<number | null>(null)
   const [apiError, setApiError] = useState<string | null>(null)
 
@@ -108,32 +108,30 @@ export const AdminTimesheetsPage: React.FC = () => {
     if (Object.keys(errors).length > 0) return
 
     setCreating(true)
-    try {
-      const res = await timesheetService.create({
-        rental_detail_id: Number(createForm.rental_detail_id),
-        report_date: createForm.report_date,
-        start_hm: Number(createForm.start_hm),
-        end_hm: Number(createForm.end_hm),
-        break_minutes: Number(createForm.break_minutes || 0),
-        standby_hours: Number(createForm.standby_hours || 0),
-        breakdown_hours: Number(createForm.breakdown_hours || 0),
-        operator_name: createForm.operator_name || undefined,
-        notes: createForm.notes || undefined,
-      })
-      if (!res.success || !res.data) {
-        throw new Error('Respons tidak valid dari server.')
+      try {
+        const res = await timesheetService.create({
+          rental_detail_id: Number(createForm.rental_detail_id),
+          report_date: createForm.report_date,
+          start_hm: Number(createForm.start_hm),
+          end_hm: Number(createForm.end_hm),
+          break_minutes: Number(createForm.break_minutes || 0),
+          standby_hours: Number(createForm.standby_hours || 0),
+          breakdown_hours: Number(createForm.breakdown_hours || 0),
+          operator_name: createForm.operator_name || undefined,
+          notes: createForm.notes || undefined,
+        })
+        if (!res.success || !res.data) {
+          throw new Error('Respons tidak valid dari server.')
+        }
+        showSuccessToast(`Timesheet #${res.data.id} berhasil dicatat & Tagihan Harian diterbitkan.`)
+        setCreateOpen(false)
+        setCreateForm((prev) => ({ ...prev, rental_detail_id: '', start_hm: '', end_hm: '', operator_name: '', notes: '' }))
+        loadTimesheets()
+      } catch (err: any) {
+        showErrorToast(err?.message || 'Gagal menginput timesheet.')
+      } finally {
+        setCreating(false)
       }
-      // Submit to SUBMITTED = menunggu konfirmasi user (PIC).
-      await timesheetService.submit(res.data.id)
-      showSuccessToast(`Timesheet #${res.data.id} diinput; menunggu konfirmasi penyewa.`)
-      setCreateOpen(false)
-      setCreateForm((prev) => ({ ...prev, rental_detail_id: '', start_hm: '', end_hm: '', operator_name: '', notes: '' }))
-      loadTimesheets()
-    } catch (err: any) {
-      showErrorToast(err?.message || 'Gagal menginput timesheet.')
-    } finally {
-      setCreating(false)
-    }
   }
 
   const loadTimesheets = async () => {
@@ -396,7 +394,7 @@ export const AdminTimesheetsPage: React.FC = () => {
       >
         <div className="space-y-4">
           <p className="text-xs text-slate-500">
-            Catat pekerjaan aktual berdasarkan laporan operator. Record dikirim ke SUBMITTED (Menunggu Konfirmasi Penyewa).
+            Catat pekerjaan aktual berdasarkan laporan operator. Timesheet langsung tersimpan sebagai APPROVED dan Tagihan Harian otomatis diterbitkan.
           </p>
           <Select
             label="Unit Rental (ONGOING) *"
@@ -471,9 +469,9 @@ export const AdminTimesheetsPage: React.FC = () => {
             <Button variant="outline" type="button" onClick={() => setCreateOpen(false)} disabled={creating}>
               Batal
             </Button>
-            <Button type="button" isLoading={creating} onClick={handleCreate}>
-              Simpan & Ajukan Konfirmasi
-            </Button>
+              <Button type="button" isLoading={creating} onClick={handleCreate}>
+                Simpan & Terbitkan Tagihan
+              </Button>
           </div>
         </div>
       </Modal>

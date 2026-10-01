@@ -91,7 +91,7 @@ class TimesheetCoreTest extends TestCase
         $response = $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id));
 
         $response->assertStatus(201)
-            ->assertJsonPath('data.status', TimesheetStatus::DRAFT->value)
+            ->assertJsonPath('data.status', TimesheetStatus::APPROVED->value)
             ->assertJsonPath('data.operator_name', 'Bambang Operator')
             ->assertJsonPath('data.signature_reference', 'sig-abc123')
             ->assertJsonPath('data.rental.unit_serial', EquipmentUnit::first()->serial_number);
@@ -224,7 +224,7 @@ class TimesheetCoreTest extends TestCase
         $this->getJson("/api/v1/timesheets/{$timesheetId}")->assertStatus(403);
     }
 
-    public function test_submit_draft_to_submitted(): void
+    public function test_submit_already_approved_is_idempotent(): void
     {
         $admin = User::factory()->admin()->create();
         $owner = User::factory()->create(['role' => UserRole::USER]);
@@ -235,12 +235,12 @@ class TimesheetCoreTest extends TestCase
 
         $submit = $this->postJson("/api/v1/timesheets/{$timesheetId}/submit");
         $submit->assertStatus(200)
-            ->assertJsonPath('data.status', TimesheetStatus::SUBMITTED->value);
+            ->assertJsonPath('data.status', TimesheetStatus::APPROVED->value);
 
-        // Double submit ilegal
+        // Double submit idempotent
         $this->postJson("/api/v1/timesheets/{$timesheetId}/submit")
-            ->assertStatus(409)
-            ->assertJson(['code' => 'INVALID_STATE_TRANSITION']);
+            ->assertStatus(200)
+            ->assertJsonPath('data.status', TimesheetStatus::APPROVED->value);
     }
 
     public function test_user_cannot_submit_timesheet(): void

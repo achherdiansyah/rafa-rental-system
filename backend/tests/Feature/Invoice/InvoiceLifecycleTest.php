@@ -90,10 +90,6 @@ class InvoiceLifecycleTest extends TestCase
                 'start_hm' => 8,
                 'end_hm' => 8 + $hours,
             ])->json('data.id');
-
-            Sanctum::actingAs($admin);
-            $this->postJson("/api/v1/timesheets/{$tsId}/submit")->assertOk();
-            $this->postJson("/api/v1/timesheets/{$tsId}/approve")->assertOk();
         }
 
         Sanctum::actingAs($admin);
@@ -101,6 +97,9 @@ class InvoiceLifecycleTest extends TestCase
             $this->postJson("/api/v1/rentals/{$rentalId}/{$target}")->assertOk();
         }
         $this->postJson("/api/v1/rentals/{$rentalId}/ready", ['result' => 'READY'])->assertOk();
+
+        // Clear auto-created invoices so test can test manual invoice lifecycle independently
+        Invoice::where('booking_id', $booking->id)->forceDelete();
 
         return [$owner, $booking, $units];
     }
