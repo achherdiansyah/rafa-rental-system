@@ -44,16 +44,31 @@ class CreateTimesheetAction
                 throw new BusinessRuleException('Timesheet untuk unit ini pada tanggal tersebut sudah pernah dicatat.');
             }
 
-            $startHm = (float) $data['start_hm'];
-            $endHm = (float) $data['end_hm'];
+            $startTime = $data['start_time'] ?? null;
+            $endTime = $data['end_time'] ?? null;
             $breakMinutes = (int) ($data['break_minutes'] ?? 0);
 
-            $elapsed = $endHm - $startHm;
+            if ($startTime && $endTime) {
+                $startCarbon = \Carbon\Carbon::createFromFormat('H:i', $startTime);
+                $endCarbon = \Carbon\Carbon::createFromFormat('H:i', $endTime);
+                if ($endCarbon->lessThanOrEqualTo($startCarbon)) {
+                    throw new BusinessRuleException('Jam selesai harus lebih besar dari jam mulai.');
+                }
+                $elapsed = $startCarbon->diffInMinutes($endCarbon) / 60;
+                $startHm = isset($data['start_hm']) ? (float) $data['start_hm'] : null;
+                $endHm = isset($data['end_hm']) ? (float) $data['end_hm'] : null;
+            } else {
+                $startHm = (float) ($data['start_hm'] ?? 0);
+                $endHm = (float) ($data['end_hm'] ?? 0);
+                $elapsed = $endHm - $startHm;
+            }
+
             $breakHours = $breakMinutes / 60;
 
+            // Dihitung apa adanya (tanpa pembulatan); presisi desimal ditangani kolom DECIMAL(8,2).
             $workHours = $elapsed - $breakHours;
             if ($workHours < 0) {
-                throw new BusinessRuleException('Durasi kerja tidak konsisten: melebihi selisih jam meter setelah break.');
+                throw new BusinessRuleException('Durasi kerja tidak konsisten: melebihi selisih jam kerja setelah break.');
             }
 
             $breakdown = (float) ($data['breakdown_hours'] ?? 0);
@@ -65,6 +80,8 @@ class CreateTimesheetAction
             $timesheet = Timesheet::create([
                 'rental_detail_id' => $rentalDetail->id,
                 'report_date' => $data['report_date'],
+                'start_time' => $startTime,
+                'end_time' => $endTime,
                 'start_hm' => $startHm,
                 'end_hm' => $endHm,
                 'break_minutes' => $breakMinutes,

@@ -34,8 +34,8 @@ interface RejectTarget {
 interface ReviseTarget {
   timesheet: Timesheet
   reason: string
-  start_hm: string
-  end_hm: string
+  start_time: string
+  end_time: string
   break_minutes: string
   standby_hours: string
   breakdown_hours: string
@@ -66,8 +66,8 @@ export const AdminTimesheetsPage: React.FC = () => {
   const [createForm, setCreateForm] = useState({
     rental_detail_id: '',
     report_date: new Date().toISOString().slice(0, 10),
-    start_hm: '',
-    end_hm: '',
+    start_time: '',
+    end_time: '',
     break_minutes: '0',
     standby_hours: '0',
     breakdown_hours: '0',
@@ -101,8 +101,10 @@ export const AdminTimesheetsPage: React.FC = () => {
     const errors: Record<string, string> = {}
     if (!createForm.rental_detail_id) errors.rental_detail_id = 'Pilih unit rental ONGOING.'
     if (!createForm.report_date) errors.report_date = 'Tanggal wajib diisi.'
-    if (!createForm.start_hm || !createForm.end_hm || Number(createForm.end_hm) <= Number(createForm.start_hm)) {
-      errors.end_hm = 'Jam akhir harus lebih besar dari jam awal.'
+    if (!createForm.start_time) errors.start_time = 'Jam mulai wajib diisi (Cth: 08:30).'
+    if (!createForm.end_time) errors.end_time = 'Jam selesai wajib diisi (Cth: 16:30).'
+    if (createForm.start_time && createForm.end_time && createForm.end_time <= createForm.start_time) {
+      errors.end_time = 'Jam selesai harus lebih besar dari jam mulai.'
     }
     setCreateErrors(errors)
     if (Object.keys(errors).length > 0) return
@@ -112,8 +114,8 @@ export const AdminTimesheetsPage: React.FC = () => {
         const res = await timesheetService.create({
           rental_detail_id: Number(createForm.rental_detail_id),
           report_date: createForm.report_date,
-          start_hm: Number(createForm.start_hm),
-          end_hm: Number(createForm.end_hm),
+          start_time: createForm.start_time,
+          end_time: createForm.end_time,
           break_minutes: Number(createForm.break_minutes || 0),
           standby_hours: Number(createForm.standby_hours || 0),
           breakdown_hours: Number(createForm.breakdown_hours || 0),
@@ -125,7 +127,7 @@ export const AdminTimesheetsPage: React.FC = () => {
         }
         showSuccessToast(`Timesheet #${res.data.id} berhasil dicatat & Tagihan Harian diterbitkan.`)
         setCreateOpen(false)
-        setCreateForm((prev) => ({ ...prev, rental_detail_id: '', start_hm: '', end_hm: '', operator_name: '', notes: '' }))
+        setCreateForm((prev) => ({ ...prev, rental_detail_id: '', start_time: '', end_time: '', operator_name: '', notes: '' }))
         loadTimesheets()
       } catch (err: any) {
         showErrorToast(err?.message || 'Gagal menginput timesheet.')
@@ -193,8 +195,8 @@ export const AdminTimesheetsPage: React.FC = () => {
     setReviseTarget({
       timesheet: t,
       reason: '',
-      start_hm: String(t.start_hm),
-      end_hm: String(t.end_hm),
+      start_time: t.start_time || '',
+      end_time: t.end_time || '',
       break_minutes: String(t.break_minutes),
       standby_hours: String(t.standby_hours),
       breakdown_hours: String(t.breakdown_hours),
@@ -206,15 +208,14 @@ export const AdminTimesheetsPage: React.FC = () => {
     if (!reviseTarget) return
     const errors: Record<string, string> = {}
     if (reviseTarget.reason.trim().length < 5) errors.reason = 'Alasan koreksi minimal 5 karakter.'
-    if (Number(reviseTarget.end_hm) <= Number(reviseTarget.start_hm)) errors.end_hm = 'Jam akhir harus lebih besar dari jam awal.'
     setReviseErrors(errors)
     if (Object.keys(errors).length > 0) return
 
     setActingId(reviseTarget.timesheet.id)
     try {
       const res = await timesheetService.revise(reviseTarget.timesheet.id, {
-        start_hm: Number(reviseTarget.start_hm),
-        end_hm: Number(reviseTarget.end_hm),
+        start_time: reviseTarget.start_time || undefined,
+        end_time: reviseTarget.end_time || undefined,
         break_minutes: Number(reviseTarget.break_minutes || 0),
         standby_hours: Number(reviseTarget.standby_hours || 0),
         breakdown_hours: Number(reviseTarget.breakdown_hours || 0),
@@ -311,14 +312,14 @@ export const AdminTimesheetsPage: React.FC = () => {
                       </span>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
-                      <span>Jam: {ts.start_hm} → {ts.end_hm}</span>
+<div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+                      <span>Jam: {ts.start_time ? `${ts.start_time} - ${ts.end_time}` : `${ts.start_hm ?? '-'} -> ${ts.end_hm ?? '-'}`}</span>
                       <span>Break: {ts.break_minutes} mnt</span>
                       <span className="font-semibold text-slate-900">Kerja: {ts.total_work_hours} jam</span>
                       <span>Standby: {ts.standby_hours}</span>
                       <span>Breakdown: {ts.breakdown_hours}</span>
                       {ts.operator_name && <span>Operator: {ts.operator_name}</span>}
-                      {ts.signature && <span className="text-emerald-600">Tanda tangan ✓</span>}
+                      {ts.signature && <span className="text-emerald-600">Tanda tangan �"</span>}
                     </div>
 
                     {ts.notes && <p className="text-xs text-slate-500 italic">"{ts.notes}"</p>}
@@ -422,20 +423,19 @@ export const AdminTimesheetsPage: React.FC = () => {
               onChange={(e) => setCreateForm((p) => ({ ...p, operator_name: e.target.value }))}
             />
             <Input
-              label="Jam Mulai (HM) *"
-              type="number"
-              step="0.01"
-              value={createForm.start_hm}
-              onChange={(e) => setCreateForm((p) => ({ ...p, start_hm: e.target.value }))}
-              error={createErrors.start_hm}
+              label="Jam Mulai *"
+              type="time"
+              value={createForm.start_time}
+              onChange={(e) => setCreateForm((p) => ({ ...p, start_time: e.target.value }))}
+              error={createErrors.start_time}
+              hint="Masukkan jam aktual sesuai timesheet lapangan. Cth: 08:30"
             />
             <Input
-              label="Jam Akhir (HM) *"
-              type="number"
-              step="0.01"
-              value={createForm.end_hm}
-              onChange={(e) => setCreateForm((p) => ({ ...p, end_hm: e.target.value }))}
-              error={createErrors.end_hm}
+              label="Jam Selesai *"
+              type="time"
+              value={createForm.end_time}
+              onChange={(e) => setCreateForm((p) => ({ ...p, end_time: e.target.value }))}
+              error={createErrors.end_time}
             />
             <Input
               label="Break (menit)"
@@ -525,19 +525,21 @@ export const AdminTimesheetsPage: React.FC = () => {
         variant="primary"
         isLoading={actingId !== null}
       >
-        <div className="grid grid-cols-2 gap-3 w-full mt-3 text-left">
-          <Input
-            label="Jam Mulai (HM)"
-            value={reviseTarget?.start_hm ?? ''}
-            onChange={(e) => setReviseTarget((prev) => (prev ? { ...prev, start_hm: e.target.value } : prev))}
-            error={reviseErrors.start_hm}
-          />
-          <Input
-            label="Jam Akhir (HM)"
-            value={reviseTarget?.end_hm ?? ''}
-            onChange={(e) => setReviseTarget((prev) => (prev ? { ...prev, end_hm: e.target.value } : prev))}
-            error={reviseErrors.end_hm}
-          />
+          <div className="grid grid-cols-2 gap-3 w-full mt-3 text-left">
+            <Input
+              label="Jam Mulai"
+              type="time"
+              value={reviseTarget?.start_time ?? ''}
+              onChange={(e) => setReviseTarget((prev) => (prev ? { ...prev, start_time: e.target.value } : prev))}
+              error={reviseErrors.start_time}
+            />
+            <Input
+              label="Jam Selesai"
+              type="time"
+              value={reviseTarget?.end_time ?? ''}
+              onChange={(e) => setReviseTarget((prev) => (prev ? { ...prev, end_time: e.target.value } : prev))}
+              error={reviseErrors.end_time}
+            />
           <Input
             label="Break (menit)"
             type="number"

@@ -20,8 +20,10 @@ class StoreTimesheetRequest extends FormRequest
         return [
             'rental_detail_id' => ['required', 'integer', 'exists:rental_details,id'],
             'report_date' => ['required', 'date', 'before_or_equal:today'],
-            'start_hm' => ['required', 'numeric', 'min:0', 'max:999999.99'],
-            'end_hm' => ['required', 'numeric', 'gt:start_hm', 'max:999999.99'],
+            'start_time' => ['nullable', 'string', 'regex:/^\d{1,2}:\d{2}$/'],
+            'end_time' => ['nullable', 'string', 'regex:/^\d{1,2}:\d{2}$/'],
+            'start_hm' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
+            'end_hm' => ['nullable', 'numeric', 'max:999999.99'],
             'break_minutes' => ['nullable', 'integer', 'min:0', 'max:1440'],
             'standby_hours' => ['nullable', 'numeric', 'min:0', 'max:24'],
             'breakdown_hours' => ['nullable', 'numeric', 'min:0', 'max:24'],

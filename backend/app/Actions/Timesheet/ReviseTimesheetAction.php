@@ -35,18 +35,32 @@ class ReviseTimesheetAction
                 );
             }
 
-            $startHm = (float) ($data['start_hm'] ?? $timesheet->start_hm);
-            $endHm = (float) ($data['end_hm'] ?? $timesheet->end_hm);
+            $startTime = $data['start_time'] ?? $timesheet->start_time;
+            $endTime = $data['end_time'] ?? $timesheet->end_time;
             $breakMinutes = (int) ($data['break_minutes'] ?? $timesheet->break_minutes);
             $standby = (float) ($data['standby_hours'] ?? $timesheet->standby_hours);
             $breakdown = (float) ($data['breakdown_hours'] ?? $timesheet->breakdown_hours);
 
-            if ($endHm <= $startHm) {
-                throw new BusinessRuleException('Durasi tidak valid: end_hm harus lebih besar dari start_hm.');
+            if ($startTime && $endTime) {
+                $startCarbon = \Carbon\Carbon::createFromFormat('H:i', $startTime);
+                $endCarbon = \Carbon\Carbon::createFromFormat('H:i', $endTime);
+                if ($endCarbon->lessThanOrEqualTo($startCarbon)) {
+                    throw new BusinessRuleException('Durasi tidak valid: jam selesai harus lebih besar dari jam mulai.');
+                }
+                $elapsed = $startCarbon->diffInMinutes($endCarbon) / 60;
+                $startHm = isset($data['start_hm']) ? (float) $data['start_hm'] : $timesheet->start_hm;
+                $endHm = isset($data['end_hm']) ? (float) $data['end_hm'] : $timesheet->end_hm;
+            } else {
+                $startHm = (float) ($data['start_hm'] ?? $timesheet->start_hm);
+                $endHm = (float) ($data['end_hm'] ?? $timesheet->end_hm);
+                if ($endHm <= $startHm) {
+                    throw new BusinessRuleException('Durasi tidak valid: end_hm harus lebih besar dari start_hm.');
+                }
+                $elapsed = $endHm - $startHm;
             }
 
             // Dihitung apa adanya (tanpa pembulatan buatan); presisi 2 desimal ditangani kolom DECIMAL(8,2).
-            $workHours = ($endHm - $startHm) - ($breakMinutes / 60);
+            $workHours = $elapsed - ($breakMinutes / 60);
             if ($workHours < 0 || $workHours < ($breakdown + $standby)) {
                 throw new BusinessRuleException('Jam kerja aktual tidak konsisten dengan total breakdown + standby.');
             }
@@ -54,6 +68,8 @@ class ReviseTimesheetAction
             // Append-only history: snapshot the current (old) values + change actor + reason + timestamp
             $timesheet->revisions()->create([
                 'version' => $timesheet->revisions()->count() + 1,
+                'old_start_time' => $timesheet->start_time,
+                'old_end_time' => $timesheet->end_time,
                 'old_start_hm' => $timesheet->start_hm,
                 'old_end_hm' => $timesheet->end_hm,
                 'revision_reason' => $reason,
@@ -62,6 +78,8 @@ class ReviseTimesheetAction
             ]);
 
             $timesheet->update([
+                'start_time' => $startTime,
+                'end_time' => $endTime,
                 'start_hm' => $startHm,
                 'end_hm' => $endHm,
                 'break_minutes' => $breakMinutes,

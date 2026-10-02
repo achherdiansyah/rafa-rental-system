@@ -15,6 +15,8 @@ class TimesheetRevision extends Model
     protected $fillable = [
         'timesheet_id',
         'version',
+        'old_start_time',
+        'old_end_time',
         'old_start_hm',
         'old_end_hm',
         'revision_reason',

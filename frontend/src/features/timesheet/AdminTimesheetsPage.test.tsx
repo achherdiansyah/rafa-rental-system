@@ -24,6 +24,8 @@ const submitted: Timesheet = {
   id: 3,
   rental_detail_id: 88,
   report_date: '2026-09-26',
+  start_time: '08:00',
+  end_time: '16:00',
   start_hm: 8,
   end_hm: 16,
   break_minutes: 60,
@@ -118,26 +120,26 @@ describe('Admin Timesheet UI', () => {
     vi.mocked(timesheetService.getTimesheets).mockResolvedValue({
       success: true,
       message: 'OK',
-      data: [{ ...submitted, status: 'APPROVED' }],
+      data: [{ ...submitted, status: 'APPROVED', start_time: '08:00', end_time: '16:00' }],
       meta: { current_page: 1, per_page: 50, total: 1, last_page: 1 },
     } as any)
     vi.mocked(timesheetService.revise).mockResolvedValue({
       success: true,
       message: 'OK',
-      data: { ...submitted, status: 'SUBMITTED', end_hm: 17 },
+      data: { ...submitted, status: 'APPROVED', end_time: '17:00' },
     } as any)
 
     renderComponent()
     fireEvent.click(await screen.findByRole('button', { name: /koreksi/i }))
 
-    fireEvent.change(screen.getByLabelText(/jam akhir \(hm\)/i), { target: { value: '17' } })
+    fireEvent.change(screen.getByLabelText(/jam selesai/i), { target: { value: '17:00' } })
     fireEvent.change(screen.getByLabelText(/alasan koreksi/i), { target: { value: 'Jam kerja diperbaiki admin' } })
     fireEvent.click(screen.getByRole('button', { name: /simpan koreksi/i }))
 
     await waitFor(() => {
       expect(timesheetService.revise).toHaveBeenCalledWith(
         3,
-        expect.objectContaining({ end_hm: 17, reason: 'Jam kerja diperbaiki admin' })
+        expect.objectContaining({ end_time: '17:00', reason: 'Jam kerja diperbaiki admin' })
       )
     })
   })

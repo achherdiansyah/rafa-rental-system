@@ -5,8 +5,10 @@ import type { Timesheet, TimesheetRevision, TimesheetSignature } from '@/types/t
 export interface TimesheetPayload {
   rental_detail_id: number
   report_date: string
-  start_hm: number
-  end_hm: number
+  start_time?: string
+  end_time?: string
+  start_hm?: number
+  end_hm?: number
   break_minutes?: number
   standby_hours?: number
   breakdown_hours?: number
@@ -15,6 +17,8 @@ export interface TimesheetPayload {
 }
 
 export interface RevisePayload {
+  start_time?: string
+  end_time?: string
   start_hm?: number
   end_hm?: number
   break_minutes?: number

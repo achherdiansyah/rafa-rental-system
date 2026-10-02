@@ -22,6 +22,8 @@ const submitted: Timesheet = {
   id: 3,
   rental_detail_id: 88,
   report_date: '2026-09-26',
+  start_time: '08:00',
+  end_time: '16:00',
   start_hm: 8,
   end_hm: 16,
   break_minutes: 60,

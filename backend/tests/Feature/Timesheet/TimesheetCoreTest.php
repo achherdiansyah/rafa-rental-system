@@ -135,10 +135,9 @@ class TimesheetCoreTest extends TestCase
 
         Sanctum::actingAs($admin);
 
-        // end_hm <= start_hm
+        // end_hm <= start_hm (caught by business rule exception now)
         $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id, ['end_hm' => 95]))
-            ->assertStatus(422)
-            ->assertJsonValidationErrors(['end_hm']);
+            ->assertStatus(409);
 
         // future date
         $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id, ['report_date' => now()->addDays(2)->toDateString()]))

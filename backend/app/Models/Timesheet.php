@@ -16,6 +16,8 @@ class Timesheet extends Model
     protected $fillable = [
         'rental_detail_id',
         'report_date',
+        'start_time',
+        'end_time',
         'start_hm',
         'end_hm',
         'break_minutes',
@@ -33,6 +35,8 @@ class Timesheet extends Model
     {
         return [
             'report_date' => 'date',
+            'start_time' => 'string',
+            'end_time' => 'string',
             'start_hm' => 'decimal:2',
             'end_hm' => 'decimal:2',
             'break_minutes' => 'integer',
