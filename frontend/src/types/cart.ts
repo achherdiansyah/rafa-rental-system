@@ -1,6 +1,12 @@
 import type { EquipmentModel } from './equipment'
 import type { ProjectLocation } from './projectLocation'
 
+export interface CartItemAvailability {
+  is_available: boolean
+  available_count: number
+  message: string
+}
+
 export interface CartItem {
   id: number
   cart_id: number
@@ -10,6 +16,7 @@ export interface CartItem {
   start_date: string
   end_date: string
   model?: EquipmentModel
+  availability?: CartItemAvailability
   created_at: string
   updated_at: string
 }

@@ -210,6 +210,8 @@ export const UserCartPage: React.FC = () => {
   const items = cart?.items ?? []
   const isEmpty = items.length === 0
 
+  const hasUnavailableItem = items.some((item) => item.availability && !item.availability.is_available)
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -224,15 +226,25 @@ export const UserCartPage: React.FC = () => {
           </p>
         </div>
         {!isEmpty && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-rose-600 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-700"
-            onClick={() => setIsClearOpen(true)}
-          >
-            <Trash2 size={14} />
-            Kosongkan Keranjang
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadCart}
+              isLoading={isLoading}
+            >
+              Cek Ketersediaan
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-rose-600 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-700"
+              onClick={() => setIsClearOpen(true)}
+            >
+              <Trash2 size={14} />
+              Kosongkan Keranjang
+            </Button>
+          </div>
         )}
       </div>
 
@@ -334,6 +346,12 @@ export const UserCartPage: React.FC = () => {
                       )}
                     </div>
 
+                    {item.availability && !item.availability.is_available && (
+                      <Alert variant="danger" title="Unit Tidak Tersedia">
+                        {item.availability.message} (Tersedia: {item.availability.available_count} unit)
+                      </Alert>
+                    )}
+
                     <p className="text-[11px] text-slate-400 mt-2">
                       Harga indikatif sesuai tarif berlaku saat tampilan; tagihan akhir memakai snapshot tarif saat invoice diterbitkan.
                     </p>
@@ -403,7 +421,7 @@ export const UserCartPage: React.FC = () => {
               </div>
               <Button
                 className="gap-2 shrink-0"
-                disabled={!cart?.project_location_id || items.length === 0 || isCreatingBooking}
+                disabled={!cart?.project_location_id || items.length === 0 || isCreatingBooking || hasUnavailableItem}
                 isLoading={isCreatingBooking}
                 onClick={handleCheckoutToBooking}
               >
