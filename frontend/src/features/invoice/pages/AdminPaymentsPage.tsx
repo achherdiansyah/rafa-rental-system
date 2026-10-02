@@ -10,6 +10,7 @@ import { Select } from '@/components/form/Select'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/feedback/EmptyState'
 import { Alert } from '@/components/feedback/Alert'
+import { Modal } from '@/components/ui/Modal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { useToast } from '@/hooks/useToast'
 
@@ -168,20 +169,81 @@ export const AdminPaymentsPage: React.FC = () => {
         <EmptyState icon={<Upload className="w-12 h-12" />} title="Tidak Ada Pembayaran" description="Tidak ada pembayaran pada filter ini." />
       )}
 
-      <ConfirmDialog isOpen={preview !== null} onClose={() => setPreview(null)} onConfirm={() => setPreview(null)}
-        title="Bukti Transfer" message="" confirmText="Tutup" cancelText="Kembali" variant="primary">
+      <Modal
+        isOpen={preview !== null}
+        onClose={() => setPreview(null)}
+        title="Bukti Transfer"
+        size="lg"
+      >
         {preview && (
-          <div className="w-full mt-3">
-            {preview.payment.proof?.mime_type?.startsWith('image/') ? (
-              <img src={preview.url} alt="Bukti transfer" className="max-h-80 w-auto rounded-xl border border-slate-200" />
-            ) : (
-              <a className="inline-flex items-center gap-2 text-sm text-primary-600 underline" href={preview.url} target="_blank" rel="noreferrer">
-                Buka berkas bukti (PDF)
-              </a>
-            )}
+          <div className="space-y-4">
+            {/* Metadata Ringkasan Pembayaran */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+              <div>
+                <span className="text-slate-500 block">ID / Kode Booking:</span>
+                <span className="font-mono font-bold text-slate-900 text-sm">
+                  {preview.payment.invoice?.booking_code ?? `Invoice #${preview.payment.invoice_id}`}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-500 block">Nama Pentransfer:</span>
+                <span className="font-medium text-slate-900 text-sm">
+                  {preview.payment.sender_name || 'Tidak dicantumkan'}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-500 block">Tanggal & Waktu Transfer:</span>
+                <span className="font-medium text-slate-800">
+                  {new Date(preview.payment.payment_date).toLocaleDateString('id-ID', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}{' '}
+                  • {new Date(preview.payment.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-500 block">Nominal Ditransfer:</span>
+                <span className="font-mono font-bold text-emerald-700 text-sm">
+                  {fmt(preview.payment.amount)}
+                </span>
+              </div>
+              {preview.payment.reference && (
+                <div className="sm:col-span-2">
+                  <span className="text-slate-500 block">Nomor Referensi:</span>
+                  <span className="font-mono text-slate-700">{preview.payment.reference}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Bukti Foto / Dokumen */}
+            <div className="w-full flex flex-col items-center justify-center p-3 bg-slate-100/60 rounded-xl border border-slate-200 overflow-hidden">
+              {preview.payment.proof?.mime_type?.startsWith('image/') || preview.url.startsWith('data:image/') || preview.url.startsWith('blob:') ? (
+                <img
+                  src={preview.url}
+                  alt="Bukti Transfer"
+                  className="max-h-[60vh] max-w-full object-contain rounded-lg shadow-xs"
+                />
+              ) : (
+                <a
+                  className="inline-flex items-center gap-2 text-sm text-primary-600 underline font-medium p-4"
+                  href={preview.url}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <Eye size={16} /> Buka Berkas Bukti Transfer (PDF / Dokumen)
+                </a>
+              )}
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-slate-100">
+              <Button variant="outline" size="sm" onClick={() => setPreview(null)}>
+                Tutup
+              </Button>
+            </div>
           </div>
         )}
-      </ConfirmDialog>
+      </Modal>
 
       <ConfirmDialog isOpen={approveTarget !== null} onClose={() => !actingId && setApproveTarget(null)} onConfirm={handleApprove}
         title="Setujui Pembayaran"

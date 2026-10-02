@@ -165,8 +165,8 @@ class DatabaseSeeder extends Seeder
                 'capacity_value' => 20.00,
                 'capacity_unit' => 'Ton',
                 'prices' => [
-                    ['is_all_in' => false, 'base_rate' => 225000.00, 'min_hours' => 8, 'overtime' => 275000.00],
-                    ['is_all_in' => true, 'base_rate' => 350000.00, 'min_hours' => 8, 'overtime' => 400000.00],
+                    ['is_all_in' => false, 'base_rate' => 225000.00, 'min_hours' => 8, 'overtime' => 275000.00, 'mob' => 500000.00, 'demob' => 500000.00],
+                    ['is_all_in' => true, 'base_rate' => 350000.00, 'min_hours' => 8, 'overtime' => 400000.00, 'mob' => 500000.00, 'demob' => 500000.00],
                 ],
                 'units' => [
                     ['serial_number' => 'KM-PC200-001', 'plate_number' => 'B 9101 RFA', 'status' => EquipmentStatus::AVAILABLE, 'hm' => 1250.50, 'year' => 2021],
@@ -181,8 +181,8 @@ class DatabaseSeeder extends Seeder
                 'capacity_value' => 20.00,
                 'capacity_unit' => 'Ton',
                 'prices' => [
-                    ['is_all_in' => false, 'base_rate' => 240000.00, 'min_hours' => 8, 'overtime' => 290000.00],
-                    ['is_all_in' => true, 'base_rate' => 365000.00, 'min_hours' => 8, 'overtime' => 415000.00],
+                    ['is_all_in' => false, 'base_rate' => 240000.00, 'min_hours' => 8, 'overtime' => 290000.00, 'mob' => 600000.00, 'demob' => 600000.00],
+                    ['is_all_in' => true, 'base_rate' => 365000.00, 'min_hours' => 8, 'overtime' => 415000.00, 'mob' => 600000.00, 'demob' => 600000.00],
                 ],
                 'units' => [
                     ['serial_number' => 'CAT-320D-001', 'plate_number' => 'B 9201 RFA', 'status' => EquipmentStatus::AVAILABLE, 'hm' => 980.00, 'year' => 2022],
@@ -196,8 +196,8 @@ class DatabaseSeeder extends Seeder
                 'capacity_value' => 21.00,
                 'capacity_unit' => 'Ton',
                 'prices' => [
-                    ['is_all_in' => false, 'base_rate' => 300000.00, 'min_hours' => 8, 'overtime' => 350000.00],
-                    ['is_all_in' => true, 'base_rate' => 450000.00, 'min_hours' => 8, 'overtime' => 500000.00],
+                    ['is_all_in' => false, 'base_rate' => 300000.00, 'min_hours' => 8, 'overtime' => 350000.00, 'mob' => 750000.00, 'demob' => 750000.00],
+                    ['is_all_in' => true, 'base_rate' => 450000.00, 'min_hours' => 8, 'overtime' => 500000.00, 'mob' => 750000.00, 'demob' => 750000.00],
                 ],
                 'units' => [
                     ['serial_number' => 'KM-D85-001', 'plate_number' => 'B 9301 RFA', 'status' => EquipmentStatus::AVAILABLE, 'hm' => 1800.00, 'year' => 2020],
@@ -210,8 +210,8 @@ class DatabaseSeeder extends Seeder
                 'capacity_value' => 18.00,
                 'capacity_unit' => 'Ton',
                 'prices' => [
-                    ['is_all_in' => false, 'base_rate' => 275000.00, 'min_hours' => 8, 'overtime' => 325000.00],
-                    ['is_all_in' => true, 'base_rate' => 400000.00, 'min_hours' => 8, 'overtime' => 450000.00],
+                    ['is_all_in' => false, 'base_rate' => 275000.00, 'min_hours' => 8, 'overtime' => 325000.00, 'mob' => 700000.00, 'demob' => 700000.00],
+                    ['is_all_in' => true, 'base_rate' => 400000.00, 'min_hours' => 8, 'overtime' => 450000.00, 'mob' => 700000.00, 'demob' => 700000.00],
                 ],
                 'units' => [
                     ['serial_number' => 'KM-WA380-001', 'plate_number' => 'B 9401 RFA', 'status' => EquipmentStatus::AVAILABLE, 'hm' => 800.00, 'year' => 2023],
@@ -224,8 +224,8 @@ class DatabaseSeeder extends Seeder
                 'capacity_value' => 11.00,
                 'capacity_unit' => 'Ton',
                 'prices' => [
-                    ['is_all_in' => false, 'base_rate' => 200000.00, 'min_hours' => 8, 'overtime' => 250000.00],
-                    ['is_all_in' => true, 'base_rate' => 320000.00, 'min_hours' => 8, 'overtime' => 370000.00],
+                    ['is_all_in' => false, 'base_rate' => 200000.00, 'min_hours' => 8, 'overtime' => 250000.00, 'mob' => 650000.00, 'demob' => 650000.00],
+                    ['is_all_in' => true, 'base_rate' => 320000.00, 'min_hours' => 8, 'overtime' => 370000.00, 'mob' => 650000.00, 'demob' => 650000.00],
                 ],
                 'units' => [
                     ['serial_number' => 'DY-CA250-001', 'plate_number' => 'B 9501 RFA', 'status' => EquipmentStatus::AVAILABLE, 'hm' => 1500.00, 'year' => 2021],
@@ -258,6 +258,8 @@ class DatabaseSeeder extends Seeder
                         'base_rate' => $p['base_rate'],
                         'minimum_hours' => $p['min_hours'],
                         'overtime_rate' => $p['overtime'],
+                        'mob_cost' => $p['mob'],
+                        'demob_cost' => $p['demob'],
                         'effective_date' => '2026-01-01',
                     ]
                 );

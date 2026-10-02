@@ -91,4 +91,26 @@ describe('Admin Payment Queue UI', () => {
       expect(invoiceService.rejectPayment).toHaveBeenCalledWith(5, 'Nominal tidak sesuai mutasi bank')
     })
   })
+
+  it('opens payment preview modal with original data from API without warning icon', async () => {
+    vi.mocked(invoiceService.fetchProofObjectUrl).mockResolvedValue('blob:http://localhost/test-proof')
+    renderComponent()
+
+    await waitFor(() => {
+      expect(screen.getByText(/PT Mitra Sejahtera/i)).toBeInTheDocument()
+    })
+
+    // Click preview button
+    fireEvent.click(screen.getByRole('button', { name: /lihat bukti/i }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Bukti Transfer' })).toBeInTheDocument()
+    })
+
+    // Assert details presence from API data
+    expect(screen.getAllByText('RFA-BKG-20260927-0001').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('PT Mitra Sejahtera').length).toBeGreaterThan(0)
+    expect(screen.getByText(/25 September 2026/i)).toBeInTheDocument()
+    expect(screen.getByAltText('Bukti Transfer')).toBeInTheDocument()
+  })
 })
