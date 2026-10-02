@@ -36,6 +36,36 @@ function fmt(n: number | undefined): string {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 2 }).format(n ?? 0)
 }
 
+const CountdownTimer: React.FC<{ dueAt: string }> = ({ dueAt }) => {
+  const calculateTimeLeft = () => {
+    const diff = new Date(dueAt).getTime() - new Date().getTime()
+    return Math.max(0, Math.floor(diff / 1000))
+  }
+
+  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft())
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft())
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [dueAt])
+
+  if (timeLeft <= 0) {
+    return <span className="font-medium text-rose-600">Pembayaran telah melewati batas waktu.</span>
+  }
+
+  const h = String(Math.floor(timeLeft / 3600)).padStart(2, '0')
+  const m = String(Math.floor((timeLeft % 3600) / 60)).padStart(2, '0')
+  const s = String(timeLeft % 60).padStart(2, '0')
+
+  return (
+    <span className="font-mono font-bold text-rose-600 tracking-tight">
+      [ {h}:{m}:{s} ] tersisa
+    </span>
+  )
+}
+
 export const UserInvoicesPage: React.FC = () => {
   const { success: showSuccessToast, error: showErrorToast } = useToast()
 
@@ -178,7 +208,12 @@ export const UserInvoicesPage: React.FC = () => {
                       <span className="text-emerald-600">Dibayar: {fmt(inv.paid_amount)}</span>
                       <span className={balance > 0 ? 'text-rose-600' : 'text-slate-500'}>Saldo: {fmt(balance)}</span>
                       {inv.due_at && (
-                        <span className="text-xs text-slate-400">Jatuh tempo {new Date(inv.due_at).toLocaleString('id-ID')}</span>
+                        <div className="flex flex-col gap-0.5 mt-1 sm:mt-0">
+                          <CountdownTimer dueAt={inv.due_at} />
+                          <span className="text-xs text-slate-400">
+                            Jatuh tempo: {new Date(inv.due_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}, {new Date(inv.due_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
+                          </span>
+                        </div>
                       )}
                     </div>
                     {inv.status === 'OVERPAID' && (

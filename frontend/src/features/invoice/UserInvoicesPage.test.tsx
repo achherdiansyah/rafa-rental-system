@@ -140,4 +140,20 @@ describe('User Invoice UI', () => {
       )
     })
   })
+
+  it('renders countdown timer for unpaid invoices', async () => {
+    vi.mocked(invoiceService.getInvoices).mockResolvedValue({
+      data: [{
+        ...invoiceFixture,
+        due_at: new Date(Date.now() + 3600000).toISOString() // 1 hour from now
+      }],
+      meta: { total: 1, current_page: 1, per_page: 10, last_page: 1 },
+    })
+
+    renderComponent()
+    
+    // Check if the timer renders "[ 01:00:00 ] tersisa" or similar
+    expect(await screen.findByText(/\[ \d{2}:\d{2}:\d{2} \] tersisa/i)).toBeInTheDocument()
+    expect(screen.getByText(/Jatuh tempo:/i)).toBeInTheDocument()
+  })
 })

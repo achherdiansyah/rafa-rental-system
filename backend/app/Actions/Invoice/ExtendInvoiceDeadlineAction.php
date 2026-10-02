@@ -44,6 +44,11 @@ class ExtendInvoiceDeadlineAction
 
             $invoice->update(['due_at' => $newDueAt]);
 
+            // Sync booking payment_deadline_at if this invoice belongs to an approved booking
+            if ($invoice->booking && $invoice->booking->payment_deadline_at) {
+                $invoice->booking->update(['payment_deadline_at' => $newDueAt]);
+            }
+
             AuditLogger::log('INVOICE_DEADLINE_EXTENDED', $invoice, [
                 'old_due_at' => $oldDueAt?->toIso8601String(),
             ], [
