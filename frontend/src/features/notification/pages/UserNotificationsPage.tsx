@@ -7,8 +7,11 @@ import { Button } from '@/components/ui/Button'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/feedback/EmptyState'
 import { useToast } from '@/hooks/useToast'
+import { targetFor } from '../utils'
+import { useNavigate } from 'react-router-dom'
 
 export const UserNotificationsPage: React.FC = () => {
+  const navigate = useNavigate()
   const { success: showSuccessToast, error: showErrorToast } = useToast()
   const [items, setItems] = useState<InAppNotification[]>([])
   const [unread, setUnread] = useState(0)
@@ -60,6 +63,13 @@ export const UserNotificationsPage: React.FC = () => {
     }
   }
 
+  const handleNotificationClick = async (n: InAppNotification) => {
+    if (!n.read_at) {
+      await markRead(n.id)
+    }
+    navigate(targetFor(n, 'USER'))
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -81,7 +91,7 @@ export const UserNotificationsPage: React.FC = () => {
       ) : items.length > 0 ? (
         <div className="space-y-2">
           {items.map((n) => (
-            <Card key={n.id} className={`p-4 cursor-pointer ${n.read_at ? 'bg-white' : 'bg-primary-50/40 border-primary-200'}`} onClick={() => !n.read_at && markRead(n.id)}>
+            <Card key={n.id} className={`p-4 cursor-pointer ${n.read_at ? 'bg-white' : 'bg-primary-50/40 border-primary-200'}`} onClick={() => handleNotificationClick(n)}>
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm text-slate-800">{n.message}</p>

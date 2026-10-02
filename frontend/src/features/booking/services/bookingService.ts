@@ -3,8 +3,8 @@ import type { ApiResponse } from '@/types/api'
 import type { Booking, BookingStatus } from '@/types/booking'
 
 export const bookingService = {
-  async createFromCart(): Promise<ApiResponse<Booking>> {
-    const response = await api.post<Booking>('/bookings', {})
+  async createFromCart(selectedItemIds?: number[]): Promise<ApiResponse<Booking>> {
+    const response = await api.post<Booking>('/bookings', { selected_item_ids: selectedItemIds })
     return response
   },
 

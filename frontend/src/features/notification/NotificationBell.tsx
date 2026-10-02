@@ -5,22 +5,7 @@ import { cn } from '@/utils/cn'
 import { useAuth } from '@/hooks/useAuth'
 import { notificationService } from './services/notificationService'
 import type { InAppNotification } from '@/types/notification'
-
-const EVENT_LABEL: Record<string, string> = {
-  BOOKING_SUBMITTED: 'Booking baru perlu persetujuan',
-  BOOKING_APPROVED: 'Booking disetujui',
-  BOOKING_REJECTED: 'Booking ditolak',
-  PAYMENT_SUBMITTED: 'Pembayaran perlu verifikasi',
-  PAYMENT_APPROVED: 'Pembayaran disetujui',
-  PAYMENT_REJECTED: 'Pembayaran ditolak',
-  TIMESHEET_SUBMITTED: 'Timesheet perlu divalidasi',
-  REFUND_PENDING: 'Refund menunggu diproses',
-  INVOICE_OVERDUE: 'Invoice jatuh tempo',
-  OUTSTANDING_REMINDER: 'Pengingat outstanding',
-}
-
-const labelFor = (item: InAppNotification): string =>
-  (item.event && EVENT_LABEL[item.event]) || item.message || item.event || 'Notifikasi'
+import { labelFor, targetFor } from './utils'
 
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
@@ -32,22 +17,11 @@ function timeAgo(iso: string): string {
   return `${Math.floor(h / 24)} hari`
 }
 
-const targetFor = (item: InAppNotification, base: string): string => {
-  if (item.link) return item.link
-  const t = item.type || ''
-  if (/PAYMENT/i.test(t)) return `${base}/payments`
-  if (/TIMESHEET/i.test(t)) return `${base}/timesheets`
-  if (/REFUND/i.test(t)) return `${base}/refunds`
-  if (/INVOICE/i.test(t)) return `${base}/invoices`
-  if (/BOOKING/i.test(t)) return `${base}/bookings`
-  if (/OUTSTANDING/i.test(t)) return `${base}/outstanding`
-  return `${base}/notifications`
-}
-
 export const NotificationBell: React.FC = () => {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const base = user?.role === 'ADMIN' || user?.role === 'OWNER' ? '/admin' : '/app'
+  const role = user?.role ?? 'USER'
+  const base = role === 'ADMIN' || role === 'OWNER' ? '/admin' : '/app'
   const [open, setOpen] = useState(false)
   const [count, setCount] = useState(0)
   const [items, setItems] = useState<InAppNotification[]>([])
@@ -99,7 +73,7 @@ export const NotificationBell: React.FC = () => {
 
   const openItem = async (item: InAppNotification) => {
     setOpen(false)
-    navigate(targetFor(item, base))
+    navigate(targetFor(item, role))
     if (!item.read_at) {
       try {
         await notificationService.markRead(item.id)

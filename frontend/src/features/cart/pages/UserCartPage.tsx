@@ -36,6 +36,9 @@ export const UserCartPage: React.FC = () => {
   const [locations, setLocations] = useState<ProjectLocation[]>([])
   const [isLocationLoading, setIsLocationLoading] = useState(false)
 
+  // Selection state
+  const [selectedItemIds, setSelectedItemIds] = useState<number[]>([])
+
   // Qty / date editing states
   const [updatingItemId, setUpdatingItemId] = useState<number | null>(null)
   const [quantityInputs, setQuantityInputs] = useState<Record<number, number>>({})
@@ -69,6 +72,8 @@ export const UserCartPage: React.FC = () => {
         setQuantityInputs(qty)
         setStartDates(sd)
         setEndDates(ed)
+        // Default select all items on load
+        setSelectedItemIds(res.data.items.map((it) => it.id))
       }
     } catch (err: any) {
       setApiError(err?.message || 'Gagal memuat keranjang sewa.')
@@ -181,15 +186,29 @@ export const UserCartPage: React.FC = () => {
   }
 
   const handleCheckoutToBooking = async () => {
+    if (selectedItemIds.length === 0) {
+      showErrorToast('Pilih minimal satu armada untuk checkout.')
+      return
+    }
+
+    const selectedItems = (cart?.items ?? []).filter((it) => selectedItemIds.includes(it.id))
+    const unavailableSelection = selectedItems.some((it) => it.availability && !it.availability.is_available)
+    if (unavailableSelection) {
+      showErrorToast('Terdapat unit yang tidak tersedia pada pilihan Anda. Silakan atur ulang tanggal atau hapus item.')
+      return
+    }
+
     setIsCreatingBooking(true)
     try {
-      const res = await bookingService.createFromCart()
+      const res = await bookingService.createFromCart(selectedItemIds)
       if (res.success && res.data) {
         showSuccessToast(`Booking ${res.data.booking_code} berhasil dibuat sebagai draft.`)
         navigate('/app/bookings')
       }
     } catch (err: any) {
       showErrorToast(err?.message || 'Gagal membuat booking dari keranjang.')
+      // Re-load cart to fetch latest availability if backend caught an availability race
+      loadCart()
     } finally {
       setIsCreatingBooking(false)
     }
@@ -210,7 +229,40 @@ export const UserCartPage: React.FC = () => {
   const items = cart?.items ?? []
   const isEmpty = items.length === 0
 
-  const hasUnavailableItem = items.some((item) => item.availability && !item.availability.is_available)
+  const selectedItems = items.filter((it) => selectedItemIds.includes(it.id))
+  const hasUnavailableSelection = selectedItems.some((item) => item.availability && !item.availability.is_available)
+
+  const isAllSelected = items.length > 0 && selectedItemIds.length === items.length
+  const toggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedItemIds([])
+    } else {
+      setSelectedItemIds(items.map((it) => it.id))
+    }
+  }
+
+  const toggleSelect = (id: number) => {
+    setSelectedItemIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    )
+  }
+
+  const selectedSubtotal = selectedItems.reduce((sum, item) => {
+    const price = item.model?.prices?.find((p) => p.is_all_in === item.is_all_in)
+    if (!price) return sum
+    
+    // Perkiraan kasar: (Harga x 8 Jam x Durasi Hari) x Qty
+    // MOB/DEMOB tidak diestimasi penuh di sini karena perhitungan riil ada di backend.
+    const start = new Date(item.start_date)
+    const end = new Date(item.end_date)
+    const diffTime = Math.abs(end.getTime() - start.getTime())
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
+    
+    const dailyRate = price.base_rate * 8
+    const itemTotal = dailyRate * diffDays * item.quantity
+    
+    return sum + itemTotal
+  }, 0)
 
   return (
     <div className="space-y-6">
@@ -306,15 +358,45 @@ export const UserCartPage: React.FC = () => {
             )}
           </Card>
 
+          {/* Select All Control */}
+          {items.length > 1 && (
+            <label
+              className="flex items-center gap-2 px-1 text-sm text-slate-600 cursor-pointer select-none"
+            >
+              <input
+                type="checkbox"
+                checked={isAllSelected}
+                onChange={toggleSelectAll}
+                className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
+              />
+              <span className="font-medium">{isAllSelected ? 'Batalkan Pilihan Semua' : 'Pilih Semua Unit'}</span>
+              <span className="ml-auto text-xs text-slate-400">
+                {selectedItemIds.length} / {items.length} unit terpilih
+              </span>
+            </label>
+          )}
+
           {/* Cart Items */}
           {items.map((item) => {
             const model = item.model
             const photo = model?.attachments?.find((a) => a.document_type === 'EQUIPMENT_PHOTO')
             const price = model?.prices?.find((p) => p.is_all_in === item.is_all_in)
+            const isSelected = selectedItemIds.includes(item.id)
 
             return (
               <Card key={item.id} className="p-5">
                 <div className="flex flex-col sm:flex-row gap-4">
+                  {/* Select Checkbox */}
+                  <div className="flex items-center sm:self-center pr-1">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleSelect(item.id)}
+                      aria-label={`Pilih ${model?.model_name}`}
+                      className="h-5 w-5 rounded border-slate-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
+                    />
+                  </div>
+
                   {/* Thumbnail */}
                   <div className="w-full sm:w-28 h-24 bg-slate-100 rounded-xl overflow-hidden shrink-0 flex items-center justify-center border border-slate-200">
                     {photo?.url ? (
@@ -414,18 +496,28 @@ export const UserCartPage: React.FC = () => {
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl border border-primary-200 bg-primary-50/50 p-5">
               <div className="flex items-start gap-3 text-sm text-slate-600">
                 <Info size={18} className="text-primary-600 shrink-0 mt-0.5" />
-                <p>
-                  Pastikan lokasi proyek sudah dipilih dan tanggal sewa sudah sesuai. Ketersediaan unit fisik
-                  akan divalidasi dan unit ditugaskan oleh Admin pada tahap persetujuan booking.
-                </p>
+                <div className="space-y-2">
+                  <p>
+                    Pastikan lokasi proyek sudah dipilih dan tanggal sewa sudah sesuai. Ketersediaan unit fisik akan divalidasi dan unit ditugaskan oleh Admin pada tahap persetujuan booking.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+                    <span>Item terpilih: <strong className="text-slate-900">{selectedItemIds.length} unit</strong></span>
+                    <span>Estimasi subtotal terpilih: <strong className="text-slate-900">{formatRupiah(selectedSubtotal)}</strong> <span className="text-slate-400">(indikatif)</span></span>
+                  </div>
+                  {hasUnavailableSelection && (
+                    <p className="text-xs text-rose-600 font-medium">
+                      Terdapat unit terpilih yang tidak tersedia. Atur ulang tanggal atau batalkan pilihan unit tersebut.
+                    </p>
+                  )}
+                </div>
               </div>
               <Button
                 className="gap-2 shrink-0"
-                disabled={!cart?.project_location_id || items.length === 0 || isCreatingBooking || hasUnavailableItem}
+                disabled={!cart?.project_location_id || selectedItemIds.length === 0 || isCreatingBooking || hasUnavailableSelection}
                 isLoading={isCreatingBooking}
                 onClick={handleCheckoutToBooking}
               >
-                Lanjut ke Booking
+                Lanjut ke Booking ({selectedItemIds.length})
                 <ArrowRight size={16} />
               </Button>
             </div>

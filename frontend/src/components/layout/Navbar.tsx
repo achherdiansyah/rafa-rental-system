@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useCms } from '@/features/cms/CmsContext'
 import { cmsService } from '@/features/cms/services/cmsService'
 import { NotificationBell } from '@/features/notification/NotificationBell'
+import { CartBadge } from '@/features/cart/CartBadge'
 import { useLocation } from 'react-router-dom'
 import { scrollToElementId } from '@/hooks/useHashScroll'
 import { Button } from '@/components/ui/Button'
@@ -174,7 +175,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = f
                     </Badge>
                   )}
                 </div>
-                {user.role !== 'OWNER' && <NotificationBell />}
+                  {user.role === 'USER' && <CartBadge />}
+                  {user.role !== 'OWNER' && <NotificationBell />}
                 <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-1.5 text-rose-600 hover:bg-rose-50">
                   <LogOut size={15} />
                   <span className="hidden sm:inline">Keluar</span>

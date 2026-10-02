@@ -22,13 +22,14 @@ class CreateBookingFromCartAction
     ) {}
 
     /**
-     * Create a DRAFT booking from the user's active cart and consume the cart items.
+     * Create a DRAFT booking from the user's active cart and consume the selected cart items.
      *
+     * @param  array<int>|null  $selectedItemIds
      * @throws BusinessRuleException
      */
-    public function execute(User $user, Cart $cart): Booking
+    public function execute(User $user, Cart $cart, ?array $selectedItemIds = null): Booking
     {
-        return DB::transaction(function () use ($user, $cart) {
+        return DB::transaction(function () use ($user, $cart, $selectedItemIds) {
             // 0. Account verification gate (Block checkout if unverified)
             $profile = $user->customerProfile;
             if (! $profile || $profile->verification_status !== 'VERIFIED') {
@@ -48,10 +49,20 @@ class CreateBookingFromCartAction
                 throw new BusinessRuleException('Lokasi proyek wajib dipilih sebelum membuat booking.');
             }
 
-            // 2. Build line items from cart
+            // Filter items if specific IDs are requested
+            $itemsToProcess = $cart->items;
+            if (! empty($selectedItemIds)) {
+                $itemsToProcess = $cart->items->whereIn('id', $selectedItemIds);
+                if ($itemsToProcess->isEmpty()) {
+                    throw new BusinessRuleException('Pilih minimal satu item armada untuk checkout.');
+                }
+            }
+
+            // 2. Build line items from selected cart items
             $lineItems = [];
-            foreach ($cart->items->all() as $item) {
+            foreach ($itemsToProcess as $item) {
                 $lineItems[] = [
+                    'cart_item_id' => $item->id,
                     'equipment_model_id' => $item->equipment_model_id,
                     'quantity' => $item->quantity,
                     'start_date' => $item->start_date->toDateString(),
@@ -101,9 +112,14 @@ class CreateBookingFromCartAction
                 ]);
             }
 
-            // 7. Consume cart (items cleared, location reset) to enforce idempotency
-            $cart->items()->delete();
-            $cart->update(['project_location_id' => null]);
+            // 7. Consume ONLY the processed items from cart
+            $consumedIds = collect($lineItems)->pluck('cart_item_id')->all();
+            $cart->items()->whereIn('id', $consumedIds)->delete();
+
+            // If cart is now completely empty, reset location
+            if ($cart->items()->count() === 0) {
+                $cart->update(['project_location_id' => null]);
+            }
 
             // 8. Audit
             AuditLogger::log('BOOKING_CREATED', $booking, [

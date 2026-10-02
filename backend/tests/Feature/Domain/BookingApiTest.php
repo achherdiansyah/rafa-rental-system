@@ -66,6 +66,44 @@ class BookingApiTest extends TestCase
         return $model;
     }
 
+    public function test_user_can_create_draft_booking_from_cart_with_partial_selection(): void
+    {
+        $user = User::factory()->create(['role' => UserRole::USER]);
+        CustomerProfile::factory()->create(['user_id' => $user->id, 'verification_status' => 'VERIFIED']);
+        $location = ProjectLocation::factory()->create(['user_id' => $user->id]);
+        
+        $cart = Cart::factory()->create([
+            'user_id' => $user->id,
+            'project_location_id' => $location->id,
+        ]);
+
+        $model1 = $this->createModelWithAvailability(2);
+        $model2 = $this->createModelWithAvailability(2);
+
+        $item1 = CartItem::factory()->create(['cart_id' => $cart->id, 'equipment_model_id' => $model1->id, 'quantity' => 1]);
+        $item2 = CartItem::factory()->create(['cart_id' => $cart->id, 'equipment_model_id' => $model2->id, 'quantity' => 1]);
+
+        Sanctum::actingAs($user);
+
+        // Only select item 1
+        $response = $this->postJson('/api/v1/bookings', [
+            'selected_item_ids' => [$item1->id]
+        ]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.details.0.equipment_model_id', $model1->id);
+            
+        $this->assertCount(1, $response->json('data.details'));
+
+        // Item 1 deleted from cart
+        $this->assertDatabaseMissing('cart_items', ['id' => $item1->id]);
+        
+        // Item 2 remains in cart
+        $this->assertDatabaseHas('cart_items', ['id' => $item2->id]);
+        
+        // Cart location remains since it is not empty
+        $this->assertEquals($location->id, $cart->fresh()->project_location_id);
+    }
     public function test_user_can_create_draft_booking_from_cart(): void
     {
         $user = User::factory()->create(['role' => UserRole::USER]);

@@ -43,11 +43,16 @@ class BookingController extends ApiController
 
         Gate::authorize('create', Booking::class);
 
+        $selectedItemIds = $request->input('selected_item_ids');
+        if ($selectedItemIds !== null && !is_array($selectedItemIds)) {
+            return $this->error('Format item terpilih tidak valid', 422);
+        }
+
         /** @var Cart $cart */
         $cart = $getCart->execute($user);
         $cart->load(['projectLocation', 'items']);
 
-        $booking = $action->execute($user, $cart);
+        $booking = $action->execute($user, $cart, $selectedItemIds);
 
         return $this->created(
             new BookingResource($booking),
