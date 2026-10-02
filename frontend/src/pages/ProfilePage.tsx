@@ -76,7 +76,7 @@ export const ProfilePage: React.FC = () => {
   if (isLoading) return <FormSkeleton fields={5} className="max-w-3xl" />
   if (isError || !profile) return <ErrorState message="Gagal memuat profil. Silakan coba lagi." onRetry={() => window.location.reload()} />
 
-  const kycStatus = profile.customer_profile?.verification_status || 'UNVERIFIED'
+  const verificationStatus = profile.customer_profile?.verification_status || 'UNVERIFIED'
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -86,9 +86,9 @@ export const ProfilePage: React.FC = () => {
           <p className="text-sm text-slate-500">Kelola informasi identitas dan detail kontak Anda</p>
         </div>
         <div className="flex items-center gap-2 text-sm font-medium">
-          Status KYC: 
-          <Badge variant={kycStatus === 'VERIFIED' ? 'success' : kycStatus === 'REJECTED' ? 'danger' : 'warning'}>
-            {kycStatus}
+          Verifikasi Akun: 
+          <Badge variant={verificationStatus === 'VERIFIED' ? 'success' : verificationStatus === 'REJECTED' ? 'danger' : 'warning'}>
+            {verificationStatus === 'VERIFIED' ? 'Terverifikasi' : verificationStatus === 'REJECTED' ? 'Ditolak' : 'Belum Verifikasi'}
           </Badge>
         </div>
       </div>
@@ -128,7 +128,7 @@ export const ProfilePage: React.FC = () => {
             />
 
             <div className="pt-4 border-t border-slate-100">
-              <h4 className="text-sm font-semibold text-slate-900 mb-4">Data Institusi & Identitas KYC</h4>
+              <h4 className="text-sm font-semibold text-slate-900 mb-4">Data Institusi & Identitas</h4>
               <div className="space-y-5">
                 <Input
                   label="Nama Perusahaan (Opsional)"

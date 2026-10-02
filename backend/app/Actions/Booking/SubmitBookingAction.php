@@ -36,13 +36,13 @@ class SubmitBookingAction
                 );
             }
 
-            // KYC gate per API Contract 1.4 (403 FORBIDDEN_ACTION if not verified)
-            $profile = $user->customerProfile;
-            if (! $profile || $profile->verification_status !== 'VERIFIED') {
-                throw new BusinessRuleException(
-                    'Profil identitas Anda belum terverifikasi. Selesaikan verifikasi (KYC) sebelum submit booking.'
-                );
-            }
+// Account verification gate per API Contract 1.4 (403 FORBIDDEN_ACTION if not verified)
+              $profile = $user->customerProfile;
+              if (! $profile || $profile->verification_status !== 'VERIFIED') {
+                  throw new BusinessRuleException(
+                      'Akun Anda belum terverifikasi. Tim kami akan menghubungi Anda untuk menyelesaikan verifikasi akun sebelum mengajukan booking.'
+                  );
+              }
 
             // Availability final pre-check before submission (no reservation)
             $this->precheck->assertBookingAvailable($booking);

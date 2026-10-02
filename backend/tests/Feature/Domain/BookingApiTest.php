@@ -32,6 +32,11 @@ class BookingApiTest extends TestCase
 
     private function createCartWithItems(User $user, ProjectLocation $location, int $qty = 2): Cart
     {
+        CustomerProfile::factory()->create([
+            'user_id' => $user->id,
+            'verification_status' => 'VERIFIED'
+        ]);
+
         $cart = Cart::factory()->create([
             'user_id' => $user->id,
             'project_location_id' => $location->id,
@@ -129,6 +134,11 @@ class BookingApiTest extends TestCase
     public function test_create_booking_fails_when_availability_insufficient(): void
     {
         $user = User::factory()->create(['role' => UserRole::USER]);
+        CustomerProfile::factory()->create([
+            'user_id' => $user->id,
+            'verification_status' => 'VERIFIED'
+        ]);
+
         $location = ProjectLocation::factory()->create(['user_id' => $user->id]);
 
         // Only 1 unit available, but 3 requested

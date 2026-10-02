@@ -27,13 +27,23 @@ class AvailabilityConcurrencyTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function verifiedUser(): User
+    {
+        $user = User::factory()->create();
+        \App\Models\CustomerProfile::factory()->create([
+            'user_id' => $user->id,
+            'verification_status' => 'VERIFIED',
+        ]);
+        return $user;
+    }
+
     public function test_booking_concurrency_race_condition(): void
     {
         // 1. Setup Data: 1 Model, 1 Unit Fisik
         $admin = User::factory()->admin()->create();
         
-        $userA = User::factory()->create(['name' => 'User A']);
-        $userB = User::factory()->create(['name' => 'User B']);
+        $userA = $this->verifiedUser();
+        $userB = $this->verifiedUser();
 
         $locationA = ProjectLocation::factory()->create(['user_id' => $userA->id]);
         $locationB = ProjectLocation::factory()->create(['user_id' => $userB->id]);
@@ -103,8 +113,8 @@ class AvailabilityConcurrencyTest extends TestCase
     public function test_expired_booking_releases_unit_making_it_available(): void
     {
         $admin = User::factory()->admin()->create();
-        $userA = User::factory()->create();
-        $userB = User::factory()->create();
+        $userA = $this->verifiedUser();
+        $userB = $this->verifiedUser();
 
         $locationA = ProjectLocation::factory()->create(['user_id' => $userA->id]);
         $locationB = ProjectLocation::factory()->create(['user_id' => $userB->id]);

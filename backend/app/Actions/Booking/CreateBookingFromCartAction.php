@@ -29,6 +29,14 @@ class CreateBookingFromCartAction
     public function execute(User $user, Cart $cart): Booking
     {
         return DB::transaction(function () use ($user, $cart) {
+            // 0. Account verification gate (Block checkout if unverified)
+            $profile = $user->customerProfile;
+            if (! $profile || $profile->verification_status !== 'VERIFIED') {
+                throw new BusinessRuleException(
+                    'Akun Anda belum terverifikasi. Tim kami akan menghubungi Anda untuk proses verifikasi sebelum Anda dapat melakukan checkout.'
+                );
+            }
+
             // 1. Validate cart is populated and location set (BR-007 / BR-003)
             $cart->load(['projectLocation', 'items.model.prices']);
 

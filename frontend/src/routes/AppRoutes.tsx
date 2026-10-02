@@ -52,6 +52,7 @@ const AdminNotificationsPage = lazy(() => import('@/features/notification/pages/
 const AdminDashboardPage = lazy(() => import('@/features/reporting/pages/AdminDashboardPage'))
 const AdminOperationalReportsPage = lazy(() => import('@/features/reporting/pages/AdminOperationalReportsPage'))
 const AdminFinancialReportsPage = lazy(() => import('@/features/reporting/pages/AdminFinancialReportsPage'))
+const AdminUsersPage = lazy(() => import('@/features/auth/pages/AdminUsersPage'))
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -115,6 +116,7 @@ export const AppRoutes: React.FC = () => {
               <Route path="outstanding" element={<AdminOutstandingPage />} />
               <Route path="pricing" element={<OwnerPricingPage />} />
               <Route path="notifications" element={<AdminNotificationsPage />} />
+              <Route path="users" element={<AdminUsersPage />} />
               <Route path="cms" element={<AdminCmsPage />} />
             </Route>
           </Route>

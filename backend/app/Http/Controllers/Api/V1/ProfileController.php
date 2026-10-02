@@ -40,11 +40,15 @@ class ProfileController extends ApiController
     }
 
     /**
-     * Admin/Owner verifies a customer identity profile (KYC).
+     * Admin/Owner verifies a customer identity profile (Verifikasi Akun).
      */
     public function verify(VerifyCustomerProfileRequest $request, VerifyCustomerProfileAction $action): JsonResponse
     {
+        /** @var User $actor */
+        $actor = $request->user();
+
         $profile = $action->execute(
+            $actor,
             (int) $request->validated('user_id'),
             (string) $request->validated('verification_status')
         );
@@ -52,6 +56,6 @@ class ProfileController extends ApiController
         return $this->success([
             'user_id' => $profile->user_id,
             'verification_status' => $profile->verification_status,
-        ], 'Status verifikasi profil berhasil diperbarui.');
+        ], 'Status verifikasi akun berhasil diperbarui.');
     }
 }

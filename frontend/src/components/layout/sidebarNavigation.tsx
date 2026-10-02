@@ -18,6 +18,7 @@ import {
   Building2,
   CreditCard,
   Users,
+  UserCheck,
   Table2,
   PiggyBank,
   Globe,
@@ -71,6 +72,12 @@ export const adminMenu: SidebarGroup[] = [
       { label: 'Approval Booking', href: '/admin/bookings', icon: <CheckSquare size={18} /> },
       { label: 'Eksekusi Rental', href: '/admin/rentals', icon: <ClipboardList size={18} /> },
       { label: 'Validasi Timesheet', href: '/admin/timesheets', icon: <Clock size={18} /> },
+    ],
+  },
+  {
+    title: 'Pengguna',
+    items: [
+      { label: 'Verifikasi Akun', href: '/admin/users', icon: <UserCheck size={18} /> },
     ],
   },
   {
