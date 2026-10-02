@@ -132,11 +132,29 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={() => !isSubmitting && onClose()}
-      title={`Sewa ${model.brand} ${model.model_name}`}
-      description="Tentukan kebutuhan sewa armada Anda. Jumlah unit fisik ditetapkan oleh Admin saat persetujuan booking."
+      title={!isLoadingLocations && locations.length === 0 ? 'Lokasi Proyek Diperlukan' : `Sewa ${model.brand} ${model.model_name}`}
+      description={!isLoadingLocations && locations.length === 0 ? '' : "Tentukan kebutuhan sewa armada Anda. Jumlah unit fisik ditetapkan oleh Admin saat persetujuan booking."}
       size="md"
     >
-      <form onSubmit={handleSubmit} className="space-y-5">
+      {!isLoadingLocations && locations.length === 0 ? (
+        <div className="space-y-6">
+          <p className="text-slate-600 text-sm">
+            Silakan tambahkan lokasi proyek terlebih dahulu sebelum melanjutkan.
+          </p>
+          <div className="flex justify-end gap-3 pt-2">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Batalkan
+            </Button>
+            <Button type="button" onClick={() => {
+              onClose()
+              navigate('/app/locations')
+            }}>
+              Tambah Lokasi Proyek
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-5">
         {/* Scheme Selector */}
         <div>
           <span className="block text-sm font-medium text-slate-700 mb-2">Pilih Skema Sewa</span>
@@ -257,9 +275,10 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
           }}
           className="text-xs text-primary-600 hover:text-primary-700 font-medium cursor-pointer"
         >
-          Lihat Keranjang Sewa →
+          Lihat Keranjang Sewa &rarr;
         </button>
       </form>
+      )}
     </Modal>
   )
 }

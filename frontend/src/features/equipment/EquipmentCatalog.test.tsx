@@ -37,6 +37,7 @@ describe('User Equipment Catalog UI', () => {
         { id: 1, document_type: 'EQUIPMENT_PHOTO', file_name: 'photo.jpg', mime_type: 'image/jpeg', file_size: 100, url: 'http://localhost/photo.jpg', uploaded_by: 1 },
       ],
       units_count: 5,
+      available_units_count: 6,
     },
   ]
 
@@ -73,6 +74,7 @@ describe('User Equipment Catalog UI', () => {
       expect(screen.getByText('Komatsu PC200-8')).toBeInTheDocument()
       expect(screen.getByText('20 Ton')).toBeInTheDocument()
       expect(screen.getByText(/Rp 225\.000\/jam/)).toBeInTheDocument()
+      expect(screen.getByText('6 unit tersedia')).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /lihat detail/i })).toBeInTheDocument()
     })
   })

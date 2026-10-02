@@ -10,6 +10,7 @@ use App\Http\Requests\Equipment\UpdateEquipmentModelRequest;
 use App\Http\Resources\EquipmentModelResource;
 use App\Models\EquipmentModel;
 use App\Models\User;
+use App\Services\Equipment\EquipmentAvailabilityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -44,8 +45,20 @@ class EquipmentModelController extends ApiController
         $perPage = (int) $request->query('per_page', 15);
         $models = $query->paginate($perPage);
 
+        // Attach real available unit counts (source of truth: physical unit status + booking buffer)
+        $availabilityService = app(EquipmentAvailabilityService::class);
+        $modelIds = collect($models->items())->pluck('id')->all();
+        $availMap = $availabilityService->getAvailabilityMap($modelIds);
+
+        $items = collect($models->items())->map(function (EquipmentModel $model) use ($availMap) {
+            $resource = new EquipmentModelResource($model);
+            $array = $resource->resolve();
+            $array['available_units_count'] = (int) ($availMap->get($model->id, 0));
+            return $array;
+        });
+
         return $this->success(
-            EquipmentModelResource::collection($models->items()),
+            $items,
             'Daftar model armada berhasil dimuat.',
             200,
             [
@@ -65,7 +78,14 @@ class EquipmentModelController extends ApiController
         $model->load(['type', 'prices', 'attachments']);
         $model->loadCount('units');
 
-        return $this->success(new EquipmentModelResource($model), 'Detail model armada berhasil dimuat.');
+        $availService = app(EquipmentAvailabilityService::class);
+        $availableUnitsCount = $availService->getAvailableUnitsCount($model);
+
+        $resource = new EquipmentModelResource($model);
+        $data = $resource->resolve();
+        $data['available_units_count'] = $availableUnitsCount;
+
+        return $this->success($data, 'Detail model armada berhasil dimuat.');
     }
 
     /**

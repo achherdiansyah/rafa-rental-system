@@ -40,6 +40,7 @@ export interface EquipmentModel {
   prices?: EquipmentPrice[]
   attachments?: EquipmentAttachment[]
   units_count?: number
+  available_units_count?: number
   created_at?: string
   updated_at?: string
 }

@@ -110,7 +110,12 @@ export const EquipmentDetailPage: React.FC = () => {
               <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary-700 bg-primary-50 px-2.5 py-1 rounded-md border border-primary-200">
                 <Layers size={13} /> {model.type?.name || 'Alat Berat'}
               </span>
-              <Badge variant="success" size="sm">Siap Beroperasi</Badge>
+              <Badge variant="success" size="sm">Tersedia</Badge>
+              {typeof model.available_units_count === 'number' && (
+                <span className="text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                  {model.available_units_count} unit tersedia
+                </span>
+              )}
             </div>
 
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">

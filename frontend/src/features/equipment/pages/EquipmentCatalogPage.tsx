@@ -155,10 +155,15 @@ export const EquipmentCatalogPage: React.FC = () => {
                         <span className="text-xs">Foto Belum Tersedia</span>
                       </div>
                     )}
-                    <div className="absolute top-2.5 right-2.5">
+                    <div className="absolute top-2.5 right-2.5 flex flex-col gap-1.5 items-end">
                       <Badge variant="secondary" size="sm" className="bg-white/90 backdrop-blur-xs font-semibold">
                         {model.capacity_value} {model.capacity_unit}
                       </Badge>
+                      {typeof model.available_units_count === 'number' && (
+                        <Badge variant={model.available_units_count > 0 ? 'success' : 'danger'} size="sm" className="bg-white/90 backdrop-blur-xs font-semibold">
+                          {model.available_units_count > 0 ? `${model.available_units_count} unit tersedia` : 'Tidak Tersedia'}
+                        </Badge>
+                      )}
                     </div>
                   </div>
 

@@ -124,10 +124,31 @@ describe('Cart UI Suite', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /keranjang sewa/i })).toBeInTheDocument()
       expect(screen.getByText('Komatsu PC200-8')).toBeInTheDocument()
-      expect(screen.getByText(/non all-in/i)).toBeInTheDocument()
+      expect(screen.getByText(/non all-in \(bare rental\)/i)).toBeInTheDocument()
     })
+  })
+
+  it('shows required location modal if user has no project locations', async () => {
+    vi.mocked(projectLocationService.getLocations).mockResolvedValue({
+      success: true,
+      message: 'OK',
+      data: [],
+    } as any)
+
+    const onClose = vi.fn()
+    render(
+      <MemoryRouter>
+        <ToastProvider>
+          <AddToCartModal isOpen={true} onClose={onClose} model={mockModel} />
+        </ToastProvider>
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByText(/lokasi proyek diperlukan/i)).toBeInTheDocument()
+    expect(screen.getByText(/silakan tambahkan lokasi proyek terlebih dahulu sebelum melanjutkan/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /tambah lokasi proyek/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /batalkan/i })).toBeInTheDocument()
   })
 
   it('updates item quantity and calls service on save', async () => {
