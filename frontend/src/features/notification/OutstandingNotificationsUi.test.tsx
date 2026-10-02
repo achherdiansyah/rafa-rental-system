@@ -123,10 +123,12 @@ describe('Outstanding & Notification UI', () => {
     })
   })
 
-  it('admin notification monitor shows delivery log status and reason', async () => {
+  it('admin notification center shows in-app notifications and unread badge', async () => {
     toastRender(<AdminNotificationsPage />)
-    expect(await screen.findByText('SKIPPED')).toBeInTheDocument()
-    expect(screen.getByText('PAYMENT_APPROVED')).toBeInTheDocument()
-    expect(screen.getByText(/belum dikonfigurasi/i)).toBeInTheDocument()
+
+    expect(await screen.findByText('1 notifikasi belum dibaca. Klik untuk membuka halaman terkait.')).toBeInTheDocument()
+    expect(screen.getByText(/Pembayaran Anda terverifikasi/i)).toBeInTheDocument()
+    expect(screen.getAllByText('PAYMENT_APPROVED').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByText('Belum dibaca')).toBeInTheDocument()
   })
 })
