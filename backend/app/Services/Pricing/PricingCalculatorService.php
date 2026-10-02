@@ -117,10 +117,11 @@ class PricingCalculatorService
             $totalDemob += $lineResult->demobSubtotal;
         }
 
-        // Strict Phase 1 Rule: No tax, No discount, No unintended fees
+        // Strict Phase 1 & Phase 9 Rule: No tax, No discount. 
+        // Initial Booking Total ONLY includes MOB/DEMOB (Rental cost is billed daily based on timesheet actual hours)
         $taxAmount = 0.00;
         $discountAmount = 0.00;
-        $grandTotal = $totalRental + $totalMob + $totalDemob;
+        $grandTotal = $totalMob + $totalDemob;
 
         return new BookingPricingResult(
             items: $lineResults,

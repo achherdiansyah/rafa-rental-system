@@ -250,17 +250,12 @@ export const UserCartPage: React.FC = () => {
   const selectedSubtotal = selectedItems.reduce((sum, item) => {
     const price = item.model?.prices?.find((p) => p.is_all_in === item.is_all_in)
     if (!price) return sum
-    
-    // Perkiraan kasar: (Harga x 8 Jam x Durasi Hari) x Qty
-    // MOB/DEMOB tidak diestimasi penuh di sini karena perhitungan riil ada di backend.
-    const start = new Date(item.start_date)
-    const end = new Date(item.end_date)
-    const diffTime = Math.abs(end.getTime() - start.getTime())
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
-    
-    const dailyRate = price.base_rate * 8
-    const itemTotal = dailyRate * diffDays * item.quantity
-    
+
+    // Business Rule Final: Total booking hanya MOB/DEMOB per unit
+    const mob = price.mob_cost ?? 0
+    const demob = price.demob_cost ?? 0
+    const itemTotal = (mob + demob) * item.quantity
+
     return sum + itemTotal
   }, 0)
 
@@ -502,8 +497,11 @@ export const UserCartPage: React.FC = () => {
                   </p>
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
                     <span>Item terpilih: <strong className="text-slate-900">{selectedItemIds.length} unit</strong></span>
-                    <span>Estimasi subtotal terpilih: <strong className="text-slate-900">{formatRupiah(selectedSubtotal)}</strong> <span className="text-slate-400">(indikatif)</span></span>
+                    <span>Estimasi Total Booking (MOB/DEMOB): <strong className="text-slate-900">{formatRupiah(selectedSubtotal)}</strong> <span className="text-slate-400">(tarif per unit × qty)</span></span>
                   </div>
+                  <p className="text-xs text-slate-500">
+                    <strong>Biaya Sewa Alat (Hourly Rate)</strong> TIDAK termasuk di total booking besar ini. Biaya sewa per jam hanya dibebankan sebagai <strong>Daily Work Invoice</strong> berdasarkan jam kerja aktual Timesheet saat rental berjalan.
+                  </p>
                   {hasUnavailableSelection && (
                     <p className="text-xs text-rose-600 font-medium">
                       Terdapat unit terpilih yang tidak tersedia. Atur ulang tanggal atau batalkan pilihan unit tersebut.

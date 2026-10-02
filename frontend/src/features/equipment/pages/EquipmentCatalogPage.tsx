@@ -189,12 +189,12 @@ export const EquipmentCatalogPage: React.FC = () => {
                   </CardContent>
 
                   <CardFooter className="p-5 pt-3 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
-                    <div>
-                      <p className="text-xs text-slate-400">Mulai dari</p>
-                      <p className="text-sm font-bold text-slate-900 font-mono">
-                        {lowestRate !== null ? `Rp ${lowestRate.toLocaleString('id-ID')}/jam` : 'Hubungi Admin'}
-                      </p>
-                    </div>
+                      <div>
+                        <p className="text-xs text-slate-400">Tarif Rental Mulai</p>
+                        <p className="text-sm font-bold text-slate-900 font-mono">
+                          {lowestRate !== null ? `Rp ${lowestRate.toLocaleString('id-ID')}/jam` : 'Hubungi Admin'}
+                        </p>
+                      </div>
 
                     <Link to={`/app/equipment/${model.id}`}>
                       <Button size="sm" rightIcon={<ArrowRight size={14} />}>

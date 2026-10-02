@@ -163,34 +163,40 @@ export const EquipmentDetailPage: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Non All-in Card */}
-          <Card className="border-2 border-slate-200 relative">
+          <Card className="border-2 border-slate-200 relative flex flex-col justify-between">
             <CardHeader className="p-6">
               <div className="flex justify-between items-start">
                 <div>
                   <Badge variant="secondary" className="mb-2">Bare Rental</Badge>
                   <CardTitle className="text-lg">Non All-in (Unit Saja)</CardTitle>
                 </div>
-                <p className="font-mono text-xl font-bold text-slate-900">
-                  {nonAllInPrice ? `Rp ${nonAllInPrice.base_rate.toLocaleString('id-ID')}` : '-'}
-                  <span className="text-xs font-normal text-slate-500"> /jam</span>
-                </p>
+                <div className="text-right">
+                  <p className="font-mono text-xl font-bold text-slate-900">
+                    {nonAllInPrice ? `Rp ${nonAllInPrice.base_rate.toLocaleString('id-ID')}` : '-'}
+                    <span className="text-xs font-normal text-slate-500"> /jam</span>
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">Biaya MOB: {nonAllInPrice && nonAllInPrice.mob_cost ? `Rp ${nonAllInPrice.mob_cost.toLocaleString('id-ID')}` : '-'}</p>
+                  <p className="text-xs text-slate-500">Biaya DEMOB: {nonAllInPrice && nonAllInPrice.demob_cost ? `Rp ${nonAllInPrice.demob_cost.toLocaleString('id-ID')}` : '-'}</p>
+                </div>
               </div>
             </CardHeader>
-            <CardContent className="p-6 pt-0 space-y-3 text-sm">
-              <div className="flex items-center gap-2 text-slate-700">
-                <Clock size={16} className="text-slate-400 shrink-0" />
-                <span>Minimum tagihan <strong>8 jam kerja</strong> per hari</span>
-              </div>
-              <div className="flex items-center gap-2 text-slate-700">
-                <Check size={16} className="text-emerald-500 shrink-0" />
-                <span>Hak guna pakai aset fisik unit murni</span>
-              </div>
-              <div className="flex items-center gap-2 text-slate-500 text-xs bg-slate-50 p-2.5 rounded-lg">
-                <span>Solar (BBM), upah dan akomodasi operator disediakan oleh penyewa di lokasi.</span>
+            <CardContent className="p-6 pt-0 space-y-3 text-sm flex flex-col justify-end h-full">
+              <div className="space-y-3 mb-4">
+                <div className="flex items-center gap-2 text-slate-700">
+                  <Clock size={16} className="text-slate-400 shrink-0" />
+                  <span>Minimum tagihan <strong>8 jam kerja</strong> per hari</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-700">
+                  <Check size={16} className="text-emerald-500 shrink-0" />
+                  <span>Hak guna pakai aset fisik unit murni</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-500 text-xs bg-slate-50 p-2.5 rounded-lg">
+                  <span>Solar (BBM), upah dan akomodasi operator disediakan oleh penyewa di lokasi.</span>
+                </div>
               </div>
               <Button
                 variant="outline"
-                className="w-full mt-1 gap-2"
+                className="w-full mt-auto gap-2"
                 disabled={!nonAllInPrice}
                 onClick={() => {
                   setCartInitialScheme(false)
@@ -204,7 +210,7 @@ export const EquipmentDetailPage: React.FC = () => {
           </Card>
 
           {/* All-in Card */}
-          <Card className="border-2 border-primary-600 relative bg-primary-50/20 shadow-xs">
+          <Card className="border-2 border-primary-600 relative bg-primary-50/20 shadow-xs flex flex-col justify-between">
             <div className="absolute top-0 right-6 -translate-y-1/2">
               <Badge variant="default" className="bg-primary-600 text-white border-none px-3 py-1 font-semibold">
                 Paling Praktis
@@ -216,32 +222,38 @@ export const EquipmentDetailPage: React.FC = () => {
                   <Badge variant="default" className="mb-2">Paket Lengkap</Badge>
                   <CardTitle className="text-lg">All-in (Unit + BBM + Operator)</CardTitle>
                 </div>
-                <p className="font-mono text-xl font-bold text-primary-700">
-                  {allInPrice ? `Rp ${allInPrice.base_rate.toLocaleString('id-ID')}` : '-'}
-                  <span className="text-xs font-normal text-slate-500"> /jam</span>
-                </p>
+                <div className="text-right">
+                  <p className="font-mono text-xl font-bold text-primary-700">
+                    {allInPrice ? `Rp ${allInPrice.base_rate.toLocaleString('id-ID')}` : '-'}
+                    <span className="text-xs font-normal text-slate-500"> /jam</span>
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">Biaya MOB: {allInPrice && allInPrice.mob_cost ? `Rp ${allInPrice.mob_cost.toLocaleString('id-ID')}` : '-'}</p>
+                  <p className="text-xs text-slate-500">Biaya DEMOB: {allInPrice && allInPrice.demob_cost ? `Rp ${allInPrice.demob_cost.toLocaleString('id-ID')}` : '-'}</p>
+                </div>
               </div>
             </CardHeader>
-            <CardContent className="p-6 pt-0 space-y-3 text-sm">
-              <div className="flex items-center gap-2 text-slate-700">
-                <Clock size={16} className="text-primary-600 shrink-0" />
-                <span>Minimum tagihan <strong>8 jam kerja</strong> per hari</span>
-              </div>
-              <div className="flex items-center gap-2 text-slate-700">
-                <Check size={16} className="text-emerald-500 shrink-0" />
-                <span>Termasuk honor operator berpengalaman</span>
-              </div>
-              <div className="flex items-center gap-2 text-slate-700">
-                <Check size={16} className="text-emerald-500 shrink-0" />
-                <span>Termasuk bahan bakar solar operasional</span>
-              </div>
-              <div className="flex items-center gap-2 text-slate-700">
-                <Check size={16} className="text-emerald-500 shrink-0" />
-                <span>Termasuk perawatan harian di lapangan</span>
+            <CardContent className="p-6 pt-0 space-y-3 text-sm flex flex-col justify-end h-full">
+              <div className="space-y-3 mb-4">
+                <div className="flex items-center gap-2 text-slate-700">
+                  <Clock size={16} className="text-primary-600 shrink-0" />
+                  <span>Minimum tagihan <strong>8 jam kerja</strong> per hari</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-700">
+                  <Check size={16} className="text-emerald-500 shrink-0" />
+                  <span>Termasuk honor operator berpengalaman</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-700">
+                  <Check size={16} className="text-emerald-500 shrink-0" />
+                  <span>Termasuk bahan bakar solar operasional</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-700">
+                  <Check size={16} className="text-emerald-500 shrink-0" />
+                  <span>Termasuk perawatan harian di lapangan</span>
+                </div>
               </div>
               <Button
                 variant="primary"
-                className="w-full mt-1 gap-2"
+                className="w-full mt-auto gap-2"
                 disabled={!allInPrice}
                 onClick={() => {
                   setCartInitialScheme(true)
@@ -253,6 +265,14 @@ export const EquipmentDetailPage: React.FC = () => {
               </Button>
             </CardContent>
           </Card>
+        </div>
+
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mt-6">
+          <h4 className="text-sm font-bold text-amber-900 mb-2">Penjelasan Skema Penagihan</h4>
+          <ul className="text-xs text-amber-800 space-y-1.5 list-disc list-inside">
+            <li><strong>Total Estimasi Booking:</strong> Tagihan awal saat persetujuan booking HANYA berisi Biaya Mobilisasi & Demobilisasi per unit fisik yang dipesan.</li>
+            <li><strong>Biaya Penggunaan Alat (Hourly Rate):</strong> Tarif Rental per Jam BUKAN bagian dari harga di awal. Biaya sewa akan ditagihkan sebagai <strong>Daily Work Invoice</strong> (faktur harian) setelah rental berjalan dan berdasarkan jam kerja aktual yang diinput ke Timesheet Harian.</li>
+          </ul>
         </div>
       </div>
 

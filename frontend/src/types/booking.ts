@@ -22,13 +22,16 @@ export interface BookingDetail {
   booking_id: number
   equipment_model_id: number
   quantity: number
-  start_date: string
-  end_date: string
-  is_all_in: boolean
+start_date: string
+    end_date: string
+    is_all_in: boolean
   rental_rate_snapshot: number
-  subtotal: number
-  model?: EquipmentModel
-  unit_assignments?: BookingUnitAssignmentSummary[]
+  overtime_rate_snapshot?: number
+  mob_cost_snapshot?: number
+  demob_cost_snapshot?: number
+    subtotal: number
+    model?: EquipmentModel
+    unit_assignments?: BookingUnitAssignmentSummary[]
   created_at: string
 }
 

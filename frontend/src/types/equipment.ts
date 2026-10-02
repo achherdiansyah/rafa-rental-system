@@ -146,6 +146,8 @@ export interface EquipmentPrice {
   base_rate: number
   minimum_hours: number
   overtime_rate: number
+  mob_cost: number
+  demob_cost: number
   effective_date: string
   model?: EquipmentModel
   versions?: EquipmentPriceVersion[]
@@ -160,6 +162,8 @@ export interface CreateEquipmentPricePayload {
   base_rate: number
   minimum_hours: number
   overtime_rate: number
+  mob_cost: number
+  demob_cost: number
   effective_date: string
 }
 
@@ -167,6 +171,8 @@ export interface UpdateEquipmentPricePayload {
   base_rate: number
   minimum_hours?: number
   overtime_rate?: number
+  mob_cost?: number
+  demob_cost?: number
   effective_date?: string
 }
 

@@ -33,6 +33,8 @@ export const OwnerPricingPage: React.FC = () => {
   const [baseRate, setBaseRate] = useState('')
   const [minimumHours, setMinimumHours] = useState('8')
   const [overtimeRate, setOvertimeRate] = useState('0')
+  const [mobCost, setMobCost] = useState('0')
+  const [demobCost, setDemobCost] = useState('0')
   const [effectiveDate, setEffectiveDate] = useState(new Date().toISOString().split('T')[0])
   const [formErrors, setFormErrors] = useState<Record<string, string[]>>({})
   const [isSaving, setIsSaving] = useState(false)
@@ -83,6 +85,8 @@ export const OwnerPricingPage: React.FC = () => {
     setBaseRate('')
     setMinimumHours('8')
     setOvertimeRate('0')
+    setMobCost('0')
+    setDemobCost('0')
     setEffectiveDate(new Date().toISOString().split('T')[0])
     setFormErrors({})
     setIsModalOpen(true)
@@ -96,6 +100,8 @@ export const OwnerPricingPage: React.FC = () => {
     setBaseRate(String(price.base_rate))
     setMinimumHours(String(price.minimum_hours))
     setOvertimeRate(String(price.overtime_rate))
+    setMobCost(String(price.mob_cost ?? 0))
+    setDemobCost(String(price.demob_cost ?? 0))
     setEffectiveDate(price.effective_date)
     setFormErrors({})
     setIsModalOpen(true)
@@ -113,6 +119,8 @@ export const OwnerPricingPage: React.FC = () => {
       base_rate: parseFloat(baseRate) || 0,
       minimum_hours: parseInt(minimumHours, 10) || 0,
       overtime_rate: parseFloat(overtimeRate) || 0,
+      mob_cost: parseFloat(mobCost) || 0,
+      demob_cost: parseFloat(demobCost) || 0,
       effective_date: effectiveDate,
     }
 
@@ -122,6 +130,8 @@ export const OwnerPricingPage: React.FC = () => {
           base_rate: payload.base_rate,
           minimum_hours: payload.minimum_hours,
           overtime_rate: payload.overtime_rate,
+          mob_cost: payload.mob_cost,
+          demob_cost: payload.demob_cost,
           effective_date: payload.effective_date,
         })
         success('Tarif harga berhasil diperbarui dan versi baru tercatat.')
@@ -204,7 +214,9 @@ export const OwnerPricingPage: React.FC = () => {
                 <TableHead>Skema Sewa</TableHead>
                 <TableHead>Tarif Dasar / Jam</TableHead>
                 <TableHead>Min. Jam</TableHead>
-                <TableHead>Tarif Overtime / Jam</TableHead>
+                <TableHead>Overtime / Jam</TableHead>
+                <TableHead>Biaya MOB</TableHead>
+                <TableHead>Biaya DEMOB</TableHead>
                 <TableHead>Mulai Berlaku</TableHead>
                 <TableHead className="text-right">Aksi</TableHead>
               </TableRow>
@@ -227,7 +239,13 @@ export const OwnerPricingPage: React.FC = () => {
                     {price.minimum_hours} Jam/hari
                   </TableCell>
                   <TableCell className="font-mono text-sm text-slate-600">
-                    Rp {price.overtime_rate.toLocaleString('id-ID')}
+                    Rp {(price.overtime_rate ?? 0).toLocaleString('id-ID')}
+                  </TableCell>
+                  <TableCell className="font-mono text-sm text-slate-600">
+                    Rp {(price.mob_cost ?? 0).toLocaleString('id-ID')}
+                  </TableCell>
+                  <TableCell className="font-mono text-sm text-slate-600">
+                    Rp {(price.demob_cost ?? 0).toLocaleString('id-ID')}
                   </TableCell>
                   <TableCell className="text-sm text-slate-500">
                     {price.effective_date}
@@ -310,49 +328,84 @@ export const OwnerPricingPage: React.FC = () => {
             </>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              label="Tarif Dasar / Jam (Rp)"
-              type="number"
-              step="1000"
-              value={baseRate}
-              onChange={(e) => setBaseRate(e.target.value)}
-              error={formErrors.base_rate?.[0]}
-              placeholder="Contoh: 250000"
-              required
-            />
-
-            <Input
-              label="Batas Minimum Jam / Hari"
-              type="number"
-              value={minimumHours}
-              onChange={(e) => setMinimumHours(e.target.value)}
-              error={formErrors.minimum_hours?.[0]}
-              placeholder="Default: 8"
-              required
-            />
+          {/* Bagian A: MOB / DEMOB */}
+          <div className="pt-2 border-t border-slate-100">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+              A. Tarif Mobilisasi / Demobilisasi (Biaya Booking Awal)
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Input
+                label="Biaya Mobilisasi (MOB) / Unit (Rp)"
+                type="number"
+                step="1000"
+                value={mobCost}
+                onChange={(e) => setMobCost(e.target.value)}
+                error={formErrors.mob_cost?.[0]}
+                placeholder="Contoh: 500000"
+                required
+              />
+              <Input
+                label="Biaya Demobilisasi (DEMOB) / Unit (Rp)"
+                type="number"
+                step="1000"
+                value={demobCost}
+                onChange={(e) => setDemobCost(e.target.value)}
+                error={formErrors.demob_cost?.[0]}
+                placeholder="Contoh: 500000"
+                required
+              />
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              label="Tarif Overtime / Jam (Rp)"
-              type="number"
-              step="1000"
-              value={overtimeRate}
-              onChange={(e) => setOvertimeRate(e.target.value)}
-              error={formErrors.overtime_rate?.[0]}
-              placeholder="Contoh: 300000"
-              required
-            />
+          {/* Bagian B: Tarif Rental Hourly */}
+          <div className="pt-2 border-t border-slate-100">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+              B. Tarif Rental Hourly (Penggunaan Aktual via Timesheet)
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Input
+                label="Tarif Dasar / Jam (Rp)"
+                type="number"
+                step="1000"
+                value={baseRate}
+                onChange={(e) => setBaseRate(e.target.value)}
+                error={formErrors.base_rate?.[0]}
+                placeholder="Contoh: 250000"
+                required
+              />
 
-            <Input
-              label="Tanggal Mulai Berlaku"
-              type="date"
-              value={effectiveDate}
-              onChange={(e) => setEffectiveDate(e.target.value)}
-              error={formErrors.effective_date?.[0]}
-              required
-            />
+              <Input
+                label="Batas Minimum Jam / Hari"
+                type="number"
+                value={minimumHours}
+                onChange={(e) => setMinimumHours(e.target.value)}
+                error={formErrors.minimum_hours?.[0]}
+                placeholder="Default: 8"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
+              <Input
+                label="Tarif Overtime / Jam (Rp)"
+                type="number"
+                step="1000"
+                value={overtimeRate}
+                onChange={(e) => setOvertimeRate(e.target.value)}
+                error={formErrors.overtime_rate?.[0]}
+                placeholder="Contoh: 300000"
+                required
+              />
+
+              <Input
+                label="Tanggal Mulai Berlaku"
+                type="date"
+                value={effectiveDate}
+                onChange={(e) => setEffectiveDate(e.target.value)}
+                error={formErrors.effective_date?.[0]}
+                required
+              />
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">

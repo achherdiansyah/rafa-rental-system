@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+﻿import React, { useState, useEffect } from 'react'
 import { MapPin, Truck, CheckCircle2, XCircle, UserCheck, RefreshCw } from 'lucide-react'
 import { bookingService } from '@/features/booking/services/bookingService'
 import { equipmentService } from '@/features/equipment/services/equipmentService'
@@ -301,36 +301,46 @@ export const AdminBookingsPage: React.FC = () => {
                       </span>
                     </div>
                   )}
-
                   <div className="text-xs text-slate-500">
-                    {(booking.details?.length ?? 0)} item armada •{' '}
-                    {new Date(booking.created_at).toLocaleDateString('id-ID', { dateStyle: 'medium' })}
+                    {(booking.details?.length ?? 0)} item armada • {new Date(booking.created_at).toLocaleDateString('id-ID', { dateStyle: 'medium' })}
                   </div>
 
                   {/* Line summary */}
                   {booking.details && booking.details.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-1">
+                    <div className="flex flex-col gap-2 mt-2">
                       {booking.details.map((d) => {
                         const current = (d.unit_assignments ?? []).filter((a) => a.is_current)
                         return (
-                          <span key={d.id} className="text-xs bg-slate-50 border border-slate-100 rounded-lg px-2 py-1 flex flex-wrap items-center gap-1.5">
-                            <Truck size={11} className="text-slate-400" />
-                            {d.model?.brand} {d.model?.model_name} × {d.quantity}
-                            {current.map((a) => (
-                              <span key={a.id} className="inline-flex items-center gap-1.5 ml-1 pl-2 border-l border-slate-200">
-                                <span className="font-mono">{a.unit?.serial_number}</span>
-                                {booking.status === 'APPROVED' && (
-                                  <button
-                                    type="button"
-                                    onClick={() => openReplaceModal(booking, a.id, d.equipment_model_id)}
-                                    className="text-primary-600 hover:text-primary-800 font-medium cursor-pointer underline-offset-2 hover:underline"
-                                  >
-                                    Ganti
-                                  </button>
-                                )}
+                          <div key={d.id} className="text-xs bg-slate-50 border border-slate-100 rounded-lg p-2.5 space-y-1.5">
+                            <div className="flex flex-wrap items-center gap-2 justify-between">
+                              <span className="font-semibold text-slate-800 flex items-center gap-1.5">
+                                <Truck size={12} className="text-slate-400" />
+                                {d.model?.brand} {d.model?.model_name} × {d.quantity} unit
                               </span>
-                            ))}
-                          </span>
+                              <Badge variant={d.is_all_in ? 'default' : 'secondary'} size="sm">
+                                {d.is_all_in ? 'All-in' : 'Non All-in'}
+                              </Badge>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-slate-500">
+                              <span>Periode: {new Date(d.start_date).toLocaleDateString('id-ID')} - {new Date(d.end_date).toLocaleDateString('id-ID')}</span>
+                              <span>MOB: Rp {Number(d.mob_cost_snapshot || 0).toLocaleString('id-ID')}</span>
+                              <span>DEMOB: Rp {Number(d.demob_cost_snapshot || 0).toLocaleString('id-ID')}</span>
+                              <span className="font-medium text-slate-700">Subtotal MOB/DEMOB: Rp {Number(d.subtotal || 0).toLocaleString('id-ID')}</span>
+                            </div>
+                            {current.length > 0 && (
+                              <div className="mt-1.5 pt-1.5 border-t border-slate-200/60 flex flex-wrap items-center gap-1.5">
+                                <span className="text-emerald-700 font-medium">Unit Assigned:</span>
+                                {current.map((a) => (
+                                  <span key={a.id} className="inline-flex items-center gap-1.5 bg-white border border-emerald-200 px-1.5 py-0.5 rounded text-emerald-800">
+                                    <span className="font-mono">{a.unit?.serial_number}</span>
+                                    {booking.status === 'APPROVED' && (
+                                      <button type="button" onClick={() => openReplaceModal(booking, a.id, d.equipment_model_id)} className="text-primary-600 hover:text-primary-800 font-medium cursor-pointer underline-offset-2 hover:underline ml-1">Ganti</button>
+                                    )}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         )
                       })}
                     </div>
@@ -338,9 +348,12 @@ export const AdminBookingsPage: React.FC = () => {
                 </div>
 
                 <div className="shrink-0 flex flex-col items-end gap-2">
-                  <span className="font-mono text-base font-bold text-slate-900">
-                    {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(booking.total_amount)}
-                  </span>
+                  <div className="text-right">
+                    <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-0.5">Total Estimasi Booking (MOB/DEMOB)</p>
+                    <p className="font-mono text-lg font-bold text-slate-900">
+                      {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(booking.total_amount)}
+                    </p>
+                  </div>
 
                   {booking.status === 'PENDING_APPROVAL' && (
                     <div className="flex gap-2">
@@ -416,7 +429,7 @@ export const AdminBookingsPage: React.FC = () => {
       {/* Assign unit modal */}
       <Modal
         isOpen={assignTarget !== null}
-        onClose={() => !isAssigning && setAssignTarget(null)}
+        onClose={() => setAssignTarget(null)}
         title={`Tugaskan Unit — ${assignTarget?.booking_code ?? ''}`}
         size="lg"
       >
@@ -440,7 +453,7 @@ export const AdminBookingsPage: React.FC = () => {
 
               {selections[detail.id]?.length === detail.quantity && (
                 <div className="text-xs text-emerald-600 mb-2 font-medium">
-                  ✔ Kuota terpenuhi ({selections[detail.id].length}/{detail.quantity})
+                  âœ” Kuota terpenuhi ({selections[detail.id].length}/{detail.quantity})
                 </div>
               )}
 
@@ -465,7 +478,7 @@ export const AdminBookingsPage: React.FC = () => {
                           className="accent-primary-600"
                         />
                         <span className="font-mono text-xs">{unit.serial_number}</span>
-                        <span className="text-xs text-slate-500 ml-auto">{unit.plate_number ?? '—'}</span>
+                        <span className="text-xs text-slate-500 ml-auto">{unit.plate_number ?? 'â€”'}</span>
                       </label>
                     )
                   })
@@ -489,7 +502,7 @@ export const AdminBookingsPage: React.FC = () => {
       <Modal
         isOpen={replaceTarget !== null}
         onClose={() => !isReplacing && setReplaceTarget(null)}
-        title={`Ganti Unit — ${replaceTarget?.booking.booking_code ?? ''}`}
+        title={`Ganti Unit â€” ${replaceTarget?.booking.booking_code ?? ''}`}
         size="md"
       >
         <div className="space-y-4">
@@ -503,7 +516,7 @@ export const AdminBookingsPage: React.FC = () => {
             <option value="">-- Pilih Unit AVAILABLE --</option>
             {replaceOptions.map((u) => (
               <option key={u.id} value={u.id}>
-                {u.serial_number} — {u.plate_number ?? 'tanpa plat'}
+                {u.serial_number} â€” {u.plate_number ?? 'tanpa plat'}
               </option>
             ))}
           </Select>

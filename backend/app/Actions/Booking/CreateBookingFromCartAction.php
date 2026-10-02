@@ -95,6 +95,7 @@ class CreateBookingFromCartAction
             ]);
 
             // 6. Persist booking detail snapshots
+            // Rental hourly kept ONLY as billing reference snapshot; booking subtotal = MOB/DEMOB.
             foreach ($pricingResult->items as $idx => $lineResult) {
                 $sourceLine = $lineItems[$idx];
 
@@ -108,7 +109,7 @@ class CreateBookingFromCartAction
                     'overtime_rate_snapshot' => $lineResult->overtimeRate,
                     'mob_cost_snapshot' => $lineResult->mobRatePerUnit,
                     'demob_cost_snapshot' => $lineResult->demobRatePerUnit,
-                    'subtotal' => $lineResult->rentalSubtotal,
+                    'subtotal' => $lineResult->mobSubtotal + $lineResult->demobSubtotal,
                 ]);
             }
 

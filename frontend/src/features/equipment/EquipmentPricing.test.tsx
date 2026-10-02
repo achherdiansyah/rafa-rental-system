@@ -35,6 +35,8 @@ describe('Owner Equipment Pricing Page', () => {
       base_rate: 350000,
       minimum_hours: 8,
       overtime_rate: 400000,
+      mob_cost: 500000,
+      demob_cost: 250000,
       effective_date: '2026-10-01',
       model: mockModels[0],
       versions: [
@@ -90,6 +92,8 @@ describe('Owner Equipment Pricing Page', () => {
       base_rate: 225000,
       minimum_hours: 8,
       overtime_rate: 275000,
+      mob_cost: 500000,
+      demob_cost: 350000,
       effective_date: '2026-10-15',
     })
 
@@ -105,6 +109,8 @@ describe('Owner Equipment Pricing Page', () => {
 
     fireEvent.change(screen.getByLabelText(/tarif dasar \/ jam/i), { target: { value: '225000' } })
     fireEvent.change(screen.getByLabelText(/tarif overtime \/ jam/i), { target: { value: '275000' } })
+    fireEvent.change(screen.getByLabelText(/biaya mobilisasi/i), { target: { value: '500000' } })
+    fireEvent.change(screen.getByLabelText(/biaya demobilisasi/i), { target: { value: '350000' } })
 
     fireEvent.click(screen.getByRole('button', { name: /^tetapkan tarif$/i }))
 
@@ -113,6 +119,8 @@ describe('Owner Equipment Pricing Page', () => {
         base_rate: 225000,
         overtime_rate: 275000,
         minimum_hours: 8,
+        mob_cost: 500000,
+        demob_cost: 350000,
       }))
     })
   })

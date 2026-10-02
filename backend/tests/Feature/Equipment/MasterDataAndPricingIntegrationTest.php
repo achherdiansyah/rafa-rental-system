@@ -184,7 +184,8 @@ class MasterDataAndPricingIntegrationTest extends TestCase
         $this->assertEquals(19200000, $calcRes->json('data.total_rental_amount'));
         $this->assertEquals(3000000, $calcRes->json('data.total_mob_amount'));
         $this->assertEquals(3000000, $calcRes->json('data.total_demob_amount'));
-        $this->assertEquals(25200000, $calcRes->json('data.grand_total'));
+        // Initial Booking Total = MOB + DEMOB only (6,000,000)
+        $this->assertEquals(6000000, $calcRes->json('data.grand_total'));
 
         // 10. SECURITY & DATA INTEGRITY GUARDS
         // 10a. User cannot mutate master data

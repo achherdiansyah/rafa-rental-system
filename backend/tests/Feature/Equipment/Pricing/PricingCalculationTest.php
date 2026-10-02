@@ -92,7 +92,8 @@ class PricingCalculationTest extends TestCase
         $this->assertEquals(2000000, $response->json('data.total_demob_amount'));
         $this->assertEquals(0, $response->json('data.tax_amount'));
         $this->assertEquals(0, $response->json('data.discount_amount'));
-        $this->assertEquals(22500000, $response->json('data.grand_total'));
+        // Initial Booking Total ONLY includes MOB/DEMOB (Rental cost is billed via daily timesheet)
+        $this->assertEquals(4500000, $response->json('data.grand_total'));
     }
 
     public function test_pricing_calculation_fails_if_master_price_not_set(): void
@@ -160,7 +161,8 @@ class PricingCalculationTest extends TestCase
             ]],
         ]);
 
-        $this->assertEquals(800000, $resOld->json('data.grand_total')); // 100,000 * 8h
+        $this->assertEquals(800000, $resOld->json('data.total_rental_amount')); // 100,000 * 8h (reference only)
+        $this->assertEquals(0, $resOld->json('data.grand_total')); // Booking initial is MOB/DEMOB only
 
         // Booking on Dec 1, 2026 -> Should use New Price
         $resNew = $this->postJson('/api/v1/pricing/calculate', [
@@ -173,7 +175,8 @@ class PricingCalculationTest extends TestCase
             ]],
         ]);
 
-        $this->assertEquals(1600000, $resNew->json('data.grand_total')); // 200,000 * 8h
+        $this->assertEquals(1600000, $resNew->json('data.total_rental_amount')); // 200,000 * 8h (reference only)
+        $this->assertEquals(0, $resNew->json('data.grand_total')); // Booking initial is MOB/DEMOB only
     }
 
     public function test_pricing_calculation_fails_if_equipment_model_is_inactive(): void
@@ -267,7 +270,7 @@ class PricingCalculationTest extends TestCase
         $this->assertEquals(800000, $response->json('data.total_rental_amount'));
         $this->assertEquals(0, $response->json('data.total_mob_amount'));
         $this->assertEquals(0, $response->json('data.total_demob_amount'));
-        $this->assertEquals(800000, $response->json('data.grand_total'));
+        $this->assertEquals(0, $response->json('data.grand_total'));
     }
 
     public function test_validation_fails_on_missing_fields_or_wrong_dates(): void
