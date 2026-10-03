@@ -26,10 +26,8 @@ export const CartBadge: React.FC = () => {
     load()
     const onChanged = () => load()
     window.addEventListener('rafa:cart-changed', onChanged)
-    window.addEventListener('focus', load)
     return () => {
       window.removeEventListener('rafa:cart-changed', onChanged)
-      window.removeEventListener('focus', load)
     }
   }, [])
 

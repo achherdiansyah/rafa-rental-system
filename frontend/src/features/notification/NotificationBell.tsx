@@ -29,16 +29,25 @@ export const NotificationBell: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const rootRef = useRef<HTMLDivElement>(null)
 
-  const load = async () => {
+  const loadCount = async () => {
+    try {
+      const countRes = await notificationService.unreadCount()
+      setCount(countRes)
+    } catch {
+      /* ignore */
+    }
+  }
+
+  const loadList = async () => {
     setLoading(true)
     setError(null)
     try {
-      const [countRes, listRes] = await Promise.all([
+      const countRes = await Promise.all([
         notificationService.unreadCount(),
         notificationService.getNotifications({ per_page: 6 }),
       ])
-      setCount(countRes)
-      setItems(listRes.data ?? [])
+      setCount(countRes[0])
+      setItems(countRes[1].data ?? [])
     } catch {
       setError('Gagal memuat notifikasi.')
     } finally {
@@ -47,15 +56,25 @@ export const NotificationBell: React.FC = () => {
   }
 
   useEffect(() => {
-    load()
-    const onChanged = () => load()
+    // Only fetch the unread badge count on mount; lazily fetch the full list
+    // when the dropdown is opened (avoids a parallel burst).
+    loadCount()
+    const onChanged = () => loadCount()
     window.addEventListener('rafa:notifications-changed', onChanged)
-    window.addEventListener('focus', load)
     return () => {
       window.removeEventListener('rafa:notifications-changed', onChanged)
-      window.removeEventListener('focus', load)
     }
   }, [])
+
+  // Open handler: lazy-load the notification list only when user clicks the bell
+  const toggle = () => {
+    setOpen((o) => {
+      if (!o && items.length === 0) {
+        loadList()
+      }
+      return !o
+    })
+  }
 
   useEffect(() => {
     if (!open) return
@@ -97,7 +116,7 @@ export const NotificationBell: React.FC = () => {
     <div ref={rootRef} className="relative">
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={toggle}
         aria-label={open ? 'Tutup notifikasi' : `Notifikasi, ${count} belum dibaca`}
         aria-expanded={open}
         className="relative p-2 rounded-md text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors cursor-pointer"

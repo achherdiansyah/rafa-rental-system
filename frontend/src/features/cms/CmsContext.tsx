@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { useLocation } from 'react-router-dom'
 import { cmsService } from './services/cmsService'
 
 type CmsMap = Record<string, string | null>
@@ -37,7 +36,6 @@ function writeCache(data: CmsMap) {
  */
 export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [cms, setCms] = useState<CmsMap>(() => readCache())
-  const location = useLocation()
 
   useEffect(() => {
     let mounted = true
@@ -53,17 +51,12 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         .catch(() => undefined) // keep cached/defaults on transient failures
     }
     load()
-    window.addEventListener('focus', load)
-    const onVisibility = () => {
-      if (document.visibilityState === 'visible') load()
-    }
-    document.addEventListener('visibilitychange', onVisibility)
+    // Remove focus and visibility change listeners that spam requests
+    // Remove dependency on location.pathname so it only runs ONCE on app boot
     return () => {
       mounted = false
-      window.removeEventListener('focus', load)
-      document.removeEventListener('visibilitychange', onVisibility)
     }
-  }, [location.pathname])
+  }, [])
 
   return <CmsContext.Provider value={cms}>{children}</CmsContext.Provider>
 }

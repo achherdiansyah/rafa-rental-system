@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 import { Navbar } from './Navbar'
 import { RoleSidebar } from './sidebar/RoleSidebar'
 import { userMenu } from './sidebarNavigation'
@@ -10,7 +10,6 @@ const NOTIFICATIONS_CHANGED_EVENT = 'rafa:notifications-changed'
 export const UserLayout: React.FC = () => {
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
-  const location = useLocation()
 
   // Unread badge: fetched on mount, on every navigation, and whenever the
   // notifications page marks items as read. No polling, no duplicate fetches.
@@ -33,7 +32,7 @@ export const UserLayout: React.FC = () => {
       mounted = false
       window.removeEventListener(NOTIFICATIONS_CHANGED_EVENT, refresh)
     }
-  }, [location.pathname])
+  }, [])
 
   const navMenu = userMenu.map((g) =>
     g.title === 'Lainnya'
