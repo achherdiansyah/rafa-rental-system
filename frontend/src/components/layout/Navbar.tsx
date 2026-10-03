@@ -21,12 +21,14 @@ export interface NavbarProps {
 
 const DEFAULT_MENU: Array<{ label: string; href: string }> = [
   { label: 'Beranda', href: '/#home' },
-  { label: 'Equipment', href: '/#equipment' },
-  { label: 'Tentang Kami', href: '/#about' },
-  { label: 'Kontak', href: '/#contact' },
+  { label: 'Alat Berat', href: '/#armada' },
+  { label: 'Tentang Kami', href: '/#tentang' },
+  { label: 'Kontak', href: '/#kontak' },
 ]
 
 const isCurrentHash = (pathname: string, hash: string, href: string): boolean => {
+  if (href === '/equipment') return pathname === '/equipment' || pathname.startsWith('/equipment/')
+  
   const target = href.split('#')[1] ?? 'home'
   if (pathname !== '/') return false
   const current = hash.replace('#', '')
@@ -78,17 +80,32 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = f
   const go = (href: string) => {
     setMobileOpen(false)
     const [path, hash] = href.split('#')
-    if (path && path !== location.pathname) {
-      navigate(href)
+
+    // Non-hash route (e.g. /equipment): navigate directly.
+    if (path && !hash) {
+      if (path !== location.pathname) {
+        navigate(path)
+      }
       return
     }
+
+    // Hash anchor ("/#section" or "/#section2"): must land on the home page section.
     if (hash) {
+      if (location.pathname !== '/') {
+        // From a non-landing page: redirect home, then scroll after render.
+        navigate('/')
+        setTimeout(() => scrollToElementId(hash), 120)
+        return
+      }
       // keep the URL hash in sync (refresh-safe + active-state) then scroll
       if (window.location.hash !== `#${hash}`) {
         window.location.hash = hash
       }
       scrollToElementId(hash)
-    } else if (href === '/') {
+      return
+    }
+
+    if (href === '/' && location.pathname !== '/') {
       navigate('/')
     }
   }

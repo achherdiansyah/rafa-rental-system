@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { Search, Layers, ArrowRight, ShieldCheck, Truck } from 'lucide-react'
 import { Input } from '@/components/form/Input'
 import { Select } from '@/components/form/Select'
@@ -16,6 +16,8 @@ import type { EquipmentModel, EquipmentType } from '@/types/equipment'
 import type { PaginationMeta } from '@/types/api'
 
 export const EquipmentCatalogPage: React.FC = () => {
+  const location = useLocation()
+  const basePath = location.pathname.startsWith('/app') ? '/app/equipment' : '/equipment'
   const { error: toastError } = useToast()
 
   const [models, setModels] = useState<EquipmentModel[]>([])
@@ -196,7 +198,7 @@ export const EquipmentCatalogPage: React.FC = () => {
                         </p>
                       </div>
 
-                    <Link to={`/app/equipment/${model.id}`}>
+                    <Link to={`${basePath}/${model.id}`}>
                       <Button size="sm" rightIcon={<ArrowRight size={14} />}>
                         Lihat Detail
                       </Button>

@@ -61,6 +61,8 @@ export const AppRoutes: React.FC = () => {
         {/* 1. Public Routes */}
         <Route element={<PublicLayout />}>
           <Route path="/" element={<HomePage />} />
+          <Route path="/equipment" element={<EquipmentCatalogPage />} />
+          <Route path="/equipment/:id" element={<EquipmentDetailPage />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
           <Route path="/forbidden" element={<ForbiddenPage />} />
         </Route>

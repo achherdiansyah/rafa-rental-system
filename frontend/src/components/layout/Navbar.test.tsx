@@ -31,7 +31,7 @@ describe('Public Navbar — redesign & navigation', () => {
     renderNav()
 
     expect(await screen.findByText('CV SUMBER MAKMUR RAFA')).toBeInTheDocument()
-    for (const label of ['Beranda', 'Equipment', 'Tentang Kami', 'Kontak']) {
+    for (const label of ['Beranda', 'Alat Berat', 'Tentang Kami', 'Kontak']) {
       expect(screen.getByText(label)).toBeInTheDocument()
     }
     expect(screen.getByText('Masuk')).toBeInTheDocument()
@@ -47,7 +47,7 @@ describe('Public Navbar — redesign & navigation', () => {
     const panel = await screen.findByRole('navigation', { name: /navigasi mobile/i })
     expect(panel).toBeInTheDocument()
 
-    fireEvent.click(within(panel).getByText('Equipment'))
+    fireEvent.click(within(panel).getByText('Alat Berat'))
     await waitFor(() => {
       expect(screen.queryByRole('navigation', { name: /navigasi mobile/i })).not.toBeInTheDocument()
     })
@@ -70,5 +70,14 @@ describe('Public Navbar — redesign & navigation', () => {
 
     const active = (await screen.findByText('Beranda')).closest('button')
     expect(active?.className).toContain('text-accent-600')
+  })
+
+  it.each(['Alat Berat', 'Tentang Kami', 'Kontak'])('nav %s is a landing-section anchor (no 404, no route change)', async (label) => {
+    renderNav('/')
+
+    // Anchor menu items stay on the landing page (no route navigation to /equipment or 404).
+    const btn = await screen.findByText(label)
+    fireEvent.click(btn)
+    expect(screen.getByText(label)).toBeInTheDocument()
   })
 })

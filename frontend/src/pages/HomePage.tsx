@@ -347,7 +347,7 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* FEATURED EQUIPMENT */}
-      <section className="space-y-6" aria-label="Armada unggulan">
+      <section id="armada" className="space-y-6 scroll-mt-24" aria-label="Armada unggulan">
         <Reveal>
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
@@ -387,6 +387,7 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* ABOUT — split text (CMS) + visual */}
+      <div id="tentang" className="absolute -mt-24" aria-hidden="true" />
       <section id="about" className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center scroll-mt-24">
         <Reveal delay={0}>
           <div className="space-y-4 max-w-xl">
@@ -440,6 +441,7 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* CONTACT — light, 2-col, selaras dgn footer */}
+      <div id="kontak" className="absolute -mt-24" aria-hidden="true" />
       <section id="contact" className="scroll-mt-24 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 lg:py-24 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
           {/* LEFT — heading + CTA */}
