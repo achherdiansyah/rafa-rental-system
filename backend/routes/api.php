@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\BankAccountController;
 use App\Http\Controllers\Api\V1\BookingController;
 use App\Http\Controllers\Api\V1\CartController;
 use App\Http\Controllers\Api\V1\CmsController;
+use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\EquipmentMediaController;
 use App\Http\Controllers\Api\V1\EquipmentModelController;
 use App\Http\Controllers\Api\V1\EquipmentPriceController;
@@ -69,6 +70,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
             Route::get('/me', [AuthController::class, 'me'])->name('me');
         });
+
+        // Unified Dashboard Summary (single round-trip batch endpoint)
+        Route::get('/dashboard/summary', [DashboardController::class, 'userSummary'])->name('dashboard.summary');
 
         // Profile Management
         Route::prefix('profile')->name('profile.')->group(function () {

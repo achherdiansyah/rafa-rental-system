@@ -2,11 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { LayoutDashboard, Truck, Sparkles, MapPin, CalendarCheck, ChevronRight } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
-import { bookingService } from '@/features/booking/services/bookingService'
-import { rentalService } from '@/features/rental/services/rentalService'
-import { invoiceService } from '@/features/invoice/services/invoiceService'
-import { projectLocationService } from '@/features/project/services/projectLocationService'
-import { notificationService } from '@/features/notification/services/notificationService'
+import { dashboardService } from '@/features/dashboard/services/dashboardService'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -66,20 +62,15 @@ export const UserDashboardPage: React.FC = () => {
     const loadAll = async () => {
       setError(null)
       try {
-        const [b, r, i, l, n] = (await Promise.allSettled([
-          bookingService.getBookings({ per_page: 5 }),
-          rentalService.getRentals({ per_page: 5 }),
-          invoiceService.getInvoices({ per_page: 6 }),
-          projectLocationService.getLocations(1, 6),
-          notificationService.getNotifications({ per_page: 6 }),
-        ])) as PromiseSettledResult<any>[]
-
+        const res = await dashboardService.getUserSummary()
         if (!mounted) return
-        if (b.status === 'fulfilled') setBookings(b.value.data ?? [])
-        if (r.status === 'fulfilled') setRentals(r.value.data ?? [])
-        if (i.status === 'fulfilled') setInvoices(i.value.data ?? [])
-        if (l.status === 'fulfilled') setLocations(l.value.data ?? [])
-        if (n.status === 'fulfilled') setNotifications(n.value.data ?? [])
+        if (res.success && res.data) {
+          setBookings(res.data.bookings ?? [])
+          setRentals(res.data.rentals ?? [])
+          setInvoices(res.data.invoices ?? [])
+          setLocations(res.data.project_locations ?? [])
+          setNotifications(res.data.notifications ?? [])
+        }
       } catch {
         if (mounted) setError('Gagal memuat dashboard.')
       } finally {
