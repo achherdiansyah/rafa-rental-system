@@ -88,8 +88,8 @@ describe('User Timesheet UI (read + confirm only)', () => {
     fireEvent.click((await screen.findAllByText('Detail'))[0])
 
     // Modal-only labels prove the details dialog opened
-    expect(await screen.findByText('Standby / Breakdown')).toBeInTheDocument()
-    expect(screen.getAllByText('Actual Working Hours').length).toBeGreaterThanOrEqual(1)
+    expect(await screen.findByRole('dialog')).toBeInTheDocument()
+    expect(screen.getAllByText('Durasi Kerja').length).toBeGreaterThanOrEqual(1)
   })
 
   it('signs (confirms) a submitted timesheet via file upload', async () => {

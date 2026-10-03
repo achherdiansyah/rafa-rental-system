@@ -10,6 +10,8 @@ import { EmptyState } from '@/components/feedback/EmptyState'
 import { Alert } from '@/components/feedback/Alert'
 import { useToast } from '@/hooks/useToast'
 
+import { formatDurationHours } from './AdminTimesheetsPage'
+
 const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'success' | 'warning' | 'danger' | 'outline'> = {
   DRAFT: 'secondary',
   SUBMITTED: 'warning',
@@ -23,8 +25,6 @@ const STATUS_LABEL: Record<string, string> = {
   APPROVED: 'Tervalidasi',
   REJECTED: 'Ditolak',
 }
-
-const fmtHours = (h: number | null | undefined) => (h === null || h === undefined || Number.isNaN(h) ? '-' : `${h} jam`)
 
 export const UserTimesheetsPage: React.FC = () => {
   const { success: showSuccessToast, error: showErrorToast } = useToast()
@@ -130,8 +130,8 @@ export const UserTimesheetsPage: React.FC = () => {
                   </p>
                 </div>
                 <div className="text-right">
-                  <span className="font-mono font-bold text-slate-900">{fmtHours(t.total_work_hours)}</span>
-                  <span className="block text-xs text-slate-400">Actual Working Hours</span>
+                  <span className="font-mono font-bold text-slate-900">{formatDurationHours(t.total_work_hours)}</span>
+                  <span className="block text-xs text-slate-400">Durasi Kerja</span>
                 </div>
               </div>
 
@@ -221,29 +221,19 @@ export const UserTimesheetsPage: React.FC = () => {
               </div>
               <div>
                 <p className="text-xs text-slate-400">Jam Mulai</p>
-                <p className="font-mono font-medium text-slate-800">{detail.start_hm}</p>
+                <p className="font-mono font-medium text-slate-800">{detail.start_time || (detail.start_hm !== null ? String(detail.start_hm) : '-')}</p>
               </div>
               <div>
-                <p className="text-xs text-slate-400">Jam Akhir</p>
-                <p className="font-mono font-medium text-slate-800">{detail.end_hm}</p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-400">Break (menit)</p>
-                <p className="font-medium text-slate-800">{detail.break_minutes ?? 0}</p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-400">Standby / Breakdown</p>
-                <p className="font-medium text-slate-800">
-                  {detail.standby_hours ?? 0} / {detail.breakdown_hours ?? 0} jam
-                </p>
+                <p className="text-xs text-slate-400">Jam Selesai</p>
+                <p className="font-mono font-medium text-slate-800">{detail.end_time || (detail.end_hm !== null ? String(detail.end_hm) : '-')}</p>
               </div>
               <div>
                 <p className="text-xs text-slate-400">Operator</p>
                 <p className="font-medium text-slate-800">{detail.operator_name ?? '—'}</p>
               </div>
               <div>
-                <p className="text-xs text-slate-400">Actual Working Hours</p>
-                <p className="font-mono font-bold text-slate-900">{fmtHours(detail.total_work_hours)}</p>
+                <p className="text-xs text-slate-400">Durasi Kerja</p>
+                <p className="font-mono font-bold text-slate-900">{formatDurationHours(detail.total_work_hours)}</p>
               </div>
             </div>
             {detail.notes && (

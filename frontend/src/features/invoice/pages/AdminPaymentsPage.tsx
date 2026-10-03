@@ -174,69 +174,74 @@ export const AdminPaymentsPage: React.FC = () => {
         onClose={() => setPreview(null)}
         title="Bukti Transfer"
         size="lg"
+        className="max-h-[90vh] flex flex-col"
       >
         {preview && (
-          <div className="space-y-4">
-            {/* Metadata Ringkasan Pembayaran */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs">
-              <div>
-                <span className="text-slate-500 block">ID / Kode Booking:</span>
-                <span className="font-mono font-bold text-slate-900 text-sm">
-                  {preview.payment.invoice?.booking_code ?? `Invoice #${preview.payment.invoice_id}`}
-                </span>
-              </div>
-              <div>
-                <span className="text-slate-500 block">Nama Pentransfer:</span>
-                <span className="font-medium text-slate-900 text-sm">
-                  {preview.payment.sender_name || 'Tidak dicantumkan'}
-                </span>
-              </div>
-              <div>
-                <span className="text-slate-500 block">Tanggal & Waktu Transfer:</span>
-                <span className="font-medium text-slate-800">
-                  {new Date(preview.payment.payment_date).toLocaleDateString('id-ID', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
-                  })}{' '}
-                  • {new Date(preview.payment.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
-                </span>
-              </div>
-              <div>
-                <span className="text-slate-500 block">Nominal Ditransfer:</span>
-                <span className="font-mono font-bold text-emerald-700 text-sm">
-                  {fmt(preview.payment.amount)}
-                </span>
-              </div>
-              {preview.payment.reference && (
-                <div className="sm:col-span-2">
-                  <span className="text-slate-500 block">Nomor Referensi:</span>
-                  <span className="font-mono text-slate-700">{preview.payment.reference}</span>
+          <div className="flex flex-col flex-1 overflow-hidden">
+            {/* Scrollable Content Body */}
+            <div className="space-y-4 overflow-y-auto pr-1.5 flex-1 max-h-[calc(90vh-130px)]">
+              {/* Metadata Ringkasan Pembayaran */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                <div>
+                  <span className="text-slate-500 block">ID / Kode Booking:</span>
+                  <span className="font-mono font-bold text-slate-900 text-sm">
+                    {preview.payment.invoice?.booking_code ?? `Invoice #${preview.payment.invoice_id}`}
+                  </span>
                 </div>
-              )}
+                <div>
+                  <span className="text-slate-500 block">Nama Pentransfer:</span>
+                  <span className="font-medium text-slate-900 text-sm">
+                    {preview.payment.sender_name || 'Tidak dicantumkan'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500 block">Tanggal & Waktu Transfer:</span>
+                  <span className="font-medium text-slate-800">
+                    {new Date(preview.payment.payment_date).toLocaleDateString('id-ID', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                    })}{' '}
+                    • {new Date(preview.payment.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500 block">Nominal Ditransfer:</span>
+                  <span className="font-mono font-bold text-emerald-700 text-sm">
+                    {fmt(preview.payment.amount)}
+                  </span>
+                </div>
+                {preview.payment.reference && (
+                  <div className="sm:col-span-2">
+                    <span className="text-slate-500 block">Nomor Referensi:</span>
+                    <span className="font-mono text-slate-700">{preview.payment.reference}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Bukti Foto / Dokumen */}
+              <div className="w-full flex flex-col items-center justify-center p-3 bg-slate-100/60 rounded-xl border border-slate-200 overflow-hidden">
+                {preview.payment.proof?.mime_type?.startsWith('image/') || preview.url.startsWith('data:image/') || preview.url.startsWith('blob:') ? (
+                  <img
+                    src={preview.url}
+                    alt="Bukti Transfer"
+                    className="max-h-72 sm:max-h-96 w-auto max-w-full object-contain rounded-lg shadow-xs"
+                  />
+                ) : (
+                  <a
+                    className="inline-flex items-center gap-2 text-sm text-primary-600 underline font-medium p-4"
+                    href={preview.url}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <Eye size={16} /> Buka Berkas Bukti Transfer (PDF / Dokumen)
+                  </a>
+                )}
+              </div>
             </div>
 
-            {/* Bukti Foto / Dokumen */}
-            <div className="w-full flex flex-col items-center justify-center p-3 bg-slate-100/60 rounded-xl border border-slate-200 overflow-hidden">
-              {preview.payment.proof?.mime_type?.startsWith('image/') || preview.url.startsWith('data:image/') || preview.url.startsWith('blob:') ? (
-                <img
-                  src={preview.url}
-                  alt="Bukti Transfer"
-                  className="max-h-[60vh] max-w-full object-contain rounded-lg shadow-xs"
-                />
-              ) : (
-                <a
-                  className="inline-flex items-center gap-2 text-sm text-primary-600 underline font-medium p-4"
-                  href={preview.url}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <Eye size={16} /> Buka Berkas Bukti Transfer (PDF / Dokumen)
-                </a>
-              )}
-            </div>
-
-            <div className="flex justify-end pt-2 border-t border-slate-100">
+            {/* Fixed Footer */}
+            <div className="flex justify-end pt-3 mt-3 border-t border-slate-100 shrink-0">
               <Button variant="outline" size="sm" onClick={() => setPreview(null)}>
                 Tutup
               </Button>

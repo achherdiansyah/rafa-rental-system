@@ -10,6 +10,14 @@ import { Badge } from '@/components/ui/Badge'
 import { Input } from '@/components/form/Input'
 import { Select } from '@/components/form/Select'
 import { Textarea } from '@/components/form/Textarea'
+
+export const formatDurationHours = (totalHours: number): string => {
+  const hours = Math.floor(totalHours)
+  const minutes = Math.round((totalHours - hours) * 60)
+  if (minutes === 0) return `${hours} jam`
+  if (hours === 0) return `${minutes} menit`
+  return `${hours} jam ${minutes} menit`
+}
 import { Modal } from '@/components/ui/Modal'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/feedback/EmptyState'
@@ -33,13 +41,10 @@ interface RejectTarget {
 
 interface ReviseTarget {
   timesheet: Timesheet
-  reason: string
-  start_time: string
-  end_time: string
-  break_minutes: string
-  standby_hours: string
-  breakdown_hours: string
-}
+reason: string
+    start_time: string
+    end_time: string
+  }
 
 export const AdminTimesheetsPage: React.FC = () => {
   const { success: showSuccessToast, error: showErrorToast } = useToast()
@@ -68,9 +73,6 @@ export const AdminTimesheetsPage: React.FC = () => {
     report_date: new Date().toISOString().slice(0, 10),
     start_time: '',
     end_time: '',
-    break_minutes: '0',
-    standby_hours: '0',
-    breakdown_hours: '0',
     operator_name: '',
     notes: '',
   })
@@ -116,9 +118,9 @@ export const AdminTimesheetsPage: React.FC = () => {
           report_date: createForm.report_date,
           start_time: createForm.start_time,
           end_time: createForm.end_time,
-          break_minutes: Number(createForm.break_minutes || 0),
-          standby_hours: Number(createForm.standby_hours || 0),
-          breakdown_hours: Number(createForm.breakdown_hours || 0),
+          break_minutes: 0,
+          standby_hours: 0,
+          breakdown_hours: 0,
           operator_name: createForm.operator_name || undefined,
           notes: createForm.notes || undefined,
         })
@@ -194,13 +196,10 @@ export const AdminTimesheetsPage: React.FC = () => {
   const openRevise = (t: Timesheet) => {
     setReviseTarget({
       timesheet: t,
-      reason: '',
-      start_time: t.start_time || '',
-      end_time: t.end_time || '',
-      break_minutes: String(t.break_minutes),
-      standby_hours: String(t.standby_hours),
-      breakdown_hours: String(t.breakdown_hours),
-    })
+reason: '',
+        start_time: t.start_time || '',
+        end_time: t.end_time || '',
+      })
     setReviseErrors({})
   }
 
@@ -213,14 +212,14 @@ export const AdminTimesheetsPage: React.FC = () => {
 
     setActingId(reviseTarget.timesheet.id)
     try {
-      const res = await timesheetService.revise(reviseTarget.timesheet.id, {
-        start_time: reviseTarget.start_time || undefined,
-        end_time: reviseTarget.end_time || undefined,
-        break_minutes: Number(reviseTarget.break_minutes || 0),
-        standby_hours: Number(reviseTarget.standby_hours || 0),
-        breakdown_hours: Number(reviseTarget.breakdown_hours || 0),
-        reason: reviseTarget.reason,
-      })
+        const res = await timesheetService.revise(reviseTarget.timesheet.id, {
+          start_time: reviseTarget.start_time || undefined,
+          end_time: reviseTarget.end_time || undefined,
+          break_minutes: 0,
+          standby_hours: 0,
+          breakdown_hours: 0,
+          reason: reviseTarget.reason,
+        })
       if (res.success && res.data) {
         showSuccessToast(`Timesheet #${res.data.id} dikoreksi; kembali menunggu validasi.`)
         loadTimesheets()
@@ -312,14 +311,10 @@ export const AdminTimesheetsPage: React.FC = () => {
                       </span>
                     </div>
 
-<div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
                       <span>Jam: {ts.start_time ? `${ts.start_time} - ${ts.end_time}` : `${ts.start_hm ?? '-'} -> ${ts.end_hm ?? '-'}`}</span>
-                      <span>Break: {ts.break_minutes} mnt</span>
-                      <span className="font-semibold text-slate-900">Kerja: {ts.total_work_hours} jam</span>
-                      <span>Standby: {ts.standby_hours}</span>
-                      <span>Breakdown: {ts.breakdown_hours}</span>
+                      <span className="font-semibold text-slate-900">Durasi Kerja: {formatDurationHours(ts.total_work_hours)}</span>
                       {ts.operator_name && <span>Operator: {ts.operator_name}</span>}
-                      {ts.signature && <span className="text-emerald-600">Tanda tangan �"</span>}
                     </div>
 
                     {ts.notes && <p className="text-xs text-slate-500 italic">"{ts.notes}"</p>}
@@ -437,31 +432,11 @@ export const AdminTimesheetsPage: React.FC = () => {
               onChange={(e) => setCreateForm((p) => ({ ...p, end_time: e.target.value }))}
               error={createErrors.end_time}
             />
-            <Input
-              label="Break (menit)"
-              type="number"
-              min={0}
-              value={createForm.break_minutes}
-              onChange={(e) => setCreateForm((p) => ({ ...p, break_minutes: e.target.value }))}
-            />
-            <Input
-              label="Standby (jam)"
-              type="number"
-              min={0}
-              value={createForm.standby_hours}
-              onChange={(e) => setCreateForm((p) => ({ ...p, standby_hours: e.target.value }))}
-            />
-            <Input
-              label="Breakdown (jam)"
-              type="number"
-              min={0}
-              value={createForm.breakdown_hours}
-              onChange={(e) => setCreateForm((p) => ({ ...p, breakdown_hours: e.target.value }))}
-            />
           </div>
           <Textarea
-            label="Catatan"
+            label="Catatan Lapangan"
             rows={2}
+            placeholder="Catatan kondisi lapangan atau kendala kerja (opsional)"
             value={createForm.notes}
             onChange={(e) => setCreateForm((p) => ({ ...p, notes: e.target.value }))}
           />
@@ -540,29 +515,6 @@ export const AdminTimesheetsPage: React.FC = () => {
               onChange={(e) => setReviseTarget((prev) => (prev ? { ...prev, end_time: e.target.value } : prev))}
               error={reviseErrors.end_time}
             />
-          <Input
-            label="Break (menit)"
-            type="number"
-            min={0}
-            value={reviseTarget?.break_minutes ?? ''}
-            onChange={(e) => setReviseTarget((prev) => (prev ? { ...prev, break_minutes: e.target.value } : prev))}
-          />
-          <Input
-            label="Standby (jam)"
-            type="number"
-            min={0}
-            step="0.5"
-            value={reviseTarget?.standby_hours ?? ''}
-            onChange={(e) => setReviseTarget((prev) => (prev ? { ...prev, standby_hours: e.target.value } : prev))}
-          />
-          <Input
-            label="Breakdown (jam)"
-            type="number"
-            min={0}
-            step="0.5"
-            value={reviseTarget?.breakdown_hours ?? ''}
-            onChange={(e) => setReviseTarget((prev) => (prev ? { ...prev, breakdown_hours: e.target.value } : prev))}
-          />
           <Textarea
             label="Alasan Koreksi"
             required

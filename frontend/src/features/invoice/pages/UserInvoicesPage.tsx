@@ -207,14 +207,14 @@ export const UserInvoicesPage: React.FC = () => {
                       <span className="text-slate-600">Total: <strong className="text-slate-900">{fmt(inv.grand_total)}</strong></span>
                       <span className="text-emerald-600">Dibayar: {fmt(inv.paid_amount)}</span>
                       <span className={balance > 0 ? 'text-rose-600' : 'text-slate-500'}>Saldo: {fmt(balance)}</span>
-                      {inv.due_at && (
-                        <div className="flex flex-col gap-0.5 mt-1 sm:mt-0">
-                          <CountdownTimer dueAt={inv.due_at} />
-                          <span className="text-xs text-slate-400">
-                            Jatuh tempo: {new Date(inv.due_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}, {new Date(inv.due_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
-                          </span>
-                        </div>
-                      )}
+{inv.due_at && ['ISSUED', 'UNPAID', 'PARTIALLY_PAID', 'OVERDUE'].includes(inv.status) && (
+                          <div className="flex flex-col gap-0.5 mt-1 sm:mt-0">
+                            <CountdownTimer dueAt={inv.due_at} />
+                            <span className="text-xs text-slate-400">
+                              Jatuh tempo: {new Date(inv.due_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}, {new Date(inv.due_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
+                            </span>
+                          </div>
+                        )}
                     </div>
                     {inv.status === 'OVERPAID' && (
                       <span className="inline-flex items-center gap-1 text-xs text-rose-600 bg-rose-50 border border-rose-200 rounded-lg px-2 py-0.5">
