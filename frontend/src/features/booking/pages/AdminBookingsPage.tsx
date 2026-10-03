@@ -287,7 +287,7 @@ export const AdminBookingsPage: React.FC = () => {
                     <Badge variant={STATUS_VARIANT[booking.status] ?? 'secondary'} size="sm">
                       {booking.status}
                     </Badge>
-                    <Badge variant="secondary" size="sm">User #{booking.user_id}</Badge>
+                    <Badge variant="secondary" size="sm">{booking.user_name || `User #${booking.user_id}`}</Badge>
                   </div>
 
                   {booking.project_location && (
@@ -323,9 +323,15 @@ export const AdminBookingsPage: React.FC = () => {
                             </div>
                             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-slate-500">
                               <span>Periode: {new Date(d.start_date).toLocaleDateString('id-ID')} - {new Date(d.end_date).toLocaleDateString('id-ID')}</span>
-                              <span>MOB: Rp {Number(d.mob_cost_snapshot || 0).toLocaleString('id-ID')}</span>
-                              <span>DEMOB: Rp {Number(d.demob_cost_snapshot || 0).toLocaleString('id-ID')}</span>
-                              <span className="font-medium text-slate-700">Subtotal MOB/DEMOB: Rp {Number(d.subtotal || 0).toLocaleString('id-ID')}</span>
+                              {Number(d.mob_cost_snapshot || 0) === 0 && Number(d.demob_cost_snapshot || 0) === 0 && Number(d.subtotal || 0) > 0 ? (
+                                <span className="font-medium text-slate-700">Biaya MOB/DEMOB/Pengiriman: Rp {Number(d.subtotal).toLocaleString('id-ID')}</span>
+                              ) : (
+                                <>
+                                  <span>MOB/Unit: Rp {Number(d.mob_cost_snapshot || 0).toLocaleString('id-ID')}</span>
+                                  <span>DEMOB/Unit: Rp {Number(d.demob_cost_snapshot || 0).toLocaleString('id-ID')}</span>
+                                  <span className="font-medium text-slate-700">Subtotal MOB/DEMOB: Rp {((Number(d.mob_cost_snapshot || 0) + Number(d.demob_cost_snapshot || 0)) * d.quantity).toLocaleString('id-ID')}</span>
+                                </>
+                              )}
                             </div>
                             {current.length > 0 && (
                               <div className="mt-1.5 pt-1.5 border-t border-slate-200/60 flex flex-wrap items-center gap-1.5">

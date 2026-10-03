@@ -22,6 +22,9 @@ class BookingDetailResource extends JsonResource
             'end_date' => $this->end_date?->toDateString(),
             'is_all_in' => (bool) $this->is_all_in,
             'rental_rate_snapshot' => (float) $this->rental_rate_snapshot,
+            'overtime_rate_snapshot' => (float) ($this->overtime_rate_snapshot ?? 0),
+            'mob_cost_snapshot' => (float) ($this->mob_cost_snapshot ?? 0),
+            'demob_cost_snapshot' => (float) ($this->demob_cost_snapshot ?? 0),
             'subtotal' => (float) $this->subtotal,
             'model' => new EquipmentModelResource($this->whenLoaded('model')),
             'unit_assignments' => $this->whenLoaded('unitAssignments', function () {

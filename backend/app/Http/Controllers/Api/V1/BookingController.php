@@ -69,6 +69,7 @@ class BookingController extends ApiController
         $user = $request->user();
 
         $query = Booking::with([
+            'user:id,name',
             'projectLocation',
             'details.model' => function ($q) {
                 $q->with(['type', 'prices', 'attachments']);
@@ -113,6 +114,7 @@ class BookingController extends ApiController
         Gate::authorize('view', $booking);
 
         $booking->load([
+            'user:id,name',
             'projectLocation',
             'details.model' => function ($q) {
                 $q->with(['type', 'prices', 'attachments']);

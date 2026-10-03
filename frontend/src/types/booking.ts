@@ -39,6 +39,7 @@ export interface Booking {
   id: number
   booking_code: string
   user_id: number
+  user_name?: string
   project_location_id: number
   status: BookingStatus
   rejection_reason: string | null

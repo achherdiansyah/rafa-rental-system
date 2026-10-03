@@ -17,6 +17,7 @@ class BookingResource extends JsonResource
             'id' => $this->id,
             'booking_code' => $this->booking_code,
             'user_id' => $this->user_id,
+            'user_name' => $this->whenLoaded('user', fn () => $this->user->name),
             'project_location_id' => $this->project_location_id,
             'status' => $this->status instanceof \BackedEnum ? $this->status->value : $this->status,
             'rejection_reason' => $this->rejection_reason,

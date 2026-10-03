@@ -83,7 +83,7 @@ class PricingBusinessRuleFinalTest extends TestCase
      */
     public function test_booking_total_only_mob_demob_not_hourly_multiplied(): void
     {
-        [$admin, $user, $location, $model] = $this->setupData(isAllIn: true, baseRate: 365000, overtimeRate: 415000, mob: 600000, demob: 400000);
+        [$admin, $user, $location, $model] = $this->setupData(isAllIn: true, baseRate: 365000, overtimeRate: 415000, mob: 0, demob: 0);
 
         // Create a 2nd unit so quantity=2 is available
         EquipmentUnit::factory()->create([
@@ -101,17 +101,53 @@ class PricingBusinessRuleFinalTest extends TestCase
             'end_date' => now()->addDays(6)->toDateString(), // 5 days
         ]);
 
-        // Hourly for 5 days * 8h * 2 units would be 29.200.000.
-        // BUT rule strictly mandates: Booking total = MOB + DEMOB only!
-        // 2 units * (600.000 + 400.000) = 2.000.000
         $booking = app(CreateBookingFromCartAction::class)->execute($user, $cart);
 
-        $this->assertEquals(2000000, (float) $booking->total_amount, 'Total booking harus HANYA MOB/DEMOB (Rp 2.000.000), bukan Rp 31.200.000.');
+        // Total should be exactly 0 since MOB=0 and DEMOB=0
+        $this->assertEquals(0, (float) $booking->total_amount, 'Total booking harus 0 karena MOB/DEMOB = 0.');
         
         $detail = $booking->details()->first();
-        $this->assertEquals(2000000, (float) $detail->subtotal);
+        // Assert there is no case where MOB=0, DEMOB=0 but subtotal > 0
+        $this->assertEquals(0, (float) $detail->mob_cost_snapshot);
+        $this->assertEquals(0, (float) $detail->demob_cost_snapshot);
+        $this->assertEquals(0, (float) $detail->subtotal, 'Subtotal tidak boleh berisi hourly rate saat MOB/DEMOB 0');
+
         $this->assertEquals(365000, (float) $detail->rental_rate_snapshot, 'Snapshot tarif hourly tetap disimpan untuk billing Timesheet.');
         $this->assertEquals(415000, (float) $detail->overtime_rate_snapshot);
+    }
+
+    /**
+     * MOB/DEMOB snapshot consistency: when pricing is split, detail subtotal
+     * MUST equal (mob + demob) x quantity. No case where MOB=0, DEMOB=0 but subtotal>0.
+     */
+    public function test_mob_demob_snapshot_consistency_with_nonzero_pricing(): void
+    {
+        [$admin, $user, $location, $model] = $this->setupData(isAllIn: true, baseRate: 365000, overtimeRate: 415000, mob: 600000, demob: 400000);
+
+        EquipmentUnit::factory()->create([
+            'equipment_model_id' => $model->id,
+            'status' => EquipmentStatus::AVAILABLE,
+        ]);
+
+        $cart = Cart::create(['user_id' => $user->id, 'project_location_id' => $location->id]);
+        CartItem::create([
+            'cart_id' => $cart->id,
+            'equipment_model_id' => $model->id,
+            'quantity' => 2,
+            'is_all_in' => true,
+            'start_date' => now()->addDays(2)->toDateString(),
+            'end_date' => now()->addDays(5)->toDateString(),
+        ]);
+
+        $booking = app(CreateBookingFromCartAction::class)->execute($user, $cart);
+        $detail = $booking->details()->first();
+
+        // (600.000 + 400.000) * 2 units = 2.000.000
+        $expectedSubtotal = (600000 + 400000) * 2;
+        $this->assertEquals($expectedSubtotal, (float) $detail->subtotal);
+        $this->assertEquals($expectedSubtotal, (float) $booking->total_amount);
+        // Consistency: subtotal MUST equal (mob + demob) x quantity
+        $this->assertEquals((600000 + 400000) * $detail->quantity, (float) $detail->subtotal);
     }
 
     /**
