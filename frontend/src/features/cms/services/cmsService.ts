@@ -31,9 +31,7 @@ export const cmsService = {
     const prepared = await compressImage(file)
     const formData = new FormData()
     formData.append('media', prepared)
-    const response = await api.post<{ url: string }>(`/admin/cms/${key}/media`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    const response = await api.post<{ url: string }>(`/admin/cms/${key}/media`, formData)
     return response.data?.url ?? ''
   },
 

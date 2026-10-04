@@ -25,9 +25,7 @@ export const refundService = {
     if (payload.transfer_reference) formData.append('transfer_reference', payload.transfer_reference)
     formData.append('proof', payload.proof)
 
-    const response = await api.post<Refund>(`/refunds/${id}/complete`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    const response = await api.post<Refund>(`/refunds/${id}/complete`, formData)
     return response.data
   },
 

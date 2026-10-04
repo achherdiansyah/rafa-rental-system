@@ -33,7 +33,7 @@ describe('cmsService', () => {
     postMock.mockResolvedValueOnce({ success: true, message: 'ok', data: { url: 'http://s/storage/cms/h.png' } })
     const file = new File(['x'], 'hero.png', { type: 'image/png' })
     const url = await cmsService.uploadMedia('hero_image', file)
-    expect(postMock).toHaveBeenCalledWith('/admin/cms/hero_image/media', expect.any(FormData), expect.any(Object))
+    expect(postMock).toHaveBeenCalledWith('/admin/cms/hero_image/media', expect.any(FormData))
     expect(url).toContain('/storage/')
   })
 

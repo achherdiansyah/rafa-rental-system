@@ -78,21 +78,16 @@ export const equipmentService = {
     await api.delete(`/equipment/models/${id}`)
   },
 
-  uploadModelPhoto: async (modelId: number, file: File): Promise<EquipmentAttachment> => {
-    const { compressImage } = await import('@/utils/image')
-    const prepared = await compressImage(file)
+uploadModelPhoto: async (modelId: number, file: File): Promise<EquipmentAttachment> => {
+      const { compressImage } = await import('@/utils/image')
+      const prepared = await compressImage(file)
     const formData = new FormData()
-    formData.append('photo', prepared)
+      formData.append('photo', prepared)
 
-    const res = await api.post<EquipmentAttachment>(
-      `/equipment/models/${modelId}/photos`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
-    )
+      const res = await api.post<EquipmentAttachment>(
+        `/equipment/models/${modelId}/photos`,
+      formData
+      )
 
     // api.post already returns the unwrapped envelope {success, message, data},
     // so `res.data` is the attachment itself — do NOT nest another `.data`.

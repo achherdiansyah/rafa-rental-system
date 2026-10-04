@@ -53,9 +53,7 @@ export const timesheetService = {
     const formData = new FormData()
     formData.append('signature', file)
 
-    const response = await api.post<TimesheetSignature>(`/timesheets/${id}/signature`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    const response = await api.post<TimesheetSignature>(`/timesheets/${id}/signature`, formData)
     return response
   },
 

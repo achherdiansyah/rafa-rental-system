@@ -39,9 +39,7 @@ export const invoiceService = {
     if (payload.reference) formData.append('reference', payload.reference)
     formData.append('proof', payload.proof)
 
-    const response = await api.post<Payment>(`/invoices/${invoiceId}/payments`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    const response = await api.post<Payment>(`/invoices/${invoiceId}/payments`, formData)
     return response.data
   },
 
