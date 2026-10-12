@@ -20,8 +20,8 @@
 | **Acuan Flow** | Phase 1–8 yg sudah diterapkan |
 
 ### Environment Record
-- DB seed terakhir: `php artisan migrate:fresh --seed` (catat tanggal & jam).
-- Akun test yg dipakai: admin@rafarental.com · owner@rafarental.com · budi@kontraktor.com · siti@tambang.com · [akun baru].
+- DB seed terakhir: php artisan migrate:fresh --seed (HANYA untuk database kosong; JANGAN jalankan pada DB berisi data).
+- Test suite php artisan test berjalan di DB isolasi afa_rental_test (lihat phpunit.xml); TIDAK menyentuh dev DB afa_rental.
 
 ---
 
