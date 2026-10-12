@@ -2,6 +2,8 @@
 
 namespace App\Actions\Payment;
 
+use App\Actions\Rental\EnsureRentalFromBookingAction;
+use App\Enums\BookingStatus;
 use App\Enums\InvoiceStatus;
 use App\Enums\PaymentStatus;
 use App\Exceptions\BusinessRuleException;
@@ -32,7 +34,8 @@ class VerifyPaymentAction
     public function __construct(
         private readonly RefundBoundary $refundBoundary,
         private readonly NotificationService $notifications,
-        private readonly WhatsAppNotifier $whatsapp
+        private readonly WhatsAppNotifier $whatsapp,
+        private readonly EnsureRentalFromBookingAction $ensureRental
     ) {}
 
     public function approve(User $admin, Payment $payment): Payment
@@ -92,6 +95,11 @@ class VerifyPaymentAction
                 $this->refundBoundary->noteOverpayment($invoice, $excess);
             }
 
+            // State machine: once the initial booking invoice is fully settled,
+            // the booking APPROVED → CONFIRMED and, if units are already assigned,
+            // a Rental is created so the order becomes executable in Eksekusi Rental.
+            $this->applyBookingConfirmed($admin, $invoice, $newPaid);
+
             AuditLogger::log('PAYMENT_APPROVED', $fresh, [
                 'old_status' => PaymentStatus::SUBMITTED->value,
             ], [
@@ -122,6 +130,41 @@ class VerifyPaymentAction
                 'invoice.booking.projectLocation',
             ]);
         });
+    }
+
+    /**
+     * Transition the booking APPROVED → CONFIRMED once its initial invoice is
+     * fully settled, then ensure a Rental exists (if units are assigned) so the
+     * order becomes executable in Eksekusi Rental. Safe no-op for partials.
+     */
+    private function applyBookingConfirmed(User $admin, Invoice $invoice, float $newPaid): void
+    {
+        $booking = $invoice->loadMissing('booking')->booking;
+        if (! $booking) {
+            return;
+        }
+
+        $fullySettled = (float) $invoice->grand_total > 0 && $newPaid >= (float) $invoice->grand_total;
+        if (! $fullySettled || ! in_array($booking->status->value, ['APPROVED', 'PAYMENT_PENDING'], true)) {
+            return;
+        }
+
+        $oldStatus = $booking->status->value;
+
+        $booking->update([
+            'status' => BookingStatus::CONFIRMED,
+            'payment_met_at' => now(),
+        ]);
+
+        AuditLogger::log('BOOKING_CONFIRMED', $booking, [
+            'old_status' => $oldStatus,
+        ], [
+            'new_status' => BookingStatus::CONFIRMED->value,
+            'invoice_id' => $invoice->id,
+            'confirmed_by' => $admin->id,
+        ]);
+
+        $this->ensureRental->execute($admin, $booking);
     }
 
     public function reject(User $admin, Payment $payment, string $reason): Payment
