@@ -10,6 +10,7 @@ use App\Exceptions\InvalidStateTransitionException;
 use App\Models\Booking;
 use App\Models\BookingDetail;
 use App\Models\BookingUnitAssignment;
+use App\Actions\Rental\EnsureRentalFromBookingAction;
 use App\Models\EquipmentUnit;
 use App\Models\User;
 use App\Services\Equipment\EquipmentAvailabilityService;
@@ -20,7 +21,8 @@ use Illuminate\Support\Facades\DB;
 class AssignBookingUnitsAction
 {
     public function __construct(
-        protected EquipmentAvailabilityService $availabilityService
+        protected EquipmentAvailabilityService $availabilityService,
+        protected EnsureRentalFromBookingAction $ensureRental
     ) {}
 
     /**
@@ -33,9 +35,18 @@ class AssignBookingUnitsAction
     public function execute(User $admin, Booking $booking, array $assignments): Booking
     {
         return DB::transaction(function () use ($admin, $booking, $assignments) {
-            if ($booking->status !== BookingStatus::APPROVED) {
+            // Business rule: physical units may only be assigned AFTER the initial
+            // MOB/DEMOB payment is verified (booking CONFIRMED / payment_met_at set).
+            // Paying/uploading a proof alone is NOT enough — verification matters.
+            if (! in_array($booking->status->value, ['CONFIRMED', 'PAYMENT_PENDING'], true)) {
                 throw new InvalidStateTransitionException(
-                    'Penugasan unit hanya diperbolehkan pada booking berstatus APPROVED.'
+                    'Penugasan unit hanya setelah pembayaran diverifikasi (booking CONFIRMED/PAYMENT_PENDING).'
+                );
+            }
+
+            if (! $booking->payment_met_at) {
+                throw new BusinessRuleException(
+                    'Pembayaran MOB/DEMOB belum diverifikasi. Unit hanya dapat ditugaskan setelah pembayaran disetujui.'
                 );
             }
 
@@ -115,6 +126,11 @@ class AssignBookingUnitsAction
                 'assignment_count' => count($assignments),
                 'assigned_by' => $admin->id,
             ]);
+
+            // Once physical units are assigned to a PAID/CONFIRMED booking, the
+            // Rental must exist so the order shows up in Eksekusi Rental.
+            // Idempotent — no-op if a Rental already exists for this booking.
+            $this->ensureRental->execute($admin, $booking);
 
             $booking->load([
                 'projectLocation',

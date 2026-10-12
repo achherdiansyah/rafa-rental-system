@@ -136,11 +136,12 @@ class AdminBookingApprovalTest extends TestCase
             ->assertJson(['code' => 'INVALID_STATE_TRANSITION']);
     }
 
-    public function test_admin_can_assign_physical_units_to_approved_booking(): void
+    public function test_admin_can_assign_physical_units_to_confirmed_paid_booking(): void
     {
         $admin = User::factory()->admin()->create();
         $user = User::factory()->create(['role' => UserRole::USER]);
-        $booking = $this->makeBooking($user, BookingStatus::APPROVED, 3);
+        $booking = $this->makeBooking($user, BookingStatus::CONFIRMED, 3);
+        $booking->update(['payment_met_at' => now()]);
 
         $unit = EquipmentUnit::where('equipment_model_id', $booking->details->first()->equipment_model_id)
             ->where('status', EquipmentStatus::AVAILABLE)
@@ -168,11 +169,35 @@ class AdminBookingApprovalTest extends TestCase
         $this->assertEquals(EquipmentStatus::ASSIGNED, $unit->fresh()->status);
     }
 
+    public function test_assign_is_blocked_before_payment_is_verified(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $user = User::factory()->create(['role' => UserRole::USER]);
+        // APPROVED but payment NOT verified -> assignment must be rejected.
+        $booking = $this->makeBooking($user, BookingStatus::APPROVED, 2);
+
+        $unit = EquipmentUnit::where('equipment_model_id', $booking->details->first()->equipment_model_id)
+            ->where('status', EquipmentStatus::AVAILABLE)
+            ->first();
+
+        Sanctum::actingAs($admin);
+
+        $response = $this->postJson("/api/v1/bookings/{$booking->id}/assign-units", [
+            'assignments' => [[
+                'booking_detail_id' => $booking->details->first()->id,
+                'equipment_unit_id' => $unit->id,
+            ]],
+        ]);
+
+        $response->assertStatus(409);
+    }
+
     public function test_assign_requires_exact_detail_quantity(): void
     {
         $admin = User::factory()->admin()->create();
         $user = User::factory()->create(['role' => UserRole::USER]);
-        $booking = $this->makeBooking($user, BookingStatus::APPROVED, 3);
+        $booking = $this->makeBooking($user, BookingStatus::CONFIRMED, 3);
+        $booking->update(['payment_met_at' => now()]);
 
         $detail = $booking->details->first(); // quantity = 1
         $unit = EquipmentUnit::where('equipment_model_id', $detail->equipment_model_id)
@@ -202,7 +227,8 @@ class AdminBookingApprovalTest extends TestCase
     {
         $admin = User::factory()->admin()->create();
         $user = User::factory()->create(['role' => UserRole::USER]);
-        $booking = $this->makeBooking($user, BookingStatus::APPROVED, 2);
+        $booking = $this->makeBooking($user, BookingStatus::CONFIRMED, 2);
+        $booking->update(['payment_met_at' => now()]);
 
         $detail = $booking->details->first();
         $units = EquipmentUnit::where('equipment_model_id', $detail->equipment_model_id)->get();
@@ -242,7 +268,8 @@ class AdminBookingApprovalTest extends TestCase
     {
         $admin = User::factory()->admin()->create();
         $user = User::factory()->create(['role' => UserRole::USER]);
-        $booking = $this->makeBooking($user, BookingStatus::APPROVED, 1);
+        $booking = $this->makeBooking($user, BookingStatus::CONFIRMED, 1);
+        $booking->update(['payment_met_at' => now()]);
 
         // A unit of a different model
         $otherModel = EquipmentModel::factory()->create(['is_active' => true]);
@@ -265,7 +292,8 @@ class AdminBookingApprovalTest extends TestCase
     {
         $owner = User::factory()->owner()->create();
         $user = User::factory()->create(['role' => UserRole::USER]);
-        $booking = $this->makeBooking($user, BookingStatus::APPROVED, 1);
+        $booking = $this->makeBooking($user, BookingStatus::CONFIRMED, 1);
+        $booking->update(['payment_met_at' => now()]);
 
         $unit = EquipmentUnit::where('equipment_model_id', $booking->details->first()->equipment_model_id)
             ->where('status', EquipmentStatus::AVAILABLE)
@@ -294,7 +322,8 @@ class AdminBookingApprovalTest extends TestCase
         $booking = Booking::factory()->create([
             'user_id' => $user->id,
             'project_location_id' => $location->id,
-            'status' => BookingStatus::APPROVED,
+            'status' => BookingStatus::CONFIRMED,
+            'payment_met_at' => now(),
         ]);
         $detail = BookingDetail::factory()->create([
             'booking_id' => $booking->id,

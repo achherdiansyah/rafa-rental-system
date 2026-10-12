@@ -95,6 +95,11 @@ class BookingWorkflowIntegrationTest extends TestCase
             ->assertJson(['data' => ['status' => BookingStatus::APPROVED->value]]);
         $this->assertNotNull($approveRes->json('data.payment_deadline_at'));
 
+        Booking::whereKey($bookingId)->update([
+            'status' => BookingStatus::CONFIRMED->value,
+            'payment_met_at' => now(),
+        ]);
+
         // 6. ADMIN: assign 2 physical units
         $units = EquipmentUnit::where('equipment_model_id', $model->id)->where('status', EquipmentStatus::AVAILABLE)->limit(2)->get();
         $booking = Booking::find($bookingId)->load('details');
@@ -176,7 +181,8 @@ class BookingWorkflowIntegrationTest extends TestCase
         $booking = Booking::factory()->create([
             'user_id' => $user->id,
             'project_location_id' => $location->id,
-            'status' => BookingStatus::APPROVED,
+            'status' => BookingStatus::CONFIRMED,
+            'payment_met_at' => now(),
         ]);
         $detail = BookingDetail::factory()->create([
             'booking_id' => $booking->id,

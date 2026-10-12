@@ -176,26 +176,29 @@ class MultiRentalIsolationTest extends TestCase
 
         Sanctum::actingAs($this->admin);
 
-        // Admin approves + assigns units on BOTH.
-        foreach ($orders as &$o) {
+        // Step 1: Admin approves BOTH (booking APPROVED — no assignment yet).
+        foreach ($orders as $o) {
             $this->postJson("/api/v1/bookings/{$o['booking']->id}/approve")->assertOk();
+        }
+
+        // Step 2: assignment BEFORE payment is verified must be blocked.
+        foreach ($orders as $o) {
             $this->postJson("/api/v1/bookings/{$o['booking']->id}/assign-units", [
                 'assignments' => [[
                     'booking_detail_id' => $o['detail']->id,
                     'equipment_unit_id' => $o['unit']->id,
                 ]],
-            ])->assertOk();
+            ])->assertStatus(409)->assertJson(['code' => 'INVALID_STATE_TRANSITION']);
         }
-        unset($o);
 
-        // Approval auto-issued MOB/DEMOB invoice.
+        // Step 3: Approval auto-issued MOB/DEMOB invoice.
         foreach ($orders as $o) {
             $invoice = Invoice::where('booking_id', $o['booking']->id)->first();
             $this->assertNotNull($invoice, 'MOB/DEMOB invoice harus terbit saat booking approved.');
             $this->assertEquals(1000000.00, (float) $invoice->grand_total);
         }
 
-        // Customer submits full payment -> admin approves.
+        // Step 4: Customer submits full payment proof (invoice still NOT settled).
         Sanctum::actingAs($this->user);
         $bank = BankAccount::factory()->create();
         $payments = [];
@@ -212,12 +215,41 @@ class MultiRentalIsolationTest extends TestCase
             $payments[] = Payment::findOrFail($res->json('data.id'));
         }
 
+        // Step 5: proof uploaded but NOT yet verified — assignment still blocked.
+        Sanctum::actingAs($this->admin);
+        foreach ($orders as $o) {
+            $this->postJson("/api/v1/bookings/{$o['booking']->id}/assign-units", [
+                'assignments' => [[
+                    'booking_detail_id' => $o['detail']->id,
+                    'equipment_unit_id' => $o['unit']->id,
+                ]],
+            ])->assertStatus(409)->assertJson(['code' => 'INVALID_STATE_TRANSITION']);
+        }
+
         Sanctum::actingAs($this->admin);
         foreach ($payments as $p) {
             $this->postJson("/api/v1/payments/{$p->id}/approve")->assertOk();
         }
 
-        // Both bookings CONFIRMED + both rentals created (per-booking, no first()).
+        // Step 6: after payment verified, bookings become CONFIRMED and the
+        // assignment gate unlocks (can_assign_units true).
+        foreach ($orders as $o) {
+            $book = Booking::findOrFail($o['booking']->id);
+            $this->assertEquals(BookingStatus::CONFIRMED, $book->status);
+            $this->assertNotNull($book->payment_met_at);
+        }
+
+        // Step 7: assign physical units on BOTH (now allowed).
+        foreach ($orders as $o) {
+            $this->postJson("/api/v1/bookings/{$o['booking']->id}/assign-units", [
+                'assignments' => [[
+                    'booking_detail_id' => $o['detail']->id,
+                    'equipment_unit_id' => $o['unit']->id,
+                ]],
+            ])->assertOk();
+        }
+
+        // Step 8: both bookings now appear in Eksekusi Rental (per-booking, no first()).
         $list = $this->getJson('/api/v1/rentals?per_page=50')->assertOk()->json('data');
         $byBooking = collect($list)->keyBy('booking_id');
         $this->assertTrue($byBooking->has($orders[0]['booking']->id), 'Rental pesanan 1 harus muncul.');

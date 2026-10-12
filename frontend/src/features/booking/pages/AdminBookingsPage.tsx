@@ -339,7 +339,7 @@ export const AdminBookingsPage: React.FC = () => {
                                 {current.map((a) => (
                                   <span key={a.id} className="inline-flex items-center gap-1.5 bg-white border border-emerald-200 px-1.5 py-0.5 rounded text-emerald-800">
                                     <span className="font-mono">{a.unit?.serial_number}</span>
-                                    {booking.status === 'APPROVED' && (
+                                    {booking.can_assign_units && (
                                       <button type="button" onClick={() => openReplaceModal(booking, a.id, d.equipment_model_id)} className="text-primary-600 hover:text-primary-800 font-medium cursor-pointer underline-offset-2 hover:underline ml-1">Ganti</button>
                                     )}
                                   </span>
@@ -382,7 +382,7 @@ export const AdminBookingsPage: React.FC = () => {
                     </div>
                   )}
 
-                  {booking.status === 'APPROVED' && (
+                  {booking.can_assign_units && (
                     <Button variant="outline" size="sm" className="gap-1.5" onClick={() => openAssignModal(booking)}>
                       <UserCheck size={15} /> Tugaskan Unit
                     </Button>

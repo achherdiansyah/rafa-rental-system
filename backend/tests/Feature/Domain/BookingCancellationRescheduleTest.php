@@ -321,7 +321,8 @@ class BookingCancellationRescheduleTest extends TestCase
         $admin = User::factory()->admin()->create();
         $user = User::factory()->create();
 
-        $booking = $this->booking($user, BookingStatus::APPROVED);
+        $booking = $this->booking($user, BookingStatus::CONFIRMED);
+        $booking->update(['payment_met_at' => now()]);
         $detail = $booking->details->first();
         $detail->update(['start_date' => now()->addDays(5)->toDateString(), 'end_date' => now()->addDays(9)->toDateString()]);
 

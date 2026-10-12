@@ -85,8 +85,18 @@ class PaymentDeadlineRulesTest extends TestCase
 
         app(ApproveBookingAction::class)->execute($admin, $booking);
 
+        $booking->update([
+            'status' => BookingStatus::CONFIRMED,
+            'payment_met_at' => now(),
+        ]);
+
         app(AssignBookingUnitsAction::class)->execute($admin, $booking, [
             ['booking_detail_id' => $detail->id, 'equipment_unit_id' => $unit->id]
+        ]);
+
+        $booking->update([
+            'status' => BookingStatus::APPROVED,
+            'payment_met_at' => null,
         ]);
 
         $invoice = Invoice::where('booking_id', $booking->id)->firstOrFail();

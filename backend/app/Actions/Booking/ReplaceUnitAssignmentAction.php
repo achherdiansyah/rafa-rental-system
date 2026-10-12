@@ -36,9 +36,9 @@ class ReplaceUnitAssignmentAction
         string $reason
     ): Booking {
         return DB::transaction(function () use ($admin, $booking, $oldAssignment, $newUnitId, $reason) {
-            if ($booking->status !== BookingStatus::APPROVED) {
+            if (! in_array($booking->status->value, ['CONFIRMED', 'PAYMENT_PENDING', 'APPROVED'], true) || ! $booking->payment_met_at) {
                 throw new InvalidStateTransitionException(
-                    'Penggantian unit hanya diperbolehkan pada booking berstatus APPROVED.'
+                    'Penggantian unit hanya diperbolehkan pada booking yang pembayarannya sudah diverifikasi.'
                 );
             }
 

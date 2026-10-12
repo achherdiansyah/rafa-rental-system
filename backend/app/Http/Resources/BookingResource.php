@@ -25,6 +25,10 @@ class BookingResource extends JsonResource
             'approved_at' => $this->approved_at?->toISOString(),
             'payment_deadline_at' => $this->payment_deadline_at?->toISOString(),
             'payment_met_at' => $this->payment_met_at?->toISOString(),
+            // Business rule: units may only be assigned after the MOB/DEMOB payment
+            // is verified (booking CONFIRMED/PAYMENT_PENDING + payment_met_at set).
+            'can_assign_units' => in_array($this->status?->value, ['CONFIRMED', 'PAYMENT_PENDING'], true)
+                && (bool) $this->payment_met_at,
             'cancelled_at' => $this->cancelled_at?->toISOString(),
             'cancellation_reason' => $this->cancellation_reason,
             'reschedule_requested_at' => $this->reschedule_requested_at?->toISOString(),

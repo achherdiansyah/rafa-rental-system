@@ -110,18 +110,19 @@ class UatWorkflowTest extends TestCase
         $booking = Booking::find($bookingId);
         $this->assertEquals(BookingStatus::APPROVED->value, $booking->status->value);
 
+        // Payment verified: booking becomes CONFIRMED with payment_met_at set.
+        $booking->update(['status' => BookingStatus::CONFIRMED, 'payment_met_at' => now()]);
+
         $detailId = $booking->details()->first()->id;
         $this->postJson("/api/v1/bookings/{$bookingId}/assign-units", [
             'assignments' => [['booking_detail_id' => $detailId, 'equipment_unit_id' => $unit->id]],
         ])->assertOk();
         $this->assertEquals('ASSIGNED', $unit->fresh()->status->value, 'Unit ditugaskan pada booking (reserved).');
 
-        // UAT note (Phase 8): CONFIRMED tercapai via alur verifikasi pembayaran
-        // (dikover test 10D); di sini state lanjut dipasang langsung.
-        $booking->update(['status' => BookingStatus::CONFIRMED]);
+        // Assigning units to a CONFIRMED booking auto-creates the Rental.
+        $rentalId = Rental::where('booking_id', $bookingId)->firstOrFail()->id;
 
         // ---------- 5) Dispatch -> arrival -> ongoing ----------
-        $rentalId = $this->postJson('/api/v1/rentals', ['booking_id' => $bookingId])->assertCreated()->json('data.id');
         foreach (['dispatch', 'arrive', 'start'] as $t) {
             $this->postJson("/api/v1/rentals/{$rentalId}/{$t}")->assertOk();
         }

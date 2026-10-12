@@ -46,6 +46,16 @@ class BookingFactory extends Factory
         ]);
     }
 
+    public function confirmedWithPayment(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => BookingStatus::CONFIRMED->value,
+            'payment_met_at' => now(),
+            'approved_at' => now()->subHour(),
+            'payment_deadline_at' => now()->addHours(23),
+        ]);
+    }
+
     public function completed(): static
     {
         return $this->state(fn (array $attributes) => [

@@ -22,7 +22,13 @@ class EnsureRentalFromBookingAction
 
     public function execute(User $admin, Booking $booking): ?Rental
     {
-        if ($booking->status !== BookingStatus::CONFIRMED) {
+        // Rental is materialised only when the booking payment is verified and
+        // physical units are already assigned.
+        if (! in_array($booking->status->value, [BookingStatus::CONFIRMED->value, BookingStatus::PAYMENT_PENDING->value], true)) {
+            return null;
+        }
+
+        if (! $booking->payment_met_at) {
             return null;
         }
 

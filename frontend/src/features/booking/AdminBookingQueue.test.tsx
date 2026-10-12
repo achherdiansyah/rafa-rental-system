@@ -136,12 +136,27 @@ describe('Admin Booking Queue UI', () => {
     })
   })
 
-  it('opens assign units modal for approved booking', async () => {
-    const approved = { ...mockBooking, status: 'APPROVED' as const }
+  it('hides assign-units button while booking approved but payment not verified', async () => {
+    const approved = { ...mockBooking, status: 'APPROVED' as const, can_assign_units: false }
     vi.mocked(bookingService.getBookings).mockResolvedValue({
       success: true,
       message: 'OK',
       data: [approved],
+      meta: { current_page: 1, per_page: 30, total: 1, last_page: 1 },
+    } as any)
+
+    renderComponent()
+
+    await screen.findByText('RFA-BKG-20260925-0005')
+    expect(screen.queryByRole('button', { name: /tugaskan unit/i })).not.toBeInTheDocument()
+  })
+
+  it('shows assign-units button once payment is verified (can_assign_units)', async () => {
+    const confirmed = { ...mockBooking, status: 'CONFIRMED' as const, can_assign_units: true, payment_met_at: '2026-09-25T10:00:00Z' as any }
+    vi.mocked(bookingService.getBookings).mockResolvedValue({
+      success: true,
+      message: 'OK',
+      data: [confirmed],
       meta: { current_page: 1, per_page: 30, total: 1, last_page: 1 },
     } as any)
     vi.mocked(equipmentService.getUnits).mockResolvedValue({

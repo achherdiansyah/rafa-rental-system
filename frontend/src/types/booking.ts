@@ -43,6 +43,7 @@ export interface Booking {
   project_location_id: number
   status: BookingStatus
   rejection_reason: string | null
+  can_assign_units?: boolean
   total_amount: number
   approved_at?: string | null
   payment_deadline_at?: string | null
