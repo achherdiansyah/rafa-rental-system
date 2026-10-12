@@ -86,6 +86,19 @@ class EquipmentAvailabilityService
     // ------------------------------------------------------------------
 
     /**
+     * Driver-agnostic "<date column> + N days" expression so the same engine
+     * works on MySQL (dev) and SQLite (isolated test in-memory DB).
+     */
+    protected function dateAddExpr(string $column, int $days): string
+    {
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return sprintf("datetime(%s, '+%d day')", $column, $days);
+        }
+
+        return sprintf('DATE_ADD(%s, INTERVAL %d DAY)', $column, $days);
+    }
+
+    /**
      * Map of [equipment_model_id => available unit count] over a buffered period.
      * Bulk-queried; no per-model queries (no N+1).
      *
@@ -145,7 +158,7 @@ class EquipmentAvailabilityService
             ->whereNull('b.deleted_at')
             ->whereNull('eu.deleted_at')
             ->where('bd.start_date', '<=', $cStartMax)
-            ->whereRaw('DATE_ADD(bd.end_date, INTERVAL ? DAY) >= ?', [$postBuffer, $cEndMin]);
+            ->whereRaw($this->dateAddExpr('bd.end_date', $postBuffer).' >= ?', [$cEndMin]);
 
         if (! empty($modelIds)) {
             $committed->whereIn('bd.equipment_model_id', $modelIds);
@@ -236,7 +249,7 @@ class EquipmentAvailabilityService
                     ->whereIn('bookings.status', $this->committedStatuses)
                     ->whereNull('bookings.deleted_at')
                     ->where('booking_details.start_date', '<=', $cStartMax)
-                    ->whereRaw('DATE_ADD(booking_details.end_date, INTERVAL ? DAY) >= ?', [$postBuffer, $cEndMin]);
+                    ->whereRaw($this->dateAddExpr('booking_details.end_date', $postBuffer).' >= ?', [$cEndMin]);
             })
             ->orderBy('id');
 

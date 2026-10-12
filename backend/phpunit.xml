@@ -22,8 +22,18 @@
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="CACHE_STORE" value="array"/>
-        <!-- <env name="DB_CONNECTION" value="sqlite"/> -->
-        <!-- <env name="DB_DATABASE" value=":memory:"/> -->
+        <!--
+            IMPORTANT: tests run on the DEDICATED MySQL database `rafa_rental_test`,
+            NEVER on the dev database `rafa_rental`. RefreshDatabase migrates the
+            isolated test DB only, so dev users / CMS settings / uploaded files are
+            never wiped when running `php artisan test`.
+        -->
+        <env name="DB_CONNECTION" value="mysql"/>
+        <env name="DB_HOST" value="127.0.0.1"/>
+        <env name="DB_PORT" value="3307"/>
+        <env name="DB_DATABASE" value="rafa_rental_test"/>
+        <env name="DB_USERNAME" value="rafa"/>
+        <env name="DB_PASSWORD" value="rafa_password"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
