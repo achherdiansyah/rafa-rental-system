@@ -38,7 +38,7 @@ Body `POST /rentals/{id}/ready`:
 
 - **Return selalu tercatat**: transisi `ONGOING → DEMOBILIZING` diaudit (`RENTAL_DEMOBILIZING`) dan men-set status unit `DEMOBILIZING`.
 - **Unit tidak langsung AVAILABLE setelah return**: hanya `READY` dari hasil inspeksi yang melepas unit ke `AVAILABLE`. Status `DEMOBILIZING`/`RETURN_INSPECTION` tidak dapat dipakai pada penyewaan baru.
-- **Inspeksi dilakukan Admin**: endpoint di bawah otorisasi `RentalPolicy::operate` (ADMIN/OWNER); USER ditolak 403.
+- **Inspeksi dilakukan Admin**: endpoint di bawah otorisasi `RentalPolicy::operate` (ADMIN only); OWNER/USER ditolak 403.
 - **Histori inspeksi tersimpan**: per `rental_details` tersimpan `inspection_result`, `condition_notes`, `checked_out_at`; riwayat lengkap tercatat di `completed_at` rental dan audit log (`RENTAL_INSPECTION`).
 - **Damage cost bukan charge otomatis**: `DAMAGED` hanya mencatat kondisi + memindah unit ke `MAINTENANCE`. Tidak ada baris invoice/charge dibuat. (*ponytail:* billing damage eksplisit ditambahkan bila PRD memintanya.)
 

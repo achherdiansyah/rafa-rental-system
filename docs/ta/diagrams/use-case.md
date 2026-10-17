@@ -31,6 +31,7 @@ flowchart LR
       UC07["Ajukan booking (DRAFT -> PENDING_APPROVAL)"]
       UC08["Perbaiki & ajukan ulang booking (revisi Supervisor)"]
       UC09["Batalkan / ajukan reschedule booking"]
+      UC37["Lihat Timesheet & tandatangani (read-only)"]
     end
 
     subgraph VALIDASI["Validasi Supervisor"]
@@ -66,7 +67,7 @@ flowchart LR
       UC27["Kelola master data alat & pool armada"]
       UC28["Kelola tarif / pricing master"]
       UC29["Kelola invoice, refund, outstanding, bank account"]
-      UC30["Kelola akun & role (USER / SUPERVISOR / OPERATOR)"]
+      UC30["Verifikasi akun, kelola akun & role (USER / SUPERVISOR / OPERATOR)"]
       UC31["Laporan operasional & finansial"]
       UC32["Kelola CMS landing page"]
     end
@@ -78,6 +79,11 @@ flowchart LR
       UC36["Nonaktifkan akun pengguna (existing)"]
     end
   end
+
+  S --> UC01
+  A --> UC01
+  O --> UC01
+  W --> UC01
 
   U --> UC01
   U --> UC02
@@ -91,6 +97,7 @@ flowchart LR
   U --> UC15
   U --> UC16
   U --> UC18
+  U --> UC37
 
   S --> UC10
   S --> UC11
@@ -129,7 +136,7 @@ flowchart LR
 |---|---|
 | USER | `BookingPolicy` (create/submit/view own), cart, project-locations, `GET/POST /recommendations*` (scoped own), `GET /timesheets` (read-only own), `POST /payments`, `GET /invoices`, `GET /refunds`, `GET /notifications` |
 | SUPERVISOR | Route `role:SUPERVISOR` → `/supervisor/bookings*`; `BookingPolicy::view` (hanya PENDING_APPROVAL), `BookingPolicy::validate` |
-| ADMIN | `role:ADMIN`/`ADMIN,OWNER` group: booking approve/reject (wajib `VALIDATED`, route `role:ADMIN`), assign units, `Operators` + operator-assignments, rentals transitions + ready/inspection, timesheets write/validate, invoices/payments verification, refunds, master data, profit pricing, CMS, users + role update |
+| ADMIN | booking approve/reject (wajib `VALIDATED`, route `role:ADMIN`), assign units, `Operators` + operator-assignments, rentals transitions + ready/inspection, timesheets write/validate, invoices/payments verification, refunds, master data (route `role:ADMIN`/`ADMIN,OWNER`), pricing, CMS, user verification + role update |
 | OPERATOR | Route `role:OPERATOR` → `/operator/dashboard`, `/operator/assignments`, `/operator/assignments/{assignment}`; `RentalOperatorAssignmentPolicy::view` (pemilik + status ACTIVE) |
 | OWNER | Gates `view-owner-dashboard`, `view-revenue-reports`, `view-audit-logs`, `approve-refund`, `deactivate-user`; user list & monitoring reports; **tidak ada approve/reject booking**, tidak ada operasional unit/Operator/Timesheet |
 

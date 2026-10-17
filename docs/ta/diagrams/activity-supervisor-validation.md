@@ -11,7 +11,7 @@ flowchart TD
   D --> E{Data sesuai?}
   E -- Tidak --> F[Isi catatan perbaikan wajib<br/>min. 5 karakter]
   F --> G[supervisor_decision = REVISION<br/>supervisor_validated_at = null]
-  G --> H[USER perbaiki project_location/tanggal<br/>PUT /bookings/{id}]
+  G --> H[USER perbaiki project_location/tanggal<br/>PUT /bookings/:id]
   H --> I[USER ajukan ulang<br/>decision direset null]
   I --> C
 
@@ -26,6 +26,6 @@ flowchart TD
 ```
 
 Catatan:
-- Supervisor **tidak** dapat approve/reject booking (`BookingPolicy::approve/reject` = ADMIN/OWNER).
+- Supervisor **tidak** dapat approve/reject booking (`BookingPolicy::approve/reject` = ADMIN only; route approve/reject memakai middleware `role:ADMIN`).
 - Supervisor hanya melihat detail booking berstatus `PENDING_APPROVAL` (`BookingPolicy::view`); booking `APPROVED` ke atas → 403.
 - Validasi/penolakan tetap tercatat di audit log dan memicu notifikasi user.

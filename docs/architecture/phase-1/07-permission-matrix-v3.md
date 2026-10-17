@@ -1,6 +1,8 @@
 # Permission Matrix V3 - RAFA Rental System
 
-Matriks hak akses lengkap berdasarkan tiga role: **USER**, **ADMIN**, **OWNER**.
+Matriks historis berbasis tiga role: **USER**, **ADMIN**, **OWNER**.
+
+> **Catatan audit Revisi Poin 4:** implementasi aktual memiliki lima role (`USER`, `SUPERVISOR`, `ADMIN`, `OPERATOR`, `OWNER`). Untuk pemetaan lima role dan alur final lihat [`docs/ta/diagrams/use-case.md`](../../ta/diagrams/use-case.md). Baris yang sudah diselaraskan dengan implementasi aktual: **Approve/Reject Booking = ADMIN only**, **Approve/Reject/Flag Overpayment Payment = ADMIN only**, **Create/Update Price Master = ADMIN only**, **Create/Submit Timesheet = ADMIN only**.
 
 Legenda:
 - **Y** = Diizinkan
@@ -51,7 +53,7 @@ Legenda:
 |---|---|---|---|
 | View Public Pricing | Y | Y | Y |
 | Calculate Price Estimate | Y | Y | Y |
-| Create/Update Price Master | N | N | Y |
+| Create/Update Price Master | N | Y | N |
 | View Price Version History | N | Y | Y |
 
 ## 5. Recommendation
@@ -112,10 +114,10 @@ Legenda:
 
 | Capability | USER | ADMIN | OWNER |
 |---|---|---|---|
-| Create Timesheet Entry | Y | Y | N |
+| Create Timesheet Entry | N | Y | N |
 | View Own Timesheets | Y (Own) | N | N |
 | View All Timesheets | N | Y | Y |
-| Submit Timesheet for Approval | Y (Own) | Y (All) | N |
+| Submit Timesheet for Approval | N | Y (All) | N |
 | Approve Timesheet | N | Y | N |
 | Reject Timesheet | N | Y | N |
 | Revise Timesheet (with History) | N | Y | N |
@@ -146,9 +148,9 @@ Legenda:
 | Upload Payment Proof | Y (Own) | N | N |
 | View Own Payments | Y (Own) | N | N |
 | View All Payments | N | Y | Y |
-| Approve Payment | N | Y | Y |
-| Reject Payment | N | Y | Y |
-| Flag Overpayment | N | Y | Y |
+| Approve Payment | N | Y | N |
+| Reject Payment | N | Y | N |
+| Flag Overpayment | N | Y | N |
 
 ## 13. Refund
 

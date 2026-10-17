@@ -29,6 +29,7 @@ Kumpulan diagram Mermaid yang dapat diedit dan dipindahkan ke laporan TA. Semua 
 3. **Rekomendasi alat**: weighted rule-based multi-criteria, bobot `40% capacity_match + 30% terrain_suitability + 20% project_suitability + 10% price_suitability`; normalisasi bobot, threshold 50, maksimum 5 hasil, tie-break deterministik (skor → tarif terendah → model ID). Ketersediaan unit adalah hard exclusion.
 4. **`depth_requirement` & `reach_requirement` bukan kriteria scoring** (tidak ada bobot di `config/recommendation.php` dan tidak ada di matriks Phase 7B). Di reasoning ditandai “tidak dihitung dalam skor”.
 5. **Routing Mapbox belum tervalidasi live** (token & data pool belum tersedia). Diagram hanya boleh menggambarkan prasyarat konfigurasi, bukan klaim hasil uji lapangan.
+6. **Kesesuaian metode rekomendasi dengan laporan TA akademik belum terverifikasi.** Implementasi sudah dicocokkan dengan spesifikasi internal Phase 7 (4 kriteria berbobot, threshold 50, maksimum 5, tie-break deterministik), tetapi laporan TA akademik belum diperiksa pada revisi ini.
 
 ## Validasi ketidaksesuaian — status akhir
 
@@ -62,6 +63,7 @@ Kumpulan diagram Mermaid yang dapat diedit dan dipindahkan ke laporan TA. Semua 
 2. **Mapbox**: konfirmasi token, pool armada, dan tarif/km untuk live test sebelum laporan menyatakan fitur tervalidasi.
 3. **Depth/reach**: konfirmasi apakah laporan TA memang tidak menjadikannya kriteria berbobot (implementasi saat ini: bukan kriteria).
 4. **Threshold rekomendasi (50) dan maksimum 5 hasil**: konfirmasi kesesuaian dengan laporan TA bila berbeda.
+5. **Verifikasi akademik**: cocokkan kembali rumus, bobot, dan istilah diagram dengan laporan TA sebelum diklaim final.
 
 ## Batasan revisi ini
 - Perubahan permission hanya pada approve/reject booking (ADMIN-only); workflow pembayaran, penugasan unit/Operator, rental, Timesheet, invoice, dan MOB/DEMOB tidak berubah.
