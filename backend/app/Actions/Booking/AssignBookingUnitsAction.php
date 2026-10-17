@@ -87,6 +87,15 @@ class AssignBookingUnitsAction
                     ->get();
 
                 foreach ($lockedUnits as $unit) {
+                    // Origin consistency: a unit from a different pool would change
+                    // the MOB/DEMOB distance already snapshotted at booking time.
+                    if ($detail->origin_pool_id && $unit->equipment_pool_id
+                        && (int) $unit->equipment_pool_id !== (int) $detail->origin_pool_id) {
+                        throw new BusinessRuleException(
+                            "Unit #{$unit->id} berasal dari pool berbeda dengan asal yang dihitung pada booking."
+                        );
+                    }
+
                     // Model match validation
                     if ((int) $unit->equipment_model_id !== (int) $detail->equipment_model_id) {
                         throw new BusinessRuleException(

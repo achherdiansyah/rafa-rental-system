@@ -23,19 +23,21 @@ Field `mob_cost` / `demob_cost` lama **tidak dihapus** agar transaksi & snapshot
 - Jika routing belum dikonfigurasi dan `distance_rate_per_km > 0` → booking **ditolak** dengan pesan estimasi belum tersedia (tidak mengarang jarak/harga). Estimasi API mengembalikan `distance_available=false` tanpa angka.
 - Jika `distance_rate_per_km = 0` (belum diatur) → sistem memakai MOB/DEMOB tetap lama (kompatibilitas data existing).
 
-## Provider routing (belum dipilih — blocker)
-Sistem memakai kontrak `App\Services\Routing\RouteDistanceProvider`. Default `NullRouteDistanceProvider` (tidak menghitung apa pun).
-Pilihan provider yang dapat dipertimbangkan (perlu persetujuan + API key):
-- Google Routes API (berbayar, key + billing).
-- Mapbox Directions API (key + kuota).
-- OpenRouteService (key, kuota gratis terbatas).
-- OSRM self-hosted (tanpa biaya API, butuh server + data peta).
+## Provider routing
+Sistem memakai kontrak `App\Services\Routing\RouteDistanceProvider` dengan:
+- `MapboxRouteDistanceProvider` — Mapbox Directions API, profil **driving**, jarak meter → km (round 2 desimal).
+- `NullRouteDistanceProvider` — fallback default, selalu `null` (tidak memakai garis lurus).
 
-Konfigurasi yang diperlukan (belum diisi):
+### Konfigurasi Mapbox (backend saja)
 ```
-ROUTING_PROVIDER=            # label provider (dokumentasi)
-ROUTING_API_KEY=             # API key provider
-ROUTING_BASE_URL=            # endpoint provider
-ROUTING_PROVIDER_CLASS=      # FQCN class implementasi RouteDistanceProvider
+ROUTING_PROVIDER=mapbox
+ROUTING_API_KEY=pk.xxxxx          # JANGAN commit; isi di backend/.env
+ROUTING_TIMEOUT=8                 # detik
+ROUTING_CACHE_TTL=86400           # cache jarak sukses (detik); 0 = nonaktif
 ```
-Selama `ROUTING_PROVIDER_CLASS` kosong, kalkulasi jarak rute aktual tidak berjalan.
+`ROUTING_PROVIDER_CLASS` opsional untuk provider kustom (FQCN). Tanpa `ROUTING_PROVIDER=mapbox` + token,
+provider Null aktif dan estimasi mengembalikan `distance_available=false`.
+
+Cache memakai key hash koordinat tervalidasi (~1 m) + class provider; hanya jarak sukses yang di-cache.
+Timeout/HTTP error/rute kosong/koordinat invalid → `null` → UI menampilkan estimasi belum tersedia; booking
+dengan tarif/km > 0 ditolak (tidak ada harga palsu).

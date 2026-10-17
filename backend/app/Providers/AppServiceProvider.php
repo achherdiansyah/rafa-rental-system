@@ -43,11 +43,21 @@ class AppServiceProvider extends ServiceProvider
         // callers must show "estimasi belum tersedia" — never invent a distance.
         $this->app->bind(RouteDistanceProvider::class, function ($app) {
             $class = config('routing.provider_class');
-
             if (is_string($class) && $class !== '' && class_exists($class)) {
                 return $app->make($class);
             }
 
+            $provider = config('routing.provider');
+            $apiKey = config('routing.api_key');
+
+            if ($provider === 'mapbox' && is_string($apiKey) && $apiKey !== '') {
+                return new \App\Services\Routing\MapboxRouteDistanceProvider(
+                    $apiKey,
+                    (int) config('routing.timeout', 8)
+                );
+            }
+
+            // Fallback: no routing configured → distance unavailable (never faked).
             return new NullRouteDistanceProvider;
         });
 

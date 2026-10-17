@@ -83,6 +83,12 @@ class CreateBookingFromCartAction
                     ->sortByDesc('effective_date')
                     ->first()?->distance_rate_per_km ?? 0);
 
+                if ($origin && $destination && $distanceRate <= 0) {
+                    throw new BusinessRuleException(
+                        'Tarif per kilometer MOB/DEMOB belum dikonfigurasi oleh Admin. Booking belum dapat dibuat.'
+                    );
+                }
+
                 if ($origin && $destination && $distanceRate > 0 && $routeDistanceKm === null) {
                     throw new BusinessRuleException(
                         'Estimasi jarak rute MOB/DEMOB belum tersedia. Hubungi Admin (layanan routing belum dikonfigurasi).'

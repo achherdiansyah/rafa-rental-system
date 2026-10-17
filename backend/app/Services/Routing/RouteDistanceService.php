@@ -2,6 +2,8 @@
 
 namespace App\Services\Routing;
 
+use Illuminate\Support\Facades\Cache;
+
 class RouteDistanceService
 {
     public function __construct(
@@ -32,6 +34,24 @@ class RouteDistanceService
             return null;
         }
 
+        // Cache key uses validated coordinates (~1 m precision) + provider class.
+        $cacheKey = sprintf(
+            'route_distance:%s:%s,%s:%s,%s',
+            md5(get_class($this->provider)),
+            round((float) $originLat, 5),
+            round((float) $originLng, 5),
+            round((float) $destinationLat, 5),
+            round((float) $destinationLng, 5)
+        );
+
+        $ttl = (int) config('routing.cache_ttl', 86400);
+        if ($ttl > 0) {
+            $cached = Cache::get($cacheKey);
+            if ($cached !== null) {
+                return (float) $cached;
+            }
+        }
+
         try {
             $distance = $this->provider->distanceKm(
                 (float) $originLat,
@@ -47,7 +67,14 @@ class RouteDistanceService
             return null;
         }
 
-        return round($distance, 2);
+        $distance = round($distance, 2);
+
+        // Only successful distances are cached (failures may recover).
+        if ($ttl > 0) {
+            Cache::put($cacheKey, $distance, $ttl);
+        }
+
+        return $distance;
     }
 
     private function validCoordinates(?float $lat, ?float $lng): bool

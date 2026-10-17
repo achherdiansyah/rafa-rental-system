@@ -81,7 +81,9 @@ class MobDemobEstimator
             ] : null,
             'message' => $available
                 ? 'Estimasi MOB/DEMOB berdasarkan jarak rute dan tarif per kilometer.'
-                : 'Estimasi jarak rute belum tersedia (layanan routing belum dikonfigurasi atau koordinat tidak lengkap).',
+                : ($rate <= 0
+                    ? 'Tarif per kilometer belum dikonfigurasi oleh Admin pada Master Tarif & Harga.'
+                    : 'Estimasi jarak rute belum tersedia (layanan routing belum dikonfigurasi atau koordinat tidak lengkap).'),
         ];
     }
 }
