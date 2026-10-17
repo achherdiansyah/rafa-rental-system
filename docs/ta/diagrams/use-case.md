@@ -119,10 +119,9 @@ flowchart LR
   W --> UC34
   W --> UC35
   W --> UC36
-  W --> UC13
 ```
 
-> Catatan: `W --> UC13` mencerminkan permission **existing** (`Gate 'approve-booking' = ADMIN,OWNER`, `BookingPolicy::approve/reject`, route group `role:ADMIN,OWNER`). Ini adalah ketidaksesuaian yang dilaporkan di `README.md`, bukan usulan perubahan.
+> Catatan: **OWNER tidak memiliki akses approve/reject booking.** Final approval adalah `ADMIN`-only (`Gate 'approve-booking'`, `BookingPolicy::approve/reject`, middleware `role:ADMIN` pada route approve/reject). OWNER hanya monitoring/laporan, approve refund, dan deactivate user sesuai permission existing.
 
 ## Pemetaan aktor → implementasi (dasar diagram)
 
@@ -130,9 +129,9 @@ flowchart LR
 |---|---|
 | USER | `BookingPolicy` (create/submit/view own), cart, project-locations, `GET/POST /recommendations*` (scoped own), `GET /timesheets` (read-only own), `POST /payments`, `GET /invoices`, `GET /refunds`, `GET /notifications` |
 | SUPERVISOR | Route `role:SUPERVISOR` → `/supervisor/bookings*`; `BookingPolicy::view` (hanya PENDING_APPROVAL), `BookingPolicy::validate` |
-| ADMIN | `role:ADMIN`/`ADMIN,OWNER` group: booking approve/reject (wajib `VALIDATED`), assign units, `Operators` + operator-assignments, rentals transitions + ready/inspection, timesheets write/validate, invoices/payments verification, refunds, master data, profit pricing, CMS, users + role update |
+| ADMIN | `role:ADMIN`/`ADMIN,OWNER` group: booking approve/reject (wajib `VALIDATED`, route `role:ADMIN`), assign units, `Operators` + operator-assignments, rentals transitions + ready/inspection, timesheets write/validate, invoices/payments verification, refunds, master data, profit pricing, CMS, users + role update |
 | OPERATOR | Route `role:OPERATOR` → `/operator/dashboard`, `/operator/assignments`, `/operator/assignments/{assignment}`; `RentalOperatorAssignmentPolicy::view` (pemilik + status ACTIVE) |
-| OWNER | Gates `view-owner-dashboard`, `view-revenue-reports`, `view-audit-logs`, `approve-refund`, `deactivate-user`; `role:ADMIN,OWNER` untuk booking approve/reject & user list; mutasi master pricing = ADMIN only |
+| OWNER | Gates `view-owner-dashboard`, `view-revenue-reports`, `view-audit-logs`, `approve-refund`, `deactivate-user`; user list & monitoring reports; **tidak ada approve/reject booking**, tidak ada operasional unit/Operator/Timesheet |
 
 ## Use case yang TIDAK diberikan ke Supervisor/Operator
 - Supervisor tidak memiliki `assignUnits`, `approve`, `reject`, verifikasi pembayaran, input Timesheet, atau akses master data.

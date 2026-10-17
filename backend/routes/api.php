@@ -138,8 +138,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::put('/{booking}', [BookingController::class, 'update'])->name('update');
             Route::patch('/{booking}', [BookingController::class, 'update'])->name('update.patch');
             Route::post('/{booking}/submit', [BookingController::class, 'submit'])->name('submit');
-            Route::post('/{booking}/approve', [BookingController::class, 'approve'])->name('approve');
-            Route::post('/{booking}/reject', [BookingController::class, 'reject'])->name('reject');
+            Route::post('/{booking}/approve', [BookingController::class, 'approve'])->name('approve')->middleware('role:ADMIN');
+            Route::post('/{booking}/reject', [BookingController::class, 'reject'])->name('reject')->middleware('role:ADMIN');
             Route::post('/{booking}/assign-units', [BookingController::class, 'assignUnits'])->name('assign-units');
             Route::post('/{booking}/assignments/{assignment}/replace', [BookingController::class, 'replaceUnit'])->name('replace-unit');
             Route::post('/{booking}/extend-deadline', [BookingController::class, 'extendDeadline'])->name('extend-deadline');

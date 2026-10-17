@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/feedback/EmptyState'
 import { Alert } from '@/components/feedback/Alert'
 import { useToast } from '@/hooks/useToast'
+import { useAuth } from '@/hooks/useAuth'
 
 const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'success' | 'warning' | 'danger' | 'outline'> = {
   DRAFT: 'secondary',
@@ -39,6 +40,9 @@ interface UnitSelections {
 
 export const AdminBookingsPage: React.FC = () => {
   const { success: showSuccessToast, error: showErrorToast } = useToast()
+  const { user } = useAuth()
+  // Final booking approval is ADMIN-only (Owner keeps monitoring access).
+  const canApprove = user?.role === 'ADMIN'
 
   const [bookings, setBookings] = useState<Booking[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -367,7 +371,13 @@ export const AdminBookingsPage: React.FC = () => {
                     </span>
                   )}
 
-                  {booking.status === 'PENDING_APPROVAL' && booking.is_supervisor_validated && (
+                  {booking.status === 'PENDING_APPROVAL' && booking.is_supervisor_validated && !canApprove && (
+                    <span className="text-xs text-slate-500 bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1.5 max-w-xs text-right">
+                      Persetujuan akhir hanya dapat dilakukan Admin.
+                    </span>
+                  )}
+
+                  {booking.status === 'PENDING_APPROVAL' && booking.is_supervisor_validated && canApprove && (
                     <div className="flex gap-2">
                       <Button variant="primary" size="sm" className="gap-1.5" isLoading={actingId === booking.id} onClick={() => handleApprove(booking)}>
                         <CheckCircle2 size={15} /> Setujui

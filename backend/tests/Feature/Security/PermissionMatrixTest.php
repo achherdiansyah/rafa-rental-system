@@ -31,7 +31,7 @@ class PermissionMatrixTest extends TestCase
         $matrix = [
             'view-admin-dashboard' => [false, true, true],
             'manage-equipment' => [false, true, true],
-            'approve-booking' => [false, true, true],
+            'approve-booking' => [false, true, false],
             'verify-payment' => [false, true, true],
             'manage-bank-accounts' => [false, true, true],
 

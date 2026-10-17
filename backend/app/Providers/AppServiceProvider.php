@@ -94,7 +94,7 @@ class AppServiceProvider extends ServiceProvider
         // Admin & Owner capabilities
         Gate::define('view-admin-dashboard', fn (User $user) => $user->hasRole(UserRole::ADMIN, UserRole::OWNER));
         Gate::define('manage-equipment', fn (User $user) => $user->hasRole(UserRole::ADMIN, UserRole::OWNER));
-        Gate::define('approve-booking', fn (User $user) => $user->hasRole(UserRole::ADMIN, UserRole::OWNER));
+        Gate::define('approve-booking', fn (User $user) => $user->isAdmin());
         Gate::define('verify-payment', fn (User $user) => $user->hasRole(UserRole::ADMIN, UserRole::OWNER));
 
         // Admin-exclusive capabilities (Field operations)

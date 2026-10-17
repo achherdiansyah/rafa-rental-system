@@ -89,6 +89,38 @@ class AdminBookingApprovalTest extends TestCase
         ])->assertStatus(403);
     }
 
+    public function test_owner_supervisor_and_operator_cannot_approve_or_reject(): void
+    {
+        $customer = User::factory()->create(['role' => UserRole::USER]);
+
+        foreach ([
+            User::factory()->owner()->create(),
+            User::factory()->supervisor()->create(),
+            User::factory()->operator()->create(),
+        ] as $actor) {
+            $booking = $this->makeBooking($customer);
+
+            Sanctum::actingAs($actor);
+            $this->postJson("/api/v1/bookings/{$booking->id}/approve")->assertForbidden();
+            $this->postJson("/api/v1/bookings/{$booking->id}/reject", [
+                'rejection_reason' => 'Tidak berwenang menolak booking ini.',
+            ])->assertForbidden();
+            $this->assertEquals(BookingStatus::PENDING_APPROVAL, $booking->fresh()->status);
+        }
+    }
+
+    public function test_owner_keeps_monitoring_access_without_approval_rights(): void
+    {
+        $owner = User::factory()->owner()->create();
+        $booking = $this->makeBooking(User::factory()->create(['role' => UserRole::USER]));
+
+        Sanctum::actingAs($owner);
+        $this->getJson('/api/v1/admin/users')->assertOk();
+        $this->getJson('/api/v1/rentals')->assertOk();
+        $this->getJson('/api/v1/reports/dashboard')->assertOk();
+        $this->postJson("/api/v1/bookings/{$booking->id}/approve")->assertForbidden();
+    }
+
     public function test_admin_can_reject_booking_with_reason(): void
     {
         $admin = User::factory()->admin()->create();

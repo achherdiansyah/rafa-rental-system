@@ -81,8 +81,8 @@ Legenda:
 | View All Bookings | N | Y | Y |
 | View Booking Detail | Y (Own) | Y (All) | Y (All) |
 | Submit Booking | Y (Own) | N | N |
-| Approve Booking | N | Y | Y |
-| Reject Booking | N | Y | Y |
+| Approve Booking | N | Y | N |
+| Reject Booking | N | Y | N |
 | Cancel Booking (Pre-Payment) | Y (Own) | Y (All) | Y (All) |
 | Cancel Booking (Post-Payment) | N | Y | Y |
 | Reschedule Booking | Y (Own) | Y (All) | Y (All) |

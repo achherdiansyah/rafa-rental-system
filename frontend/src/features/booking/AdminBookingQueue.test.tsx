@@ -22,6 +22,11 @@ vi.mock('@/features/equipment/services/equipmentService', () => ({
   },
 }))
 
+const { authRole } = vi.hoisted(() => ({ authRole: { current: 'ADMIN' } }))
+vi.mock('@/hooks/useAuth', () => ({
+  useAuth: () => ({ user: { id: 1, name: 'Test Admin', role: authRole.current } }),
+}))
+
 const mockBooking: Booking = {
   id: 1,
   booking_code: 'RFA-BKG-20260925-0005',
@@ -76,6 +81,7 @@ const renderComponent = () =>
 describe('Admin Booking Queue UI', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    authRole.current = 'ADMIN'
     vi.mocked(bookingService.getBookings).mockResolvedValue({
       success: true,
       message: 'OK',
@@ -90,6 +96,16 @@ describe('Admin Booking Queue UI', () => {
     expect(await screen.findByText('RFA-BKG-20260925-0005')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /setujui/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /tolak/i })).toBeInTheDocument()
+  })
+
+  it('hides approve/reject actions for OWNER (monitoring only)', async () => {
+    authRole.current = 'OWNER'
+    renderComponent()
+
+    expect(await screen.findByText('RFA-BKG-20260925-0005')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /setujui/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /tolak/i })).not.toBeInTheDocument()
+    expect(screen.getByText(/persetujuan akhir hanya dapat dilakukan admin/i)).toBeInTheDocument()
   })
 
   it('approves booking via service', async () => {

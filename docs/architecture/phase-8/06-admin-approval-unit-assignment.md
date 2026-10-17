@@ -1,6 +1,6 @@
 # Spesifikasi Approval & Unit Assignment (Phase 8F) - RAFA Rental System
 
-Dokumentasi implementasi alur persetujuan booking oleh Admin/Owner, penolakan dengan alasan, penugasan unit fisik (physical unit assignment), riwayat assignment, dan fondasi penggantian unit (unit replacement).
+Dokumentasi implementasi alur persetujuan booking oleh **ADMIN** (setelah validasi Supervisor), penolakan dengan alasan, penugasan unit fisik (physical unit assignment), riwayat assignment, dan fondasi penggantian unit (unit replacement). OWNER bersifat monitoring/laporan dan **tidak** dapat approve/reject booking.
 
 ---
 
@@ -8,22 +8,22 @@ Dokumentasi implementasi alur persetujuan booking oleh Admin/Owner, penolakan de
 
 ```text
 PENDING_APPROVAL
-   ├── Approve (Admin/Owner) ──► APPROVED
+   ├── Approve (Admin, wajib VALIDATED) ──► APPROVED
    │                              └── Assign Units (Admin) ──► unit → ASSIGNED
    │                                 └── Replace Unit (Admin) ──► history + unit baru
-   └── Reject (Admin/Owner) ──► REJECTED (wajib alasan min. 10 karakter)
+   └── Reject (Admin, wajib VALIDATED) ──► REJECTED (wajib alasan min. 10 karakter)
 ```
 
 - **Invoice / Payment / Refund:** Sengaja **tidak** diimplementasikan pada fase ini (BR-021 ditunda ke fase lanjutan).
 
 ---
 
-## 2. Endpoints (Admin/Owner)
+## 2. Endpoints (Admin only)
 
 | Method | URI | Actor | Deskripsi |
 |---|---|---|---|
-| `POST` | `/api/v1/bookings/{booking}/approve` | `ADMIN`, `OWNER` | `PENDING_APPROVAL → APPROVED`; audit `BOOKING_APPROVED`. |
-| `POST` | `/api/v1/bookings/{booking}/reject` | `ADMIN`, `OWNER` | `PENDING_APPROVAL → REJECTED`; body `{rejection_reason}` (min 10 karakter); audit `BOOKING_REJECTED`. |
+| `POST` | `/api/v1/bookings/{booking}/approve` | `ADMIN` only | `PENDING_APPROVAL → APPROVED`; wajib `supervisor_decision=VALIDATED`; audit `BOOKING_APPROVED`. |
+| `POST` | `/api/v1/bookings/{booking}/reject` | `ADMIN` only | `PENDING_APPROVAL → REJECTED`; wajib `VALIDATED`; body `{rejection_reason}` (min 10 karakter); audit `BOOKING_REJECTED`. |
 | `POST` | `/api/v1/bookings/{booking}/assign-units` | `ADMIN` only | Memasang unit fisik ke detail booking; audit `UNITS_ASSIGNED`. |
 | `POST` | `/api/v1/bookings/{booking}/assignments/{assignment}/replace` | `ADMIN` only | Penggantian unit; audit `UNIT_REPLACED`. |
 
@@ -33,6 +33,8 @@ PENDING_APPROVAL
 
 ### Approve / Reject
 - Hanya transisi dari status `PENDING_APPROVAL`. Status lain → `409 INVALID_STATE_TRANSITION`.
+- Wajib sudah divalidasi Supervisor (`supervisor_decision=VALIDATED` + `supervisor_validated_at`); belum validasi → `409`.
+- Hanya `ADMIN` (route middleware `role:ADMIN` + policy). `OWNER`, `SUPERVISOR`, `OPERATOR`, `USER` → `403`.
 - Penolakan wajib menyertakan alasan ≥ 10 karakter (`422 VALIDATION_ERROR` bila kurang).
 
 ### Assign Units (`AssignBookingUnitsAction`)
@@ -61,7 +63,7 @@ Seluruh transisi & mutasi assignment dicatat via `AuditLogger::log()`:
 ## 5. Antarmuka Admin (`/admin/bookings`)
 
 - **AdminBookingsPage** — antrean booking dengan filter status (PENDING_APPROVAL / APPROVED / REJECTED / dsb).
-- Aksi **Setujui** / **Tolak** (modal alasan) pada booking `PENDING_APPROVAL`.
+- Aksi **Setujui** / **Tolak** (modal alasan) pada booking `PENDING_APPROVAL` — hanya tampil untuk role `ADMIN`; OWNER melihat antrean read-only.
 - Aksi **Tugaskan Unit** pada booking `APPROVED` — modal per-detail dengan daftar unit `AVAILABLE` (checkbox), indikator pemenuhan kuota.
 - Alasan penolakan ditampilkan pada kartu booking `REJECTED`.
 
@@ -75,7 +77,8 @@ Seluruh transisi & mutasi assignment dicatat via `AuditLogger::log()`:
 - Reject tanpa alasan cukup panjang → `422` (validasi).
 - Assign unit valid → assignment tersimpan + unit `ASSIGNED`.
 - Kuantitas tidak tepat / unit sudah ter-commit / unit model salah → `409 BUSINESS_RULE_VIOLATION`.
-- OWNER tidak boleh assign unit (`403`, admin-exclusive).
+- OWNER tidak boleh approve/reject (`403`) dan tidak boleh assign unit (`403`, admin-exclusive); OWNER tetap bisa monitoring/laporan.
+- SUPERVISOR/OPERATOR tidak boleh approve/reject (`403`); hanya Supervisor yang boleh validasi awal.
 - Replacement: riwayat lama tersimpan (`is_current=false`, `REPLACED`), unit lama → `MAINTENANCE`, unit baru → `ASSIGNED`.
 
 **Frontend (`AdminBookingQueue.test.tsx` — 4 kasus):** render antrean, approve, gate alasan reject (min 10), buka modal assign.

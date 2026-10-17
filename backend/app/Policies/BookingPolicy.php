@@ -54,14 +54,18 @@ class BookingPolicy
             || ($booking->status === BookingStatus::PENDING_APPROVAL && $booking->supervisor_decision === 'REVISION');
     }
 
+    /**
+     * Final booking approval is ADMIN-only. Supervisor performs initial
+     * validation; Owner keeps monitoring/reporting access only.
+     */
     public function approve(User $user): bool
     {
-        return $user->hasRole(UserRole::ADMIN, UserRole::OWNER);
+        return $user->isAdmin();
     }
 
     public function reject(User $user): bool
     {
-        return $user->hasRole(UserRole::ADMIN, UserRole::OWNER);
+        return $user->isAdmin();
     }
 
     /**

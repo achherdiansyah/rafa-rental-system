@@ -124,7 +124,7 @@ class AuthAndRoleTest extends TestCase
         // User cannot approve bookings
         $this->assertFalse(Gate::forUser($user)->allows('approve-booking'));
         $this->assertTrue(Gate::forUser($admin)->allows('approve-booking'));
-        $this->assertTrue(Gate::forUser($owner)->allows('approve-booking'));
+        $this->assertFalse(Gate::forUser($owner)->allows('approve-booking'));
 
         // Only Admin can assign units
         $this->assertFalse(Gate::forUser($user)->allows('assign-units'));
