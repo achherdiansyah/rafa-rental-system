@@ -120,7 +120,12 @@ class NotificationTest extends TestCase
         $admin = User::factory()->admin()->create();
 
         // Booking approval notifies user
-        $booking = Booking::factory()->create(['user_id' => $user->id, 'status' => 'PENDING_APPROVAL']);
+        $booking = Booking::factory()->create([
+            'user_id' => $user->id,
+            'status' => 'PENDING_APPROVAL',
+            'supervisor_decision' => 'VALIDATED',
+            'supervisor_validated_at' => now(),
+        ]);
         app(ApproveBookingAction::class)->execute($admin, $booking);
         $this->assertEquals('BOOKING_APPROVED', $user->notifications()->latest()->first()->data['event']);
 

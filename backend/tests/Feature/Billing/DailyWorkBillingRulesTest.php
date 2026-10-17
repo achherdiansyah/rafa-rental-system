@@ -57,6 +57,8 @@ class DailyWorkBillingRulesTest extends TestCase
             'project_location_id' => $location->id,
             'status' => BookingStatus::PENDING_APPROVAL,
             'total_amount' => ($baseRate * 8 * 5) + $mob + $demob,
+            'supervisor_decision' => 'VALIDATED',
+            'supervisor_validated_at' => now(),
         ]);
 
         $detail = BookingDetail::factory()->create([

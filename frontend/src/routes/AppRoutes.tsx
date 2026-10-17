@@ -6,6 +6,8 @@ import { AuthLayout } from '@/components/layout/AuthLayout'
 import { UserLayout } from '@/components/layout/UserLayout'
 import { AdminLayout } from '@/components/layout/AdminLayout'
 import { OwnerLayout } from '@/components/layout/OwnerLayout'
+import { SupervisorLayout } from '@/components/layout/SupervisorLayout'
+import { OperatorLayout } from '@/components/layout/OperatorLayout'
 import { ProtectedRoute } from './ProtectedRoute'
 import { RoleRoute } from './RoleRoute'
 import { GuestRoute } from './GuestRoute'
@@ -54,6 +56,10 @@ const AdminDashboardPage = lazy(() => import('@/features/reporting/pages/AdminDa
 const AdminOperationalReportsPage = lazy(() => import('@/features/reporting/pages/AdminOperationalReportsPage'))
 const AdminFinancialReportsPage = lazy(() => import('@/features/reporting/pages/AdminFinancialReportsPage'))
 const AdminUsersPage = lazy(() => import('@/features/auth/pages/AdminUsersPage'))
+const SupervisorBookingsPage = lazy(() => import('@/features/supervisor/pages/SupervisorBookingsPage'))
+const OperatorDashboardPage = lazy(() => import('@/features/operator/pages/OperatorDashboardPage'))
+const OperatorAssignmentsPage = lazy(() => import('@/features/operator/pages/OperatorAssignmentsPage'))
+const OperatorAssignmentDetailPage = lazy(() => import('@/features/operator/pages/OperatorAssignmentDetailPage'))
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -125,7 +131,28 @@ export const AppRoutes: React.FC = () => {
             </Route>
           </Route>
 
-          {/* 3.3 Owner Portal (/owner/*) - Restricted exclusively to OWNER */}
+          {/* 3.3 Supervisor Portal (/supervisor/*) - initial booking validation */}
+          <Route element={<RoleRoute allowedRoles={['SUPERVISOR']} />}>
+            <Route path="/supervisor" element={<SupervisorLayout />}>
+              <Route index element={<SupervisorBookingsPage />} />
+              <Route path="bookings" element={<SupervisorBookingsPage />} />
+              <Route path="notifications" element={<UserNotificationsPage />} />
+              <Route path="profile" element={<ProfilePage />} />
+            </Route>
+          </Route>
+
+          {/* 3.4 Operator Portal (/operator/*) - read-only own assignments */}
+          <Route element={<RoleRoute allowedRoles={['OPERATOR']} />}>
+            <Route path="/operator" element={<OperatorLayout />}>
+              <Route index element={<OperatorDashboardPage />} />
+              <Route path="assignments" element={<OperatorAssignmentsPage />} />
+              <Route path="assignments/:id" element={<OperatorAssignmentDetailPage />} />
+              <Route path="notifications" element={<UserNotificationsPage />} />
+              <Route path="profile" element={<ProfilePage />} />
+            </Route>
+          </Route>
+
+          {/* 3.5 Owner Portal (/owner/*) - Restricted exclusively to OWNER */}
           <Route element={<RoleRoute allowedRoles={['OWNER']} />}>
             <Route path="/owner" element={<OwnerLayout />}>
               <Route index element={<OwnerExecutiveSummaryPage />} />

@@ -361,7 +361,13 @@ export const AdminBookingsPage: React.FC = () => {
                     </p>
                   </div>
 
-                  {booking.status === 'PENDING_APPROVAL' && (
+                  {booking.status === 'PENDING_APPROVAL' && !booking.is_supervisor_validated && (
+                    <span className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-2.5 py-1.5 max-w-xs text-right">
+                      Menunggu validasi Supervisor{booking.supervisor_decision === 'REVISION' ? ' (dikembalikan untuk perbaikan)' : ''}.
+                    </span>
+                  )}
+
+                  {booking.status === 'PENDING_APPROVAL' && booking.is_supervisor_validated && (
                     <div className="flex gap-2">
                       <Button variant="primary" size="sm" className="gap-1.5" isLoading={actingId === booking.id} onClick={() => handleApprove(booking)}>
                         <CheckCircle2 size={15} /> Setujui

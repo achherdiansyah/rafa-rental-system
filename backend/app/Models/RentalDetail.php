@@ -48,4 +48,10 @@ class RentalDetail extends Model
     {
         return $this->hasMany(Timesheet::class);
     }
+
+    public function operatorAssignments(): HasMany
+    {
+        return $this->hasMany(RentalOperatorAssignment::class);
+    }
 }
+

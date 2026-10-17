@@ -30,6 +30,13 @@ class ApproveBookingAction
                 );
             }
 
+            // Admin final approval requires prior Supervisor validation.
+            if ($booking->supervisor_decision !== 'VALIDATED' || ! $booking->supervisor_validated_at) {
+                throw new InvalidStateTransitionException(
+                    'Booking belum lolos validasi Supervisor; Admin tidak dapat menyetujui.'
+                );
+            }
+
             $oldStatus = $booking->status->value;
 
             $approvedAt = now();

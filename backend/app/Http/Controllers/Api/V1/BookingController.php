@@ -11,6 +11,7 @@ use App\Actions\Booking\RejectBookingAction;
 use App\Actions\Booking\ReplaceUnitAssignmentAction;
 use App\Actions\Booking\RescheduleBookingAction;
 use App\Actions\Booking\SubmitBookingAction;
+use App\Actions\Booking\UpdateBookingAction;
 use App\Actions\Cart\GetOrCreateUserCartAction;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Requests\Booking\AssignBookingUnitsRequest;
@@ -19,6 +20,7 @@ use App\Http\Requests\Booking\ExtendDeadlineRequest;
 use App\Http\Requests\Booking\RejectBookingRequest;
 use App\Http\Requests\Booking\ReplaceUnitRequest;
 use App\Http\Requests\Booking\RescheduleBookingRequest;
+use App\Http\Requests\Booking\UpdateBookingRequest;
 use App\Http\Resources\BookingResource;
 use App\Models\Booking;
 use App\Models\BookingUnitAssignment;
@@ -104,6 +106,21 @@ class BookingController extends ApiController
                 'last_page' => $paginated->lastPage(),
             ]
         );
+    }
+
+    /**
+     * Correct a DRAFT or Supervisor-revision booking (project location + dates).
+     */
+    public function update(UpdateBookingRequest $request, Booking $booking, UpdateBookingAction $action): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        Gate::authorize('update', $booking);
+
+        $updated = $action->execute($user, $booking, $request->validated());
+
+        return $this->success(new BookingResource($updated), 'Booking berhasil diperbarui.');
     }
 
     /**

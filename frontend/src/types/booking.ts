@@ -45,6 +45,10 @@ export interface Booking {
   rejection_reason: string | null
   can_assign_units?: boolean
   total_amount: number
+  supervisor_decision?: 'VALIDATED' | 'REVISION' | null
+  supervisor_validated_at?: string | null
+  supervisor_notes?: string | null
+  is_supervisor_validated?: boolean
   approved_at?: string | null
   payment_deadline_at?: string | null
   payment_met_at?: string | null

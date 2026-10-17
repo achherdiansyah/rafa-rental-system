@@ -88,7 +88,12 @@ class BookingWorkflowIntegrationTest extends TestCase
             ->assertStatus(200)
             ->assertJson(['data' => ['status' => BookingStatus::PENDING_APPROVAL->value]]);
 
-        // 5. ADMIN: approve → APPROVED (deadline set)
+        // 5. SUPERVISOR validates, then ADMIN approves → APPROVED (deadline set)
+        Booking::whereKey($bookingId)->update([
+            'supervisor_user_id' => User::factory()->supervisor()->create()->id,
+            'supervisor_decision' => 'VALIDATED',
+            'supervisor_validated_at' => now(),
+        ]);
         Sanctum::actingAs($admin);
         $approveRes = $this->postJson("/api/v1/bookings/{$bookingId}/approve");
         $approveRes->assertStatus(200)
@@ -183,6 +188,8 @@ class BookingWorkflowIntegrationTest extends TestCase
             'project_location_id' => $location->id,
             'status' => BookingStatus::CONFIRMED,
             'payment_met_at' => now(),
+            'supervisor_decision' => 'VALIDATED',
+            'supervisor_validated_at' => now(),
         ]);
         $detail = BookingDetail::factory()->create([
             'booking_id' => $booking->id,

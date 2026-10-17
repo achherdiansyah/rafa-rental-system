@@ -21,7 +21,14 @@ export const NotificationBell: React.FC = () => {
   const navigate = useNavigate()
   const { user } = useAuth()
   const role = user?.role ?? 'USER'
-  const base = role === 'ADMIN' || role === 'OWNER' ? '/admin' : '/app'
+  const base =
+    role === 'SUPERVISOR'
+      ? '/supervisor'
+      : role === 'OPERATOR'
+        ? '/operator'
+        : role === 'ADMIN' || role === 'OWNER'
+          ? '/admin'
+          : '/app'
   const [open, setOpen] = useState(false)
   const [count, setCount] = useState(0)
   const [items, setItems] = useState<InAppNotification[]>([])

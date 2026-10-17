@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { RoleSidebar } from './sidebar/RoleSidebar'
-import { userMenu, adminMenu, ownerMenu } from './sidebarNavigation'
+import { userMenu, adminMenu, ownerMenu, supervisorMenu, operatorMenu } from './sidebarNavigation'
 import { AuthProvider } from '@/app/AuthContext'
 import { CmsProvider } from '@/features/cms/CmsContext'
 import { cmsService } from '@/features/cms/services/cmsService'
@@ -61,6 +61,21 @@ describe('RoleSidebar grouped navigation', () => {
     renderSidebar(userMenu, '/app', true)
     await waitFor(() => expect(screen.getAllByText('Katalog Alat').length).toBeGreaterThanOrEqual(1))
     expect(document.querySelector('.fixed.inset-0.z-50')).not.toBeNull()
+  })
+
+  it('SUPERVISOR and OPERATOR menus expose their own portals', () => {
+    const supervisorLabels = supervisorMenu.flatMap((g) => g.items.map((i) => i.label))
+    expect(supervisorLabels).toContain('Antrean Validasi')
+    const supervisorHrefs = supervisorMenu.flatMap((g) => g.items.map((i) => i.href))
+    expect(supervisorHrefs.some((h) => h.startsWith('/supervisor'))).toBe(true)
+
+    const operatorLabels = operatorMenu.flatMap((g) => g.items.map((i) => i.label))
+    expect(operatorLabels).toContain('Penugasan Saya')
+    const operatorHrefs = operatorMenu.flatMap((g) => g.items.map((i) => i.href))
+    expect(operatorHrefs).toContain('/operator/assignments')
+    // No admin pages leak into the restricted portals.
+    expect(supervisorHrefs.some((h) => h.startsWith('/admin'))).toBe(false)
+    expect(operatorHrefs.some((h) => h.startsWith('/admin'))).toBe(false)
   })
 
   it('OWNER menu has no pricing entry, ADMIN menu has pricing', async () => {

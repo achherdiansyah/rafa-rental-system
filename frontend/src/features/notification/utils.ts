@@ -4,6 +4,10 @@ export const EVENT_LABEL: Record<string, string> = {
   BOOKING_SUBMITTED: 'Booking baru perlu persetujuan',
   BOOKING_APPROVED: 'Booking disetujui',
   BOOKING_REJECTED: 'Booking ditolak',
+  BOOKING_SUPERVISOR_VALIDATED: 'Booking lolos validasi Supervisor',
+  BOOKING_SUPERVISOR_REVISION: 'Booking dikembalikan Supervisor',
+  OPERATOR_ASSIGNED: 'Penugasan Operator baru',
+  USER_ROLE_UPDATED: 'Role akun diperbarui',
   PAYMENT_SUBMITTED: 'Pembayaran perlu verifikasi',
   PAYMENT_APPROVED: 'Pembayaran disetujui',
   PAYMENT_REJECTED: 'Pembayaran ditolak',
@@ -16,12 +20,22 @@ export const EVENT_LABEL: Record<string, string> = {
 export const labelFor = (item: InAppNotification): string =>
   (item.event && EVENT_LABEL[item.event]) || item.message || item.event || 'Notifikasi'
 
-export const targetFor = (item: InAppNotification, role: 'ADMIN' | 'OWNER' | 'USER' | string = 'USER'): string => {
+export const targetFor = (item: InAppNotification, role: 'ADMIN' | 'OWNER' | 'USER' | 'SUPERVISOR' | 'OPERATOR' | string = 'USER'): string => {
   if (item.link) return item.link
 
-  const base = role === 'ADMIN' || role === 'OWNER' ? '/admin' : '/app'
+  const base =
+    role === 'SUPERVISOR'
+      ? '/supervisor'
+      : role === 'OPERATOR'
+        ? '/operator'
+        : role === 'ADMIN' || role === 'OWNER'
+          ? '/admin'
+          : '/app'
   const evt = item.event || ''
   const t = item.type || ''
+
+  if (role === 'SUPERVISOR') return evt.includes('BOOKING') ? `${base}/bookings` : `${base}/notifications`
+  if (role === 'OPERATOR') return evt.includes('OPERATOR') ? `${base}/assignments` : `${base}/notifications`
   
   // Specific entity targets using URL hashes/queries to locate elements (or main views)
   if (evt.includes('BOOKING') && role === 'ADMIN') return `${base}/bookings`

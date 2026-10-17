@@ -22,6 +22,14 @@ export const bookingService = {
     return response
   },
 
+  async updateBooking(
+    id: number,
+    payload: { project_location_id?: number | null; details?: { id: number; start_date: string; end_date: string }[] }
+  ): Promise<ApiResponse<Booking>> {
+    const response = await api.put<Booking, typeof payload>(`/bookings/${id}`, payload)
+    return response
+  },
+
   async submitBooking(id: number): Promise<ApiResponse<Booking>> {
     const response = await api.post<Booking>(`/bookings/${id}/submit`, {})
     return response

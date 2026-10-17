@@ -105,6 +105,10 @@ class UatWorkflowTest extends TestCase
         $this->postJson("/api/v1/bookings/{$bookingId}/approve")
             ->assertStatus(403); // authorization: user cannot approve
 
+        Booking::whereKey($bookingId)->update([
+            'supervisor_decision' => 'VALIDATED',
+            'supervisor_validated_at' => now(),
+        ]);
         Sanctum::actingAs($admin);
         $this->postJson("/api/v1/bookings/{$bookingId}/approve")->assertOk();
         $booking = Booking::find($bookingId);

@@ -17,9 +17,10 @@ export const AdminUsersPage: React.FC = () => {
   const [users, setUsers] = useState<AdminUserData[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [apiError, setApiError] = useState<string | null>(null)
-  
-  // Only interested in USER role for account verification
-  const [roleFilter] = useState('USER')
+
+  const [roleFilter, setRoleFilter] = useState('')
+  const [roleDraft, setRoleDraft] = useState<Record<number, string>>({})
+  const [savingRoleId, setSavingRoleId] = useState<number | null>(null)
 
   const [verifyTarget, setVerifyTarget] = useState<AdminUserData | null>(null)
   const [rejectTarget, setRejectTarget] = useState<AdminUserData | null>(null)
@@ -30,7 +31,7 @@ export const AdminUsersPage: React.FC = () => {
     setApiError(null)
     try {
       // Load max 50 recent users for verification
-      const res = await userService.getUsers({ role: roleFilter, per_page: 50 })
+      const res = await userService.getUsers({ role: roleFilter || undefined, per_page: 50 })
       if (res.success && res.data) {
         setUsers(res.data)
       }
@@ -79,15 +80,48 @@ export const AdminUsersPage: React.FC = () => {
     }
   }
 
+  const handleSaveRole = async (user: AdminUserData) => {
+    const role = (roleDraft[user.id] ?? user.role) as 'USER' | 'SUPERVISOR' | 'OPERATOR'
+    if (role === user.role) return
+    setSavingRoleId(user.id)
+    try {
+      const res = await userService.updateUserRole(user.id, role)
+      if (res.success) {
+        showSuccessToast(`Role ${user.name} diubah menjadi ${role}.`)
+        setRoleDraft((prev) => ({ ...prev, [user.id]: role }))
+        loadUsers()
+      }
+    } catch (err: any) {
+      showErrorToast(err?.message || 'Gagal mengubah role pengguna.')
+    } finally {
+      setSavingRoleId(null)
+    }
+  }
+
+  const EDITABLE_ROLES = ['USER', 'SUPERVISOR', 'OPERATOR']
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Verifikasi Akun Pelanggan</h2>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Kelola Akun &amp; Role Pengguna</h2>
           <p className="text-sm text-slate-500 mt-1">
-            Tinjau identitas pengguna, verifikasi nomor telepon, dan berikan akses penyewaan armada.
+            Verifikasi identitas pelanggan serta tugaskan role SUPERVISOR atau OPERATOR sesuai kebutuhan operasional.
           </p>
         </div>
+        <select
+          value={roleFilter}
+          onChange={(e) => setRoleFilter(e.target.value)}
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-600"
+          aria-label="Filter role pengguna"
+        >
+          <option value="">Semua Role</option>
+          <option value="USER">USER</option>
+          <option value="SUPERVISOR">SUPERVISOR</option>
+          <option value="OPERATOR">OPERATOR</option>
+          <option value="ADMIN">ADMIN</option>
+          <option value="OWNER">OWNER</option>
+        </select>
       </div>
 
       {apiError && (
@@ -120,10 +154,44 @@ export const AdminUsersPage: React.FC = () => {
                       <h4 className="text-base font-bold text-slate-900">{user.name}</h4>
                       <p className="text-sm text-slate-500">{user.email}</p>
                     </div>
-                    <Badge variant={status === 'VERIFIED' ? 'success' : status === 'REJECTED' ? 'danger' : 'warning'}>
-                      {status === 'VERIFIED' ? 'Terverifikasi' : status === 'REJECTED' ? 'Ditolak' : 'Belum Verifikasi'}
-                    </Badge>
+                    <div className="flex flex-col items-end gap-1.5">
+                      <Badge variant={user.role === 'ADMIN' ? 'success' : user.role === 'OWNER' ? 'warning' : 'secondary'} size="sm">
+                        {user.role}
+                      </Badge>
+                      {user.role === 'USER' && (
+                        <Badge variant={status === 'VERIFIED' ? 'success' : status === 'REJECTED' ? 'danger' : 'warning'}>
+                          {status === 'VERIFIED' ? 'Terverifikasi' : status === 'REJECTED' ? 'Ditolak' : 'Belum Verifikasi'}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
+
+                  {user.role !== 'ADMIN' && user.role !== 'OWNER' && (
+                    <div className="flex items-end gap-2">
+                      <label className="flex-1 text-xs text-slate-500">
+                        <span className="block mb-1">Role Akun</span>
+                        <select
+                          value={roleDraft[user.id] ?? user.role}
+                          onChange={(e) => setRoleDraft((prev) => ({ ...prev, [user.id]: e.target.value }))}
+                          className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-600"
+                          aria-label={`Role untuk ${user.name}`}
+                        >
+                          {EDITABLE_ROLES.map((r) => (
+                            <option key={r} value={r}>{r}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        isLoading={savingRoleId === user.id}
+                        disabled={(roleDraft[user.id] ?? user.role) === user.role}
+                        onClick={() => handleSaveRole(user)}
+                      >
+                        Simpan Role
+                      </Button>
+                    </div>
+                  )}
 
                   <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 text-sm space-y-1.5">
                     <div className="flex justify-between">
@@ -160,7 +228,9 @@ export const AdminUsersPage: React.FC = () => {
                 </div>
 
                 <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
-                  {isUnverified ? (
+                  {user.role !== 'USER' ? (
+                    <span className="text-xs text-slate-400">Akun staf — verifikasi identitas hanya untuk pelanggan.</span>
+                  ) : isUnverified ? (
                     <>
                       <Button variant="outline" size="sm" className="text-rose-600 hover:bg-rose-50" onClick={() => setRejectTarget(user)}>
                         <XCircle size={14} className="mr-1" /> Tolak

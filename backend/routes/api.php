@@ -24,6 +24,9 @@ use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\ProjectLocationController;
 use App\Http\Controllers\Api\V1\RecommendationController;
 use App\Http\Controllers\Api\V1\RefundController;
+use App\Http\Controllers\Api\V1\AdminRentalOperatorController;
+use App\Http\Controllers\Api\V1\OperatorAssignmentController;
+use App\Http\Controllers\Api\V1\SupervisorBookingController;
 use App\Http\Controllers\Api\V1\RentalController;
 use App\Http\Controllers\Api\V1\ReportingController;
 use App\Http\Controllers\Api\V1\TimesheetController;
@@ -132,6 +135,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('/', [BookingController::class, 'index'])->name('index');
             Route::post('/', [BookingController::class, 'store'])->name('store');
             Route::get('/{booking}', [BookingController::class, 'show'])->name('show');
+            Route::put('/{booking}', [BookingController::class, 'update'])->name('update');
+            Route::patch('/{booking}', [BookingController::class, 'update'])->name('update.patch');
             Route::post('/{booking}/submit', [BookingController::class, 'submit'])->name('submit');
             Route::post('/{booking}/approve', [BookingController::class, 'approve'])->name('approve');
             Route::post('/{booking}/reject', [BookingController::class, 'reject'])->name('reject');
@@ -294,6 +299,31 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             // User Management
             Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
             Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('users.show');
+            Route::patch('/users/{user}/role', [AdminUserController::class, 'updateRole'])->name('users.role');
+        });
+
+        // Supervisor: initial booking validation (not final approval)
+        Route::middleware('role:SUPERVISOR')->prefix('supervisor')->name('supervisor.')->group(function () {
+            Route::get('/bookings', [SupervisorBookingController::class, 'index'])->name('bookings.index');
+            Route::get('/bookings/{booking}', [SupervisorBookingController::class, 'show'])->name('bookings.show');
+            Route::post('/bookings/{booking}/validate', [SupervisorBookingController::class, 'validateBooking'])->name('bookings.validate');
+            Route::post('/bookings/{booking}/return', [SupervisorBookingController::class, 'returnBooking'])->name('bookings.return');
+        });
+
+        // Operator: read-only access to own assignments & project locations
+        Route::middleware('role:OPERATOR')->prefix('operator')->name('operator.')->group(function () {
+            Route::get('/dashboard', [OperatorAssignmentController::class, 'dashboard'])->name('dashboard');
+            Route::get('/assignments', [OperatorAssignmentController::class, 'index'])->name('assignments.index');
+            Route::get('/assignments/{assignment}', [OperatorAssignmentController::class, 'show'])->name('assignments.show');
+        });
+
+        // Admin: operator assignment management
+        Route::middleware('role:ADMIN')->prefix('admin')->name('admin.operator.')->group(function () {
+            Route::get('/operators', [AdminRentalOperatorController::class, 'operators'])->name('operators.index');
+            Route::get('/rentals/{rental}/operator-assignments', [AdminRentalOperatorController::class, 'index'])->name('assignments.index');
+            Route::post('/rentals/{rental}/operator-assignments', [AdminRentalOperatorController::class, 'store'])->name('assignments.store');
+            Route::post('/operator-assignments/{assignment}/replace', [AdminRentalOperatorController::class, 'replace'])->name('assignments.replace');
+            Route::post('/operator-assignments/{assignment}/end', [AdminRentalOperatorController::class, 'end'])->name('assignments.end');
         });
 
         /*
@@ -308,3 +338,4 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         });
     });
 });
+

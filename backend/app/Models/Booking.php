@@ -17,11 +17,15 @@ class Booking extends Model
     protected $fillable = [
         'booking_code',
         'user_id',
+        'supervisor_user_id',
         'project_location_id',
         'status',
         'rejection_reason',
         'total_amount',
         'approved_at',
+        'supervisor_validated_at',
+        'supervisor_decision',
+        'supervisor_notes',
         'payment_deadline_at',
         'payment_met_at',
         'cancelled_at',
@@ -37,6 +41,7 @@ class Booking extends Model
             'status' => BookingStatus::class,
             'total_amount' => 'decimal:2',
             'approved_at' => 'datetime',
+            'supervisor_validated_at' => 'datetime',
             'payment_deadline_at' => 'datetime',
             'payment_met_at' => 'datetime',
             'cancelled_at' => 'datetime',
@@ -80,3 +85,4 @@ class Booking extends Model
         return $this->hasOne(Rental::class);
     }
 }
+

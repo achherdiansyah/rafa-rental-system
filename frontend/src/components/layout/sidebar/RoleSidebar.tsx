@@ -29,7 +29,7 @@ const isActive = (pathname: string, href: string): boolean => {
   if (pathname === href) return true
   if (href !== '/' && pathname.startsWith(href + '/')) return true
   // exact dashboard roots: keep '/' home only matched exactly
-  return href === '/app' || href === '/admin' || href === '/owner' ? pathname === href : false
+  return ['/app', '/admin', '/owner', '/supervisor', '/operator'].includes(href) ? pathname === href : false
 }
 
 function MenuItem({
@@ -120,7 +120,16 @@ export const RoleSidebar: React.FC<RoleSidebarProps> = ({ groups, title = 'Porta
   const navigate = useNavigate()
   const [collapsed, setCollapsed] = useState(false)
 
-  const brand = user?.role === 'ADMIN' ? 'Admin' : user?.role === 'OWNER' ? 'Owner' : 'Customer'
+  const brand =
+    user?.role === 'ADMIN'
+      ? 'Admin'
+      : user?.role === 'OWNER'
+        ? 'Owner'
+        : user?.role === 'SUPERVISOR'
+          ? 'Supervisor'
+          : user?.role === 'OPERATOR'
+            ? 'Operator'
+            : 'Customer'
   const brandName = 'CV SUMBER MAKMUR RAFA'
 
   const handleLogout = () => {

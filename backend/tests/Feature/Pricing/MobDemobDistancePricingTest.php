@@ -121,7 +121,11 @@ class MobDemobDistancePricingTest extends TestCase
         $this->assertEqualsWithDelta(80000.0, (float) $detail->fresh()->subtotal, 0.01);
 
         // Initial invoice (on approval) uses the snapshot, MOB/DEMOB only.
-        $booking->update(['status' => BookingStatus::PENDING_APPROVAL]);
+        $booking->update([
+            'status' => BookingStatus::PENDING_APPROVAL,
+            'supervisor_decision' => 'VALIDATED',
+            'supervisor_validated_at' => now(),
+        ]);
         app(ApproveBookingAction::class)->execute($admin, $booking);
 
         $invoice = Invoice::where('booking_id', $booking->id)->firstOrFail();

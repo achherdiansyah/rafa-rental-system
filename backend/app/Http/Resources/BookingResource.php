@@ -23,6 +23,11 @@ class BookingResource extends JsonResource
             'rejection_reason' => $this->rejection_reason,
             'total_amount' => (float) $this->total_amount,
             'approved_at' => $this->approved_at?->toISOString(),
+            'supervisor_decision' => $this->supervisor_decision,
+            'supervisor_validated_at' => $this->supervisor_validated_at?->toISOString(),
+            'supervisor_notes' => $this->supervisor_notes,
+            'is_supervisor_validated' => $this->supervisor_decision === 'VALIDATED'
+                && $this->supervisor_validated_at !== null,
             'payment_deadline_at' => $this->payment_deadline_at?->toISOString(),
             'payment_met_at' => $this->payment_met_at?->toISOString(),
             // Business rule: units may only be assigned after the MOB/DEMOB payment

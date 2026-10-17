@@ -41,6 +41,8 @@ class AdminBookingApprovalTest extends TestCase
             'user_id' => $user->id,
             'project_location_id' => $location->id,
             'status' => $status instanceof BookingStatus ? $status->value : $status,
+            'supervisor_decision' => 'VALIDATED',
+            'supervisor_validated_at' => now(),
         ]);
         BookingDetail::factory()->create([
             'booking_id' => $booking->id,

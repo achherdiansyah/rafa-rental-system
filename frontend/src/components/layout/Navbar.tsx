@@ -186,8 +186,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, showMenuToggle = f
                 <div className="flex items-center gap-2.5 text-sm text-slate-700 mr-1">
                   <User size={16} className="text-slate-400" />
                   <span className="font-medium">{user.name}</span>
-                  {user.role === 'ADMIN' && (
-                    <Badge variant="success" size="sm">
+                  {user.role !== 'USER' && (
+                    <Badge
+                      variant={user.role === 'ADMIN' ? 'success' : user.role === 'OWNER' ? 'warning' : 'secondary'}
+                      size="sm"
+                    >
                       {user.role}
                     </Badge>
                   )}

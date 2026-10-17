@@ -30,6 +30,9 @@ const mockBooking: Booking = {
   status: 'PENDING_APPROVAL',
   rejection_reason: null,
   total_amount: 19200000,
+  supervisor_decision: 'VALIDATED',
+  supervisor_validated_at: '2026-09-25T09:00:00Z',
+  is_supervisor_validated: true,
   project_location: {
     id: 1,
     user_id: 7,

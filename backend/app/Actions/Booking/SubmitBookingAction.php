@@ -30,9 +30,13 @@ class SubmitBookingAction
                 throw new InvalidStateTransitionException('Booking bukan milik akun Anda.');
             }
 
-            if ($booking->status !== BookingStatus::DRAFT) {
+            // DRAFT (first submit) or PENDING_APPROVAL returned by Supervisor (revision)
+            $isRevision = $booking->status === BookingStatus::PENDING_APPROVAL
+                && $booking->supervisor_decision === 'REVISION';
+
+            if ($booking->status !== BookingStatus::DRAFT && ! $isRevision) {
                 throw new InvalidStateTransitionException(
-                    'Transisi tidak valid: hanya booking berstatus DRAFT yang dapat di-submit.'
+                    'Transisi tidak valid: hanya booking DRAFT atau hasil revisi Supervisor yang dapat di-submit.'
                 );
             }
 
@@ -51,12 +55,15 @@ class SubmitBookingAction
 
             $booking->update([
                 'status' => BookingStatus::PENDING_APPROVAL,
+                'supervisor_validated_at' => null,
+                'supervisor_decision' => null,
             ]);
 
             AuditLogger::log('BOOKING_SUBMITTED', $booking, [
                 'old_status' => $oldStatus,
             ], [
                 'new_status' => BookingStatus::PENDING_APPROVAL->value,
+                'supervisor_revision_resubmitted' => $isRevision,
             ]);
 
             $booking->load([

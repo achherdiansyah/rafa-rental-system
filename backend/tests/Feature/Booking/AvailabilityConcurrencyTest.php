@@ -93,7 +93,11 @@ class AvailabilityConcurrencyTest extends TestCase
         
         // 4. Admin approves User B
         // Note: ApproveBookingAction in real life comes after SUBMIT (PENDING_APPROVAL).
-        $bookingB->update(['status' => BookingStatus::PENDING_APPROVAL]);
+        $bookingB->update([
+            'status' => BookingStatus::PENDING_APPROVAL,
+            'supervisor_decision' => 'VALIDATED',
+            'supervisor_validated_at' => now(),
+        ]);
         $bookingB = app(ApproveBookingAction::class)->execute($admin, $bookingB);
 
         $bookingB->update([

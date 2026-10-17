@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers\Api\V1\Admin;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Support\AuditLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class AdminUserController extends ApiController
 {
@@ -39,5 +42,46 @@ class AdminUserController extends ApiController
         $user->load('customerProfile', 'projectLocations');
 
         return $this->success(new UserResource($user), 'Detail pengguna berhasil dimuat.');
+    }
+
+    /**
+     * Admin assigns an operational role (USER/SUPERVISOR/OPERATOR) to an account.
+     * ADMIN/OWNER accounts cannot be changed here.
+     */
+    public function updateRole(Request $request, User $user): JsonResponse
+    {
+        /** @var User $actor */
+        $actor = $request->user();
+
+        if (! $actor->isAdmin()) {
+            return $this->forbidden('Hanya Admin yang dapat mengubah role pengguna.');
+        }
+
+        if ($user->isAdmin() || $user->isOwner()) {
+            return $this->error(
+                'Role akun Admin/Owner tidak dapat diubah dari sini.',
+                [],
+                409,
+                'BUSINESS_RULE_VIOLATION'
+            );
+        }
+
+        $validated = $request->validate([
+            'role' => ['required', Rule::in([
+                UserRole::USER->value,
+                UserRole::SUPERVISOR->value,
+                UserRole::OPERATOR->value,
+            ])],
+        ]);
+
+        $oldRole = $user->role?->value;
+        $user->update(['role' => $validated['role']]);
+
+        AuditLogger::log('USER_ROLE_UPDATED', $user, ['old_role' => $oldRole], [
+            'new_role' => $validated['role'],
+            'updated_by' => $actor->id,
+        ]);
+
+        return $this->success(new UserResource($user->fresh()), 'Role pengguna berhasil diperbarui.');
     }
 }

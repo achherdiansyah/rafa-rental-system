@@ -29,6 +29,10 @@ export const userService = {
     return await api.get<AdminUserData>(`/admin/users/${id}`)
   },
 
+  updateUserRole: async (userId: number, role: 'USER' | 'SUPERVISOR' | 'OPERATOR'): Promise<ApiResponse<AdminUserData>> => {
+    return await api.patch<AdminUserData, { role: string }>(`/admin/users/${userId}/role`, { role })
+  },
+
   verifyAccount: async (userId: number, status: 'VERIFIED' | 'REJECTED'): Promise<ApiResponse<{ user_id: number; verification_status: string }>> => {
     return await api.post<{ user_id: number; verification_status: string }>('/profile/verify', {
       user_id: userId,

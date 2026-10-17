@@ -112,6 +112,40 @@ export const adminMenu: SidebarGroup[] = [
   },
 ]
 
+export const supervisorMenu: SidebarGroup[] = [
+  {
+    title: 'Validasi',
+    items: [
+      { label: 'Dashboard', href: '/supervisor', icon: <LayoutDashboard size={18} /> },
+      { label: 'Antrean Validasi', href: '/supervisor/bookings', icon: <CheckSquare size={18} /> },
+    ],
+  },
+  {
+    title: 'Lainnya',
+    items: [
+      { label: 'Notifikasi', href: '/supervisor/notifications', icon: <Bell size={18} />, badge: 0 },
+      { label: 'Profil', href: '/supervisor/profile', icon: <User size={18} /> },
+    ],
+  },
+]
+
+export const operatorMenu: SidebarGroup[] = [
+  {
+    title: 'Operasional',
+    items: [
+      { label: 'Dashboard', href: '/operator', icon: <LayoutDashboard size={18} /> },
+      { label: 'Penugasan Saya', href: '/operator/assignments', icon: <ClipboardList size={18} /> },
+    ],
+  },
+  {
+    title: 'Lainnya',
+    items: [
+      { label: 'Notifikasi', href: '/operator/notifications', icon: <Bell size={18} />, badge: 0 },
+      { label: 'Profil', href: '/operator/profile', icon: <User size={18} /> },
+    ],
+  },
+]
+
 export const ownerMenu: SidebarGroup[] = [
   {
     title: 'Governance',

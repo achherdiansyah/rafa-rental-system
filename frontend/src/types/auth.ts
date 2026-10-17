@@ -1,4 +1,4 @@
-export type UserRole = 'USER' | 'ADMIN' | 'OWNER'
+export type UserRole = 'USER' | 'ADMIN' | 'SUPERVISOR' | 'OPERATOR' | 'OWNER'
 
 export type AuthStatus = 'checking' | 'authenticated' | 'unauthenticated'
 

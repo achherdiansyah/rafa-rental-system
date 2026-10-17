@@ -158,6 +158,8 @@ class MultiRentalIsolationTest extends TestCase
                 'project_location_id' => $location->id,
                 'status' => BookingStatus::PENDING_APPROVAL,
                 'total_amount' => 500000.00,
+                'supervisor_decision' => 'VALIDATED',
+                'supervisor_validated_at' => now(),
             ]);
             $detail = BookingDetail::factory()->create([
                 'booking_id' => $booking->id,

@@ -50,6 +50,20 @@ class UserFactory extends Factory
         ]);
     }
 
+    public function supervisor(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => UserRole::SUPERVISOR->value,
+        ]);
+    }
+
+    public function operator(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => UserRole::OPERATOR->value,
+        ]);
+    }
+
     public function inactive(): static
     {
         return $this->state(fn (array $attributes) => [

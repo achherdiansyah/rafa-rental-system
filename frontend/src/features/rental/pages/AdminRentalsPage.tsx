@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { Truck, Send, MapPin, PlayCircle, Undo2, ClipboardCheck, Wrench, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { Truck, Send, MapPin, PlayCircle, Undo2, ClipboardCheck, Wrench, AlertTriangle, CheckCircle2, UserCheck } from 'lucide-react'
 import { rentalService } from '../services/rentalService'
+import { OperatorAssignmentModal } from '../components/OperatorAssignmentModal'
 import type { Rental } from '@/types/rental'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -46,6 +47,8 @@ export const AdminRentalsPage: React.FC = () => {
   const [inspectionRental, setInspectionRental] = useState<Rental | null>(null)
   const [inspectionResult, setInspectionResult] = useState<InspectionResult>('READY')
   const [inspectionNotes, setInspectionNotes] = useState('')
+
+  const [operatorRental, setOperatorRental] = useState<Rental | null>(null)
 
   const loadRentals = async () => {
     setIsLoading(true)
@@ -227,18 +230,25 @@ export const AdminRentalsPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {action && (
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      className="gap-1.5 shrink-0"
-                      isLoading={actingId === rental.id}
-                      onClick={() => openConfirm(rental)}
-                    >
-                      {action.target === 'dispatch' ? <Send size={15} /> : action.target === 'arrive' ? <MapPin size={15} /> : action.target === 'start' ? <PlayCircle size={15} /> : action.target === 'return' ? <Undo2 size={15} /> : <ClipboardCheck size={15} />}
-                      {action.label}
-                    </Button>
-                  )}
+                  <div className="flex flex-col items-stretch gap-2 shrink-0">
+                    {action && (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        className="gap-1.5"
+                        isLoading={actingId === rental.id}
+                        onClick={() => openConfirm(rental)}
+                      >
+                        {action.target === 'dispatch' ? <Send size={15} /> : action.target === 'arrive' ? <MapPin size={15} /> : action.target === 'start' ? <PlayCircle size={15} /> : action.target === 'return' ? <Undo2 size={15} /> : <ClipboardCheck size={15} />}
+                        {action.label}
+                      </Button>
+                    )}
+                    {rental.status !== 'COMPLETED' && rental.status !== 'CANCELLED' && (
+                      <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setOperatorRental(rental)}>
+                        <UserCheck size={15} /> Operator
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </Card>
             )
@@ -261,6 +271,12 @@ export const AdminRentalsPage: React.FC = () => {
         confirmText="Konfirmasi"
         cancelText="Batal"
         isLoading={actingId !== null}
+      />
+
+      <OperatorAssignmentModal
+        rental={operatorRental}
+        isOpen={operatorRental !== null}
+        onClose={() => setOperatorRental(null)}
       />
 
       <ConfirmDialog

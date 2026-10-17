@@ -37,4 +37,10 @@ class Rental extends Model
     {
         return $this->hasMany(RentalDetail::class);
     }
+
+    public function operatorAssignments(): HasMany
+    {
+        return $this->hasMany(RentalOperatorAssignment::class);
+    }
 }
+

@@ -168,7 +168,11 @@ class PricingBusinessRuleFinalTest extends TestCase
         ]);
 
         $booking = app(CreateBookingFromCartAction::class)->execute($user, $cart);
-        $booking->update(['status' => BookingStatus::PENDING_APPROVAL]);
+        $booking->update([
+            'status' => BookingStatus::PENDING_APPROVAL,
+            'supervisor_decision' => 'VALIDATED',
+            'supervisor_validated_at' => now(),
+        ]);
 
         // Admin views booking
         Sanctum::actingAs($admin);

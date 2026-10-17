@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { CalendarCheck, MapPin, Truck, ShieldCheck, Clock, Check, XCircle, CalendarClock } from 'lucide-react'
 import { bookingService } from '../services/bookingService'
+import { projectLocationService } from '@/features/project/services/projectLocationService'
 import type { Booking } from '@/types/booking'
+import type { ProjectLocation } from '@/types/projectLocation'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -56,6 +58,13 @@ export const UserBookingsPage: React.FC = () => {
   const [cancelTarget, setCancelTarget] = useState<Booking | null>(null)
   const [cancelReason, setCancelReason] = useState('')
   const [cancelError, setCancelError] = useState('')
+
+  // Supervisor-revision correction
+  const [correctTarget, setCorrectTarget] = useState<Booking | null>(null)
+  const [correctLocationId, setCorrectLocationId] = useState('')
+  const [correctDetails, setCorrectDetails] = useState<{ id: number; start_date: string; end_date: string }[]>([])
+  const [correctLocations, setCorrectLocations] = useState<ProjectLocation[]>([])
+  const [correctError, setCorrectError] = useState('')
 
   // Reschedule
   const [rescheduleTarget, setRescheduleTarget] = useState<Booking | null>(null)
@@ -176,6 +185,53 @@ export const UserBookingsPage: React.FC = () => {
       }
     } catch (err: any) {
       showErrorToast(err?.message || 'Gagal mengajukan reschedule.')
+    } finally {
+      setSubmittingId(null)
+    }
+  }
+
+  const canCorrect = (b: Booking) =>
+    b.status === 'PENDING_APPROVAL' && b.supervisor_decision === 'REVISION'
+
+  const openCorrect = async (booking: Booking) => {
+    setCorrectTarget(booking)
+    setCorrectLocationId(String(booking.project_location_id ?? ''))
+    setCorrectDetails(
+      (booking.details ?? []).map((d) => ({ id: d.id, start_date: d.start_date, end_date: d.end_date }))
+    )
+    setCorrectError('')
+    if (correctLocations.length === 0) {
+      try {
+        const res = await projectLocationService.getLocations(1, 50)
+        setCorrectLocations(res.data ?? [])
+      } catch {
+        setCorrectLocations([])
+      }
+    }
+  }
+
+  const handleCorrect = async () => {
+    if (!correctTarget) return
+    for (const d of correctDetails) {
+      if (!d.start_date || !d.end_date || d.end_date < d.start_date) {
+        setCorrectError('Tanggal selesai tidak boleh sebelum tanggal mulai.')
+        return
+      }
+    }
+    setSubmittingId(correctTarget.id)
+    try {
+      const res = await bookingService.updateBooking(correctTarget.id, {
+        project_location_id: correctLocationId ? Number(correctLocationId) : null,
+        details: correctDetails,
+      })
+      if (res.success) {
+        await bookingService.submitBooking(correctTarget.id)
+        showSuccessToast('Perbaikan disimpan dan booking diajukan ulang ke validasi Supervisor.')
+        setCorrectTarget(null)
+        loadBookings(currentPage)
+      }
+    } catch (err: any) {
+      showErrorToast(err?.message || 'Gagal memperbarui booking.')
     } finally {
       setSubmittingId(null)
     }
@@ -310,6 +366,25 @@ export const UserBookingsPage: React.FC = () => {
                       Ajukan ke Approval
                     </Button>
                   ) : null}
+
+                  {canCorrect(booking) && (
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      disabled={submittingId !== null}
+                      onClick={() => openCorrect(booking)}
+                      className="gap-1.5"
+                    >
+                      <ShieldCheck size={15} />
+                      Perbaiki &amp; Ajukan Ulang
+                    </Button>
+                  )}
+
+                  {booking.supervisor_decision === 'REVISION' && booking.supervisor_notes && (
+                    <span className="text-xs text-amber-700 max-w-md">
+                      Catatan Supervisor: {booking.supervisor_notes}
+                    </span>
+                  )}
 
                   {canReschedule(booking) && (
                     <Button
@@ -455,6 +530,73 @@ export const UserBookingsPage: React.FC = () => {
             </Button>
             <Button isLoading={submittingId === rescheduleTarget?.id} onClick={handleReschedule} className="gap-1.5">
               <CalendarClock size={16} /> Ajukan Reschedule
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Supervisor-revision correction modal */}
+      <Modal
+        isOpen={correctTarget !== null}
+        onClose={() => submittingId === null && setCorrectTarget(null)}
+        title={`Perbaiki ${correctTarget?.booking_code ?? ''}`}
+        size="md"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-slate-500">
+            {correctTarget?.supervisor_notes
+              ? `Catatan Supervisor: ${correctTarget.supervisor_notes}`
+              : 'Sesuaikan data booking lalu ajukan ulang ke validasi Supervisor.'}
+          </p>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Lokasi Proyek</label>
+            <select
+              value={correctLocationId}
+              onChange={(e) => setCorrectLocationId(e.target.value)}
+              disabled={submittingId !== null}
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-600"
+            >
+              <option value="">-- Pilih Lokasi --</option>
+              {correctLocations.map((loc) => (
+                <option key={loc.id} value={loc.id}>
+                  {loc.project_name} - {loc.city}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {correctDetails.map((d, idx) => (
+            <div key={d.id} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Input
+                label={`Mulai Item #${idx + 1}`}
+                type="date"
+                value={d.start_date}
+                disabled={submittingId !== null}
+                onChange={(e) =>
+                  setCorrectDetails((prev) => prev.map((x) => (x.id === d.id ? { ...x, start_date: e.target.value } : x)))
+                }
+              />
+              <Input
+                label={`Selesai Item #${idx + 1}`}
+                type="date"
+                value={d.end_date}
+                disabled={submittingId !== null}
+                onChange={(e) =>
+                  setCorrectDetails((prev) => prev.map((x) => (x.id === d.id ? { ...x, end_date: e.target.value } : x)))
+                }
+              />
+            </div>
+          ))}
+
+          {correctError && <p className="text-xs text-rose-600">{correctError}</p>}
+
+          <div className="flex justify-end gap-3 pt-2 border-t border-slate-100">
+            <Button variant="outline" onClick={() => setCorrectTarget(null)} disabled={submittingId !== null}>
+              Batal
+            </Button>
+            <Button isLoading={submittingId === correctTarget?.id} onClick={handleCorrect} className="gap-1.5">
+              <ShieldCheck size={16} /> Simpan &amp; Ajukan Ulang
             </Button>
           </div>
         </div>
