@@ -39,5 +39,9 @@
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
+        <!-- Never call a real routing provider (or use the Mapbox token) in tests. -->
+        <env name="ROUTING_PROVIDER" value=""/>
+        <env name="ROUTING_API_KEY" value=""/>
+        <env name="ROUTING_PROVIDER_CLASS" value=""/>
     </php>
 </phpunit>

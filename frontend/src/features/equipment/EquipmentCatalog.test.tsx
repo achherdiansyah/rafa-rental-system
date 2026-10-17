@@ -74,7 +74,7 @@ describe('User Equipment Catalog UI', () => {
       expect(screen.getByText('Komatsu PC200-8')).toBeInTheDocument()
       expect(screen.getByText('20 Ton')).toBeInTheDocument()
       expect(screen.getByText(/Rp 225\.000\/jam/)).toBeInTheDocument()
-      expect(screen.getByText('6 unit tersedia')).toBeInTheDocument()
+      expect(screen.getAllByText('6 unit tersedia').length).toBeGreaterThanOrEqual(1)
       expect(screen.getByRole('button', { name: /lihat detail/i })).toBeInTheDocument()
     })
   })
@@ -114,8 +114,8 @@ describe('User Equipment Catalog UI', () => {
       </MemoryRouter>
     )
 
-    expect(await screen.findByText(/sedang disewa hingga/i)).toBeInTheDocument()
-    expect(screen.getByText(/15 Nov 2026/i)).toBeInTheDocument()
+    expect((await screen.findAllByText(/sedang disewa hingga/i)).length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText(/15 Nov 2026/i).length).toBeGreaterThanOrEqual(1)
   })
 
   it('shows maintenance status instead of rented', async () => {
@@ -134,7 +134,29 @@ describe('User Equipment Catalog UI', () => {
       </MemoryRouter>
     )
 
-    expect(await screen.findByText('Unit Maintenance')).toBeInTheDocument()
+    expect((await screen.findAllByText('Unit Maintenance')).length).toBeGreaterThanOrEqual(1)
+    expect(screen.queryByText(/sedang disewa/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/armada siap sewa/i)).not.toBeInTheDocument()
+  })
+
+  it('shows future booking as "Dipesan mulai" instead of "Sedang Disewa"', async () => {
+    vi.mocked(equipmentService.getModels).mockResolvedValue({
+      success: true,
+      message: 'OK',
+      data: [{ ...mockModels[0], available_units_count: 0, availability_status: 'BOOKED', booked_from: '2026-12-01', rented_until: null }],
+      meta: { current_page: 1, per_page: 9, total: 1, last_page: 1 },
+    } as any)
+
+    render(
+      <MemoryRouter>
+        <ToastProvider>
+          <EquipmentCatalogPage />
+        </ToastProvider>
+      </MemoryRouter>
+    )
+
+    expect((await screen.findAllByText(/dipesan mulai/i)).length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText(/1 Des 2026/i).length).toBeGreaterThanOrEqual(1)
     expect(screen.queryByText(/sedang disewa/i)).not.toBeInTheDocument()
   })
 

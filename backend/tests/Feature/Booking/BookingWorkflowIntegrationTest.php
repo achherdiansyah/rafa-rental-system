@@ -119,7 +119,8 @@ class BookingWorkflowIntegrationTest extends TestCase
             $this->assertEquals(EquipmentStatus::ASSIGNED, $u->fresh()->status);
         }
 
-        // 7. Conflict: second booking requesting the same window must be rejected at draft
+        // 7. Conflict: second request for the same window is rejected at cart add
+        // (backend availability guard), so it can never become a conflicting booking.
         Sanctum::actingAs($user);
         $loc2 = ProjectLocation::factory()->create(['user_id' => $user->id]);
         $this->postJson('/api/v1/cart/items', [
@@ -129,8 +130,9 @@ class BookingWorkflowIntegrationTest extends TestCase
             'start_date' => $start,
             'end_date' => $end,
             'project_location_id' => $loc2->id,
-        ])->assertStatus(201);
+        ])->assertStatus(409)->assertJsonPath('code', 'BUSINESS_RULE_VIOLATION');
 
+        $this->assertDatabaseCount('cart_items', 0);
         $this->postJson('/api/v1/bookings')->assertStatus(409);
     }
 

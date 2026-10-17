@@ -140,6 +140,7 @@ export const EquipmentCatalogPage: React.FC = () => {
             {models.map((model) => {
               const lowestRate = getLowestPrice(model)
               const primaryPhoto = model.attachments?.find((a) => a.url)?.url
+              const availability = availabilityLabel(model)
 
               return (
                 <Card key={model.id} className="overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow">
@@ -162,8 +163,8 @@ export const EquipmentCatalogPage: React.FC = () => {
                         <Badge variant="secondary" size="sm" className="bg-white/90 backdrop-blur-xs font-semibold">
                           {model.capacity_value} {model.capacity_unit}
                         </Badge>
-                        <Badge variant={availabilityLabel(model).tone} size="sm" className="bg-white/90 backdrop-blur-xs font-semibold">
-                          {availabilityLabel(model).text}
+                        <Badge variant={availability.tone} size="sm" className="bg-white/90 backdrop-blur-xs font-semibold">
+                          {availability.text}
                         </Badge>
                       </div>
                   </div>
@@ -183,8 +184,17 @@ export const EquipmentCatalogPage: React.FC = () => {
                   <CardContent className="px-5 py-2 space-y-2">
                     <div className="flex items-center justify-between text-xs text-slate-500 border-t border-slate-100 pt-2.5">
                       <span>Status Kesiapan:</span>
-                      <span className="font-semibold text-emerald-600 flex items-center gap-1">
-                        <ShieldCheck size={13} /> Armada Siap Sewa
+                      <span
+                        className={`font-semibold flex items-center gap-1 ${
+                          availability.tone === 'success'
+                            ? 'text-emerald-600'
+                            : availability.tone === 'warning'
+                              ? 'text-amber-600'
+                              : 'text-rose-600'
+                        }`}
+                      >
+                        {availability.tone === 'success' && <ShieldCheck size={13} />}
+                        {availability.text}
                       </span>
                     </div>
                   </CardContent>

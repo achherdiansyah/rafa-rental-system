@@ -31,6 +31,13 @@ export const availabilityLabel = (model: EquipmentModel): AvailabilityLabel => {
     return { text: 'Sedang Disewa', tone: 'warning' }
   }
 
+  if (model.availability_status === 'BOOKED') {
+    if (model.booked_from) {
+      return { text: `Dipesan mulai ${formatDate(model.booked_from)}`, tone: 'warning' }
+    }
+    return { text: 'Sudah Dipesan', tone: 'warning' }
+  }
+
   if (model.availability_status === 'MAINTENANCE') {
     return { text: 'Unit Maintenance', tone: 'warning' }
   }

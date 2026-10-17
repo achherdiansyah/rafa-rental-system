@@ -63,6 +63,7 @@ class EquipmentModelController extends ApiController
             $array['total_units'] = (int) ($summary['total_units'] ?? 0);
             $array['maintenance_units'] = (int) ($summary['maintenance_units'] ?? 0);
             $array['rented_until'] = $summary['rented_until'] ?? null;
+            $array['booked_from'] = $summary['booked_from'] ?? null;
             $array['availability_status'] = $summary['status'] ?? 'UNAVAILABLE';
             return $array;
         });
@@ -98,6 +99,7 @@ class EquipmentModelController extends ApiController
         $data['total_units'] = (int) ($summary['total_units'] ?? 0);
         $data['maintenance_units'] = (int) ($summary['maintenance_units'] ?? 0);
         $data['rented_until'] = $summary['rented_until'] ?? null;
+        $data['booked_from'] = $summary['booked_from'] ?? null;
         $data['availability_status'] = $summary['status'] ?? 'UNAVAILABLE';
 
         return $this->success($data, 'Detail model armada berhasil dimuat.');

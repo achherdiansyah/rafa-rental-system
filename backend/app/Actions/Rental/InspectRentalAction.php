@@ -63,6 +63,9 @@ class InspectRentalAction
                 'completed_at' => now(),
             ]);
 
+            // Booking status is intentionally left to its existing lifecycle.
+            // Availability queries exclude COMPLETED rentals instead, so a stale
+            // ONGOING booking no longer blocks a unit that has been inspected.
             AuditLogger::log('RENTAL_INSPECTION', $rental, [
                 'old_status' => RentalStatus::RETURN_INSPECTED->value,
             ], [

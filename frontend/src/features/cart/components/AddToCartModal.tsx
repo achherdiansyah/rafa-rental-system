@@ -97,6 +97,7 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
     }
 
     let active = true
+    setPeriodModel(null)
     setIsCheckingAvailability(true)
 
     equipmentService
@@ -200,6 +201,9 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
   const rateLabel = selectedPrice
     ? `Rp ${selectedPrice.base_rate.toLocaleString('id-ID')} / jam`
     : 'Tarif belum tersedia'
+
+  const periodAvailable = periodModel?.available_units_count ?? 0
+  const quantityExceedsAvailability = periodModel !== null && periodAvailable < quantity
 
   return (
     <Modal
@@ -310,9 +314,9 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
             {isCheckingAvailability
               ? 'Memeriksa ketersediaan untuk periode ini...'
               : periodModel
-                ? (periodModel.available_units_count ?? 0) > 0
-                  ? `Tersedia ${periodModel.available_units_count} unit untuk periode ini.`
-                  : availabilityLabel(periodModel).text
+                ? quantityExceedsAvailability
+                  ? `${availabilityLabel(periodModel).text}. Hanya ${periodAvailable} unit tersedia untuk periode ini, sedangkan Anda meminta ${quantity} unit.`
+                  : `Tersedia ${periodAvailable} unit untuk periode ini.`
                 : 'Ketersediaan untuk periode ini belum dapat dipastikan.'}
           </div>
         )}
@@ -377,7 +381,12 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
           <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
             Batal
           </Button>
-          <Button type="submit" isLoading={isSubmitting} className="gap-2">
+          <Button
+            type="submit"
+            isLoading={isSubmitting}
+            disabled={isCheckingAvailability || quantityExceedsAvailability}
+            className="gap-2"
+          >
             <ShoppingCart size={16} />
             Tambah ke Keranjang
           </Button>

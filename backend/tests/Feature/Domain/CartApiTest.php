@@ -3,9 +3,11 @@
 namespace Tests\Feature\Domain;
 
 use App\Enums\UserRole;
+use App\Enums\EquipmentStatus;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\EquipmentModel;
+use App\Models\EquipmentUnit;
 use App\Models\ProjectLocation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -42,6 +44,10 @@ class CartApiTest extends TestCase
         Sanctum::actingAs($user);
 
         $model = EquipmentModel::factory()->create(['is_active' => true]);
+        EquipmentUnit::factory()->count(4)->create([
+            'equipment_model_id' => $model->id,
+            'status' => EquipmentStatus::AVAILABLE,
+        ]);
 
         $payload = [
             'equipment_model_id' => $model->id,
@@ -72,8 +78,14 @@ class CartApiTest extends TestCase
         Sanctum::actingAs($user);
 
         $cart = Cart::factory()->create(['user_id' => $user->id]);
+        $model = EquipmentModel::factory()->create(['is_active' => true]);
+        EquipmentUnit::factory()->count(5)->create([
+            'equipment_model_id' => $model->id,
+            'status' => EquipmentStatus::AVAILABLE,
+        ]);
         $item = CartItem::factory()->create([
             'cart_id' => $cart->id,
+            'equipment_model_id' => $model->id,
             'quantity' => 1,
             'is_all_in' => false,
         ]);
@@ -113,6 +125,53 @@ class CartApiTest extends TestCase
         $response->assertStatus(200);
         $this->assertCount(0, $response->json('data.items'));
         $this->assertDatabaseCount('cart_items', 0);
+    }
+
+    public function test_add_to_cart_is_rejected_when_period_availability_is_insufficient(): void
+    {
+        $user = User::factory()->create(['role' => UserRole::USER]);
+        Sanctum::actingAs($user);
+
+        $model = EquipmentModel::factory()->create(['is_active' => true]);
+        EquipmentUnit::factory()->create([
+            'equipment_model_id' => $model->id,
+            'status' => EquipmentStatus::AVAILABLE,
+        ]);
+
+        $response = $this->postJson('/api/v1/cart/items', [
+            'equipment_model_id' => $model->id,
+            'quantity' => 2,
+            'is_all_in' => false,
+            'start_date' => now()->addDays(2)->toDateString(),
+            'end_date' => now()->addDays(5)->toDateString(),
+        ])->assertStatus(409)->assertJsonPath('code', 'BUSINESS_RULE_VIOLATION');
+
+        $this->assertStringContainsString('Ketersediaan unit tidak mencukupi', $response->json('message'));
+        $this->assertDatabaseCount('cart_items', 0);
+    }
+
+    public function test_update_cart_item_is_rejected_when_quantity_exceeds_availability(): void
+    {
+        $user = User::factory()->create(['role' => UserRole::USER]);
+        Sanctum::actingAs($user);
+
+        $cart = Cart::factory()->create(['user_id' => $user->id]);
+        $model = EquipmentModel::factory()->create(['is_active' => true]);
+        EquipmentUnit::factory()->create([
+            'equipment_model_id' => $model->id,
+            'status' => EquipmentStatus::AVAILABLE,
+        ]);
+        $item = CartItem::factory()->create([
+            'cart_id' => $cart->id,
+            'equipment_model_id' => $model->id,
+            'quantity' => 1,
+        ]);
+
+        $this->putJson("/api/v1/cart/items/{$item->id}", ['quantity' => 3])
+            ->assertStatus(409)
+            ->assertJsonPath('code', 'BUSINESS_RULE_VIOLATION');
+
+        $this->assertEquals(1, $item->fresh()->quantity);
     }
 
     public function test_user_can_update_cart_location(): void

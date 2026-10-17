@@ -46,7 +46,8 @@ export interface EquipmentModel {
   total_units?: number
   maintenance_units?: number
   rented_until?: string | null
-  availability_status?: 'AVAILABLE' | 'RENTED' | 'MAINTENANCE' | 'UNAVAILABLE'
+  booked_from?: string | null
+  availability_status?: 'AVAILABLE' | 'RENTED' | 'BOOKED' | 'MAINTENANCE' | 'UNAVAILABLE'
   created_at?: string
   updated_at?: string
 }

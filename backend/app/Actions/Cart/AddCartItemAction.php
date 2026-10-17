@@ -7,12 +7,15 @@ use App\Models\Cart;
 use App\Models\EquipmentModel;
 use App\Models\ProjectLocation;
 use App\Models\User;
+use App\Services\Equipment\EquipmentAvailabilityService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class AddCartItemAction
 {
     public function __construct(
-        protected GetOrCreateUserCartAction $getOrCreateCart
+        protected GetOrCreateUserCartAction $getOrCreateCart,
+        protected EquipmentAvailabilityService $availability
     ) {}
 
     /**
@@ -53,6 +56,21 @@ class AddCartItemAction
                 ->where('start_date', $data['start_date'])
                 ->where('end_date', $data['end_date'])
                 ->first();
+
+            // 5. Re-check real availability for the requested period (backend is
+            // the source of truth; the frontend check is only a convenience).
+            $requestedQuantity = (int) $data['quantity'] + (int) ($existingItem?->quantity ?? 0);
+            $available = $this->availability->getAvailableUnitsCount(
+                $model,
+                Carbon::parse($data['start_date']),
+                Carbon::parse($data['end_date'])
+            );
+
+            if ($available < $requestedQuantity) {
+                throw new BusinessRuleException(
+                    "Ketersediaan unit tidak mencukupi untuk periode ini: diminta {$requestedQuantity} unit, tersedia {$available} unit."
+                );
+            }
 
             if ($existingItem) {
                 $existingItem->increment('quantity', $data['quantity']);

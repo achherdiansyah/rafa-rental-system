@@ -93,7 +93,11 @@ describe('Cart UI Suite', () => {
         data: mockLocations,
         meta: { current_page: 1, per_page: 100, total: 1, last_page: 1 },
       } as any)
-      vi.mocked(equipmentService.getModel).mockResolvedValue(mockModel as any)
+      vi.mocked(equipmentService.getModel).mockResolvedValue({
+        ...mockModel,
+        available_units_count: 3,
+        availability_status: 'AVAILABLE',
+      } as any)
     })
 
   it('shows empty state when cart is empty', async () => {
@@ -302,6 +306,10 @@ describe('Cart UI Suite', () => {
 
     fireEvent.change(screen.getByLabelText(/tanggal mulai sewa/i), { target: { value: start } })
     fireEvent.change(screen.getByLabelText(/tanggal selesai sewa/i), { target: { value: end } })
+
+    await waitFor(() => {
+      expect(screen.getByText(/tersedia 3 unit untuk periode ini/i)).toBeInTheDocument()
+    })
 
     fireEvent.click(screen.getByRole('button', { name: /tambah ke keranjang/i }))
 

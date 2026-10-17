@@ -157,6 +157,12 @@ class EquipmentAvailabilityService
             ->whereIn('b.status', $this->committedStatuses)
             ->whereNull('b.deleted_at')
             ->whereNull('eu.deleted_at')
+            ->whereNotExists(function ($sub) {
+                $sub->select(DB::raw(1))
+                    ->from('rentals')
+                    ->whereColumn('rentals.booking_id', 'b.id')
+                    ->where('rentals.status', 'COMPLETED');
+            })
             ->where('bd.start_date', '<=', $cStartMax)
             ->whereRaw($this->dateAddExpr('bd.end_date', $postBuffer).' >= ?', [$cEndMin]);
 
@@ -225,14 +231,14 @@ class EquipmentAvailabilityService
      * - available_units: bookable units for the requested window (or today)
      * - total_units: operational (non-decommissioned/maintenance) units
      * - maintenance_units: units currently in MAINTENANCE/RETURN_INSPECTION
-     * - rented_until: latest committed booking end date causing the unavailability
-     *                 (null when unknown / not caused by a rental)
-     * - status: AVAILABLE | RENTED | MAINTENANCE | UNAVAILABLE
+     * - rented_until: latest end date of an ACTIVE rental causing unavailability
+     * - booked_from: earliest start date of an UPCOMING reservation causing unavailability
+     * - status: AVAILABLE | RENTED | BOOKED | MAINTENANCE | UNAVAILABLE
      *
      * Bulk-queried (no N+1) and derived from real booking/assignment data only.
      *
      * @param  array<int>  $modelIds
-     * @return Collection<int, array{available_units:int,total_units:int,maintenance_units:int,rented_until:?string,status:string}>
+     * @return Collection<int, array{available_units:int,total_units:int,maintenance_units:int,rented_until:?string,booked_from:?string,status:string}>
      */
     public function availabilitySummaryMap(
         array $modelIds,
@@ -266,35 +272,56 @@ class EquipmentAvailabilityService
             ->groupBy('equipment_model_id')
             ->pluck('maintenance_count', 'equipment_model_id');
 
-        // Latest committed booking end date per model that causes the conflict.
-        $committedStatuses = $startDate && $endDate
-            ? $this->committedStatuses
-            : ['DISPATCHED', 'ARRIVED', 'ONGOING']; // "currently rented" window
+        // RENTED = there is a rental in operation; BOOKED = a reservation for a
+        // future period. Both are derived from existing booking status/dates.
+        $activeStatuses = ['DISPATCHED', 'ARRIVED', 'ONGOING'];
+        $upcomingStatuses = ['APPROVED', 'PAYMENT_PENDING', 'CONFIRMED'];
 
-        $rentedQuery = DB::table('booking_unit_assignments as bua')
-            ->join('booking_details as bd', 'bua.booking_detail_id', '=', 'bd.id')
-            ->join('bookings as b', 'bd.booking_id', '=', 'b.id')
-            ->join('equipment_units as eu', 'bua.equipment_unit_id', '=', 'eu.id')
-            ->where('bua.is_current', true)
-            ->whereIn('b.status', $committedStatuses)
-            ->whereNull('b.deleted_at')
-            ->whereNull('eu.deleted_at')
-            ->whereIn('bd.equipment_model_id', $modelIds);
+        $baseQuery = function () use ($modelIds) {
+            return DB::table('booking_unit_assignments as bua')
+                ->join('booking_details as bd', 'bua.booking_detail_id', '=', 'bd.id')
+                ->join('bookings as b', 'bd.booking_id', '=', 'b.id')
+                ->join('equipment_units as eu', 'bua.equipment_unit_id', '=', 'eu.id')
+                ->where('bua.is_current', true)
+                ->whereNull('b.deleted_at')
+                ->whereNull('eu.deleted_at')
+                ->whereNotExists(function ($sub) {
+                    $sub->select(DB::raw(1))
+                        ->from('rentals')
+                        ->whereColumn('rentals.booking_id', 'b.id')
+                        ->where('rentals.status', 'COMPLETED');
+                })
+                ->whereIn('bd.equipment_model_id', $modelIds);
+        };
 
-        if ($startDate && $endDate) {
+        $applyPeriod = function ($query) use ($startDate, $endDate) {
             [$cStartMax, $cEndMin] = $this->overlapRange($startDate, $endDate);
             $postBuffer = $this->extDays + $this->inspDays;
-            $rentedQuery
+
+            return $query
                 ->where('bd.start_date', '<=', $cStartMax)
                 ->whereRaw($this->dateAddExpr('bd.end_date', $postBuffer).' >= ?', [$cEndMin]);
+        };
+
+        if ($startDate && $endDate) {
+            $rentedQuery = $applyPeriod($baseQuery())
+                ->whereIn('b.status', $activeStatuses);
+            $bookedQuery = $applyPeriod($baseQuery())
+                ->whereIn('b.status', $upcomingStatuses);
         } else {
-            // Currently rented only: unit must be physically out of the pool.
-            $rentedQuery->whereIn('eu.status', [
-                EquipmentStatus::MOBILIZING->value,
-                EquipmentStatus::ON_SITE->value,
-                EquipmentStatus::DEMOBILIZING->value,
-                EquipmentStatus::RETURN_INSPECTION->value,
-            ]);
+            // Currently rented: booking runs now and the unit is physically out.
+            $rentedQuery = $baseQuery()
+                ->whereIn('b.status', $activeStatuses)
+                ->whereIn('eu.status', [
+                    EquipmentStatus::MOBILIZING->value,
+                    EquipmentStatus::ON_SITE->value,
+                    EquipmentStatus::DEMOBILIZING->value,
+                    EquipmentStatus::RETURN_INSPECTION->value,
+                ]);
+            // Upcoming reservation: not yet in operation.
+            $bookedQuery = $baseQuery()
+                ->whereIn('b.status', $upcomingStatuses)
+                ->where('bd.start_date', '>=', now()->toDateString());
         }
 
         $rentedUntil = $rentedQuery
@@ -302,20 +329,32 @@ class EquipmentAvailabilityService
             ->groupBy('bd.equipment_model_id')
             ->pluck('rented_until', 'bd.equipment_model_id');
 
+        $bookedFrom = $bookedQuery
+            ->select('bd.equipment_model_id', DB::raw('MIN(bd.start_date) as booked_from'))
+            ->groupBy('bd.equipment_model_id')
+            ->pluck('booked_from', 'bd.equipment_model_id');
+
         $summary = collect();
         foreach ($modelIds as $modelId) {
             $available = (int) ($availableMap->get($modelId, 0));
             $total = (int) ($totalCounts->get($modelId, 0));
             $maintenance = (int) ($maintenanceCounts->get($modelId, 0));
             $untilRaw = $rentedUntil->get($modelId);
+            $fromRaw = $bookedFrom->get($modelId);
             $rentedUntilValue = $untilRaw ? substr((string) $untilRaw, 0, 10) : null;
+            $bookedFromValue = $fromRaw ? substr((string) $fromRaw, 0, 10) : null;
 
             if ($available > 0) {
                 // Some physical units are still bookable -> the model IS available.
                 $status = 'AVAILABLE';
                 $rentedUntilValue = null;
+                $bookedFromValue = null;
             } elseif ($rentedUntilValue) {
                 $status = 'RENTED';
+                $bookedFromValue = null;
+            } elseif ($bookedFromValue) {
+                $status = 'BOOKED';
+                $rentedUntilValue = null;
             } elseif ($maintenance > 0) {
                 $status = 'MAINTENANCE';
             } else {
@@ -327,6 +366,7 @@ class EquipmentAvailabilityService
                 'total_units' => $total,
                 'maintenance_units' => $maintenance,
                 'rented_until' => $rentedUntilValue,
+                'booked_from' => $bookedFromValue,
                 'status' => $status,
             ]);
         }
@@ -368,6 +408,12 @@ class EquipmentAvailabilityService
                     ->where('booking_unit_assignments.is_current', true)
                     ->whereIn('bookings.status', $this->committedStatuses)
                     ->whereNull('bookings.deleted_at')
+                    ->whereNotExists(function ($rental) {
+                        $rental->select(DB::raw(1))
+                            ->from('rentals')
+                            ->whereColumn('rentals.booking_id', 'bookings.id')
+                            ->where('rentals.status', 'COMPLETED');
+                    })
                     ->where('booking_details.start_date', '<=', $cStartMax)
                     ->whereRaw($this->dateAddExpr('booking_details.end_date', $postBuffer).' >= ?', [$cEndMin]);
             })
