@@ -14,6 +14,8 @@ class RecommendationResult extends Model
         'request_id',
         'equipment_model_id',
         'match_score',
+        'score_breakdown',
+        'available_units',
         'reasoning_text',
     ];
 
@@ -21,6 +23,8 @@ class RecommendationResult extends Model
     {
         return [
             'match_score' => 'decimal:2',
+            'score_breakdown' => 'array',
+            'available_units' => 'integer',
         ];
     }
 

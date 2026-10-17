@@ -22,6 +22,9 @@ const input = {
   depth_requirement: 5,
   reach_requirement: 9,
   duration_days: 14,
+  project_location_id: 3,
+  start_date: '2026-11-01',
+  end_date: '2026-11-05',
 }
 
 describe('recommendationService', () => {
@@ -43,7 +46,12 @@ describe('recommendationService', () => {
     expect(url).toBe('/recommendations/request')
     expect(url).not.toContain('/api/v1/api/v1')
     // numeric duration must travel as a number, never as the string "hari"
-    expect(payload).toMatchObject({ duration_days: 14 })
+    expect(payload).toMatchObject({
+      duration_days: 14,
+      project_location_id: 3,
+      start_date: '2026-11-01',
+      end_date: '2026-11-05',
+    })
     expect(payload).not.toHaveProperty('duration_days', '14 hari')
     expect(out.data?.id).toBe(1)
   })

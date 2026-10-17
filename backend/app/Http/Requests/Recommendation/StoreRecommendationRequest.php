@@ -32,9 +32,10 @@ class StoreRecommendationRequest extends FormRequest
             'load_capacity' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'target_productivity' => ['nullable', 'string', 'max:100'],
             'location_access' => ['nullable', 'string', 'max:100'],
+            'project_location_id' => ['nullable', 'integer', 'exists:project_locations,id'],
             'duration_days' => ['nullable', 'integer', 'min:1'],
-            'start_date' => ['nullable', 'date'],
-            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'start_date' => ['nullable', 'date', 'required_with:end_date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date', 'required_with:start_date'],
             'budget_range' => ['nullable', 'string', 'max:50'],
             'additional_params' => ['nullable', 'array'],
         ];

@@ -256,12 +256,18 @@ class RecommendationScoringService
             $reasons[] = "Fungsi operasional tipe {$model->type?->name} relevan dengan jenis pekerjaan '{$criteria->project_type}'.";
         }
 
+        // depth_requirement & reach_requirement are NOT part of the 4 weighted
+        // criteria (see config/recommendation.php + Phase 7B scoring spec), so
+        // they must not be presented as ranking factors.
+        $extras = [];
         if ($criteria->depth_requirement) {
-            $reasons[] = "Mendukung kedalaman operasional hingga {$criteria->depth_requirement} meter.";
+            $extras[] = "kedalaman {$criteria->depth_requirement} m";
         }
-
         if ($criteria->reach_requirement) {
-            $reasons[] = "Mendukung jangkauan boom/arm hingga {$criteria->reach_requirement} meter.";
+            $extras[] = "jangkauan {$criteria->reach_requirement} m";
+        }
+        if ($extras) {
+            $reasons[] = 'Catatan kebutuhan tambahan (tidak dihitung dalam skor): '.implode(', ', $extras).'.';
         }
 
         return implode(' ', $reasons);

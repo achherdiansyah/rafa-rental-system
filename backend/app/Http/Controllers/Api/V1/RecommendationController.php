@@ -24,6 +24,7 @@ class RecommendationController extends ApiController
 
         $query = RecommendationRequest::with([
             'criteria',
+            'projectLocation',
             'results.model' => function ($q) {
                 $q->with(['type', 'prices', 'attachments'])->withCount('units');
             },
@@ -79,6 +80,7 @@ class RecommendationController extends ApiController
 
         $recommendationRequest->load([
             'criteria',
+            'projectLocation',
             'results.model' => function ($q) {
                 $q->with(['type', 'prices', 'attachments'])->withCount('units');
             },

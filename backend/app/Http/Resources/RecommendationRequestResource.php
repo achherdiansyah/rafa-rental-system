@@ -22,6 +22,8 @@ class RecommendationRequestResource extends JsonResource
             'id' => $this->id,
             'user_id' => $this->user_id,
             'status' => $this->status instanceof \BackedEnum ? $this->status->value : $this->status,
+            'project_location_id' => $this->project_location_id,
+            'project_location' => new ProjectLocationResource($this->whenLoaded('projectLocation')),
             'criteria' => new RecommendationCriteriaResource($this->whenLoaded('criteria')),
             'results' => $this->whenLoaded('results', function () {
                 return $this->results

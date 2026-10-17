@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Sparkles, History, RotateCcw, ArrowRight, Layers, ShieldCheck, Tag, Info } from 'lucide-react'
 import { recommendationService } from '../services/recommendationService'
+import { projectLocationService } from '@/features/project/services/projectLocationService'
 import type { RecommendationRequest, CreateRecommendationInput } from '@/types/recommendation'
+import type { ProjectLocation } from '@/types/projectLocation'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -22,14 +24,18 @@ export const RecommendationPage: React.FC = () => {
   const [formData, setFormData] = useState<CreateRecommendationInput>({
     project_type: '',
     terrain_condition: '',
+    project_location_id: null,
     load_capacity: undefined,
     work_volume: undefined,
     depth_requirement: undefined,
     reach_requirement: undefined,
     duration_days: undefined,
+    start_date: '',
+    end_date: '',
     budget_range: '',
   })
 
+  const [projectLocations, setProjectLocations] = useState<ProjectLocation[]>([])
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
@@ -59,6 +65,13 @@ export const RecommendationPage: React.FC = () => {
     }
   }, [activeTab])
 
+  useEffect(() => {
+    projectLocationService
+      .getLocations(1, 50)
+      .then((res) => setProjectLocations(res.data ?? []))
+      .catch(() => setProjectLocations([]))
+  }, [])
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
     if (!formData.project_type.trim()) {
@@ -72,6 +85,12 @@ export const RecommendationPage: React.FC = () => {
     }
     if (formData.duration_days !== undefined && formData.duration_days < 1) {
       newErrors.duration_days = 'Durasi sewa minimal 1 hari.'
+    }
+    if ((formData.start_date && !formData.end_date) || (!formData.start_date && formData.end_date)) {
+      newErrors.end_date = 'Tanggal mulai dan selesai harus diisi keduanya.'
+    }
+    if (formData.start_date && formData.end_date && formData.end_date < formData.start_date) {
+      newErrors.end_date = 'Tanggal selesai tidak boleh sebelum tanggal mulai.'
     }
 
     setErrors(newErrors)
@@ -104,11 +123,14 @@ export const RecommendationPage: React.FC = () => {
     setFormData({
       project_type: '',
       terrain_condition: '',
+      project_location_id: null,
       load_capacity: undefined,
       work_volume: undefined,
       depth_requirement: undefined,
       reach_requirement: undefined,
       duration_days: undefined,
+      start_date: '',
+      end_date: '',
       budget_range: '',
     })
     setErrors({})
@@ -211,6 +233,25 @@ export const RecommendationPage: React.FC = () => {
                   </Select>
                 </div>
 
+                {/* Project Location */}
+                <div>
+                  <Select
+                    label="Lokasi Proyek (opsional)"
+                    value={formData.project_location_id ?? ''}
+                    onChange={(e) => setFormData({ ...formData, project_location_id: e.target.value ? Number(e.target.value) : null })}
+                  >
+                    <option value="">-- Tanpa lokasi proyek --</option>
+                    {projectLocations.map((loc) => (
+                      <option key={loc.id} value={loc.id}>
+                        {loc.project_name} - {loc.city}
+                      </option>
+                    ))}
+                  </Select>
+                  <p className="mt-1 text-[11px] text-slate-400">
+                    Lokasi proyek hanya sebagai konteks. Kondisi medan & kapasitas tetap diambil dari input kriteria di atas.
+                  </p>
+                </div>
+
                 {/* Capacity & Volume Grid */}
                 <div className="grid grid-cols-2 gap-3">
                   <Input
@@ -263,6 +304,26 @@ export const RecommendationPage: React.FC = () => {
                   onChange={(e) => setFormData({ ...formData, duration_days: e.target.value ? parseInt(e.target.value, 10) : undefined })}
                   error={errors.duration_days}
                 />
+
+                {/* Rental Period */}
+                <div className="grid grid-cols-2 gap-3">
+                  <Input
+                    label="Mulai Sewa"
+                    type="date"
+                    value={formData.start_date ?? ''}
+                    onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                  />
+                  <Input
+                    label="Selesai Sewa"
+                    type="date"
+                    value={formData.end_date ?? ''}
+                    onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                    error={errors.end_date}
+                  />
+                </div>
+                <p className="-mt-3 text-[11px] text-slate-400">
+                  Ketersediaan unit dihitung pada periode ini (buffered schedule). Kosongkan untuk menilai ketersediaan saat ini.
+                </p>
 
                 {/* Form Actions */}
                 <div className="flex gap-2 pt-2">
@@ -333,6 +394,17 @@ export const RecommendationPage: React.FC = () => {
                   </span>
                 </div>
 
+                {(currentResult.project_location || currentResult.criteria?.start_date || currentResult.criteria?.end_date) && (
+                  <div className="text-xs text-slate-600 bg-slate-50 border border-slate-100 rounded-lg p-3 flex flex-wrap gap-x-5 gap-y-1">
+                    {currentResult.project_location && (
+                      <span>Proyek: <strong className="text-slate-900">{currentResult.project_location.project_name}</strong> ({currentResult.project_location.city})</span>
+                    )}
+                    {currentResult.criteria?.start_date && currentResult.criteria?.end_date && (
+                      <span>Periode Sewa: <strong className="text-slate-900">{currentResult.criteria.start_date} s/d {currentResult.criteria.end_date}</strong></span>
+                    )}
+                  </div>
+                )}
+
                 {currentResult.results && currentResult.results.length > 0 ? (
                   currentResult.results.map((item) => {
                     const model = item.model
@@ -388,6 +460,11 @@ export const RecommendationPage: React.FC = () => {
                               <span className="text-slate-500">
                                 Unit Fisik Terdaftar: {model?.units_count ?? 0}
                               </span>
+                              {item.available_units !== null && item.available_units !== undefined && (
+                                <span className="text-emerald-700 font-medium">
+                                  Tersedia pada periode: {item.available_units} unit
+                                </span>
+                              )}
                             </div>
 
                             {/* Explanation Traceability */}
@@ -398,6 +475,30 @@ export const RecommendationPage: React.FC = () => {
                               </div>
                               <p className="leading-relaxed">{item.reasoning_text}</p>
                             </div>
+
+                            {/* Score breakdown (transparent weighted scoring) */}
+                            {item.score_breakdown && Object.keys(item.score_breakdown).length > 0 && (
+                              <div className="p-3 bg-slate-50 rounded-lg border border-slate-100 text-xs">
+                                <div className="font-semibold text-slate-700 mb-2">Rincian Skor (Weighted Scoring)</div>
+                                <div className="space-y-1">
+                                  {Object.entries(item.score_breakdown).map(([key, c]) => (
+                                    <div key={key} className="flex items-center justify-between gap-3 text-slate-600">
+                                      <span className="truncate">
+                                        {c.name}
+                                        <span className="text-slate-400"> ({Math.round(c.weight * 100)}%)</span>
+                                      </span>
+                                      <span className="font-mono text-slate-500 shrink-0">
+                                        {c.score} × {c.weight} = <span className="font-semibold text-slate-800">{c.contribution}</span>
+                                      </span>
+                                    </div>
+                                  ))}
+                                  <div className="flex items-center justify-between gap-3 pt-1.5 mt-1.5 border-t border-slate-200 font-semibold text-slate-900">
+                                    <span>Skor Akhir</span>
+                                    <span className="font-mono">{item.match_score}%</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
 
                             {/* Action: Link to Detail (NO AUTO BOOKING) */}
                             <div className="flex items-center justify-between pt-1">

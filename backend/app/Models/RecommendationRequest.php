@@ -15,6 +15,7 @@ class RecommendationRequest extends Model
 
     protected $fillable = [
         'user_id',
+        'project_location_id',
         'status',
     ];
 
@@ -28,6 +29,11 @@ class RecommendationRequest extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function projectLocation(): BelongsTo
+    {
+        return $this->belongsTo(ProjectLocation::class);
     }
 
     public function criteria(): HasOne

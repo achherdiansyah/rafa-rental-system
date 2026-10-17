@@ -3,9 +3,11 @@
 namespace App\Actions\Recommendation;
 
 use App\Enums\RecommendationStatus;
+use App\Models\ProjectLocation;
 use App\Models\RecommendationRequest;
 use App\Models\User;
 use App\Services\Recommendation\RecommendationScoringService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 
 class CreateRecommendationAction
@@ -22,9 +24,23 @@ class CreateRecommendationAction
     public function execute(User $user, array $data): RecommendationRequest
     {
         return DB::transaction(function () use ($user, $data) {
+            // A recommendation may be tied to one of the user's own project
+            // locations (medan/kapasitas tetap berasal dari input kriteria, bukan
+            // disimpulkan dari alamat/koordinat).
+            $projectLocationId = $data['project_location_id'] ?? null;
+            if ($projectLocationId !== null && ! ($user->isAdmin() || $user->isOwner())) {
+                $owned = ProjectLocation::whereKey((int) $projectLocationId)
+                    ->where('user_id', $user->id)
+                    ->exists();
+                if (! $owned) {
+                    throw new AuthorizationException('Lokasi proyek bukan milik akun Anda.');
+                }
+            }
+
             /** @var RecommendationRequest $recRequest */
             $recRequest = RecommendationRequest::create([
                 'user_id' => $user->id,
+                'project_location_id' => $projectLocationId,
                 'status' => RecommendationStatus::PROCESSED,
             ]);
 
@@ -53,12 +69,15 @@ class CreateRecommendationAction
                 $recRequest->results()->create([
                     'equipment_model_id' => $item['model']->id,
                     'match_score' => $item['score'],
+                    'score_breakdown' => $item['breakdown'],
+                    'available_units' => $item['available_units'] ?? null,
                     'reasoning_text' => $item['reasoning'],
                 ]);
             }
 
             $recRequest->load([
                 'criteria',
+                'projectLocation',
                 'results.model' => function ($q) {
                     $q->with(['type', 'prices', 'attachments'])->withCount('units');
                 },

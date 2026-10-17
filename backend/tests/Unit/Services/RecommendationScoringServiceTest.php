@@ -276,7 +276,9 @@ class RecommendationScoringServiceTest extends TestCase
         $this->assertStringContainsString('21.00 Ton', $reasoning);
         $this->assertStringContainsString('Bebatuan Keras', $reasoning);
         $this->assertStringContainsString('Galian Bendungan', $reasoning);
-        $this->assertStringContainsString('6.00 meter', $reasoning);
-        $this->assertStringContainsString('10.00 meter', $reasoning);
+        // depth/reach are informational only and must not imply ranking impact.
+        $this->assertStringContainsString('tidak dihitung dalam skor', $reasoning);
+        $this->assertStringContainsString('kedalaman 6.00 m', $reasoning);
+        $this->assertStringContainsString('jangkauan 10.00 m', $reasoning);
     }
 }
