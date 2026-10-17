@@ -215,6 +215,126 @@ class EquipmentAvailabilityService
     }
 
     // ------------------------------------------------------------------
+    // Availability status summary (catalog / detail UI)
+    // ------------------------------------------------------------------
+
+    /**
+     * Human-readable availability per model for the catalog/detail UI.
+     *
+     * Returns, per model:
+     * - available_units: bookable units for the requested window (or today)
+     * - total_units: operational (non-decommissioned/maintenance) units
+     * - maintenance_units: units currently in MAINTENANCE/RETURN_INSPECTION
+     * - rented_until: latest committed booking end date causing the unavailability
+     *                 (null when unknown / not caused by a rental)
+     * - status: AVAILABLE | RENTED | MAINTENANCE | UNAVAILABLE
+     *
+     * Bulk-queried (no N+1) and derived from real booking/assignment data only.
+     *
+     * @param  array<int>  $modelIds
+     * @return Collection<int, array{available_units:int,total_units:int,maintenance_units:int,rented_until:?string,status:string}>
+     */
+    public function availabilitySummaryMap(
+        array $modelIds,
+        ?CarbonInterface $startDate = null,
+        ?CarbonInterface $endDate = null
+    ): Collection {
+        $modelIds = array_values(array_unique(array_map('intval', $modelIds)));
+        if (empty($modelIds)) {
+            return collect();
+        }
+
+        $availableMap = $this->getAvailabilityMap($modelIds, $startDate, $endDate);
+
+        $totalCounts = EquipmentUnit::query()
+            ->whereNull('deleted_at')
+            ->whereNotIn('status', [EquipmentStatus::DECOMMISSIONED->value])
+            ->whereIn('equipment_model_id', $modelIds)
+            ->select('equipment_model_id', DB::raw('COUNT(*) as total_count'))
+            ->groupBy('equipment_model_id')
+            ->pluck('total_count', 'equipment_model_id');
+
+        $maintenanceStatuses = [
+            EquipmentStatus::MAINTENANCE->value,
+            EquipmentStatus::RETURN_INSPECTION->value,
+        ];
+        $maintenanceCounts = EquipmentUnit::query()
+            ->whereNull('deleted_at')
+            ->whereIn('status', $maintenanceStatuses)
+            ->whereIn('equipment_model_id', $modelIds)
+            ->select('equipment_model_id', DB::raw('COUNT(*) as maintenance_count'))
+            ->groupBy('equipment_model_id')
+            ->pluck('maintenance_count', 'equipment_model_id');
+
+        // Latest committed booking end date per model that causes the conflict.
+        $committedStatuses = $startDate && $endDate
+            ? $this->committedStatuses
+            : ['DISPATCHED', 'ARRIVED', 'ONGOING']; // "currently rented" window
+
+        $rentedQuery = DB::table('booking_unit_assignments as bua')
+            ->join('booking_details as bd', 'bua.booking_detail_id', '=', 'bd.id')
+            ->join('bookings as b', 'bd.booking_id', '=', 'b.id')
+            ->join('equipment_units as eu', 'bua.equipment_unit_id', '=', 'eu.id')
+            ->where('bua.is_current', true)
+            ->whereIn('b.status', $committedStatuses)
+            ->whereNull('b.deleted_at')
+            ->whereNull('eu.deleted_at')
+            ->whereIn('bd.equipment_model_id', $modelIds);
+
+        if ($startDate && $endDate) {
+            [$cStartMax, $cEndMin] = $this->overlapRange($startDate, $endDate);
+            $postBuffer = $this->extDays + $this->inspDays;
+            $rentedQuery
+                ->where('bd.start_date', '<=', $cStartMax)
+                ->whereRaw($this->dateAddExpr('bd.end_date', $postBuffer).' >= ?', [$cEndMin]);
+        } else {
+            // Currently rented only: unit must be physically out of the pool.
+            $rentedQuery->whereIn('eu.status', [
+                EquipmentStatus::MOBILIZING->value,
+                EquipmentStatus::ON_SITE->value,
+                EquipmentStatus::DEMOBILIZING->value,
+                EquipmentStatus::RETURN_INSPECTION->value,
+            ]);
+        }
+
+        $rentedUntil = $rentedQuery
+            ->select('bd.equipment_model_id', DB::raw('MAX(bd.end_date) as rented_until'))
+            ->groupBy('bd.equipment_model_id')
+            ->pluck('rented_until', 'bd.equipment_model_id');
+
+        $summary = collect();
+        foreach ($modelIds as $modelId) {
+            $available = (int) ($availableMap->get($modelId, 0));
+            $total = (int) ($totalCounts->get($modelId, 0));
+            $maintenance = (int) ($maintenanceCounts->get($modelId, 0));
+            $untilRaw = $rentedUntil->get($modelId);
+            $rentedUntilValue = $untilRaw ? substr((string) $untilRaw, 0, 10) : null;
+
+            if ($available > 0) {
+                // Some physical units are still bookable -> the model IS available.
+                $status = 'AVAILABLE';
+                $rentedUntilValue = null;
+            } elseif ($rentedUntilValue) {
+                $status = 'RENTED';
+            } elseif ($maintenance > 0) {
+                $status = 'MAINTENANCE';
+            } else {
+                $status = 'UNAVAILABLE';
+            }
+
+            $summary->put($modelId, [
+                'available_units' => $available,
+                'total_units' => $total,
+                'maintenance_units' => $maintenance,
+                'rented_until' => $rentedUntilValue,
+                'status' => $status,
+            ]);
+        }
+
+        return $summary;
+    }
+
+    // ------------------------------------------------------------------
     // Physical-unit level availability
     // ------------------------------------------------------------------
 

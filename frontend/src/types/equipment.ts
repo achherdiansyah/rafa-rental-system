@@ -41,6 +41,10 @@ export interface EquipmentModel {
   attachments?: EquipmentAttachment[]
   units_count?: number
   available_units_count?: number
+  total_units?: number
+  maintenance_units?: number
+  rented_until?: string | null
+  availability_status?: 'AVAILABLE' | 'RENTED' | 'MAINTENANCE' | 'UNAVAILABLE'
   created_at?: string
   updated_at?: string
 }
@@ -113,6 +117,8 @@ export interface EquipmentModelFilterParams {
   equipment_type_id?: number | string
   brand?: string
   is_active?: boolean
+  start_date?: string
+  end_date?: string
   page?: number
   per_page?: number
 }

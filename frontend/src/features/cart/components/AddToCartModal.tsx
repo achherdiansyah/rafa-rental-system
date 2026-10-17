@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { ShoppingCart, Truck } from 'lucide-react'
 import { cartService } from '../services/cartService'
 import { projectLocationService } from '@/features/project/services/projectLocationService'
+import { equipmentService } from '@/features/equipment/services/equipmentService'
+import { availabilityLabel } from '@/features/equipment/availability'
 import type { ProjectLocation } from '@/types/projectLocation'
 import type { EquipmentModel } from '@/types/equipment'
 import { Modal } from '@/components/ui/Modal'
@@ -46,6 +48,10 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<DateValidError>({})
 
+  // Period-aware availability: re-check the selected dates against real bookings.
+  const [periodModel, setPeriodModel] = useState<EquipmentModel | null>(null)
+  const [isCheckingAvailability, setIsCheckingAvailability] = useState(false)
+
   useEffect(() => {
     if (!isOpen) return
 
@@ -74,6 +80,33 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
 
     loadLocations()
   }, [isOpen, initialIsAllIn])
+
+  // Re-check availability for the user's selected period (real booking data).
+  useEffect(() => {
+    if (!isOpen || !startDate || !endDate || endDate < startDate) {
+      setPeriodModel(null)
+      return
+    }
+
+    let active = true
+    setIsCheckingAvailability(true)
+
+    equipmentService
+      .getModel(model.id, { start_date: startDate, end_date: endDate })
+      .then((fresh) => {
+        if (active) setPeriodModel(fresh)
+      })
+      .catch(() => {
+        if (active) setPeriodModel(null)
+      })
+      .finally(() => {
+        if (active) setIsCheckingAvailability(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [isOpen, model.id, startDate, endDate])
 
   const validate = (): boolean => {
     const next: DateValidError = {}
@@ -222,6 +255,27 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
             disabled={isSubmitting}
           />
         </div>
+
+        {/* Period-aware availability (real booking/rental data) */}
+        {startDate && endDate && endDate >= startDate && (
+          <div
+            className={`rounded-xl border p-3 text-xs font-medium ${
+              isCheckingAvailability
+                ? 'border-slate-200 bg-slate-50 text-slate-500'
+                : periodModel && (periodModel.available_units_count ?? 0) > 0
+                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                  : 'border-amber-200 bg-amber-50 text-amber-700'
+            }`}
+          >
+            {isCheckingAvailability
+              ? 'Memeriksa ketersediaan untuk periode ini...'
+              : periodModel
+                ? (periodModel.available_units_count ?? 0) > 0
+                  ? `Tersedia ${periodModel.available_units_count} unit untuk periode ini.`
+                  : availabilityLabel(periodModel).text
+                : 'Ketersediaan untuk periode ini belum dapat dipastikan.'}
+          </div>
+        )}
 
         {/* Project Location */}
         <div>

@@ -5,6 +5,7 @@ import { UserCartPage } from './pages/UserCartPage'
 import { AddToCartModal } from './components/AddToCartModal'
 import { cartService } from './services/cartService'
 import { projectLocationService } from '@/features/project/services/projectLocationService'
+import { equipmentService } from '@/features/equipment/services/equipmentService'
 import { ToastProvider } from '@/app/ToastContext'
 import type { Cart } from '@/types/cart'
 
@@ -22,6 +23,12 @@ vi.mock('./services/cartService', () => ({
 vi.mock('@/features/project/services/projectLocationService', () => ({
   projectLocationService: {
     getLocations: vi.fn(),
+  },
+}))
+
+vi.mock('@/features/equipment/services/equipmentService', () => ({
+  equipmentService: {
+    getModel: vi.fn(),
   },
 }))
 
@@ -79,13 +86,14 @@ const mockLocations = [mockCart.project_location] as any[]
 describe('Cart UI Suite', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(projectLocationService.getLocations).mockResolvedValue({
-      success: true,
-      message: 'OK',
-      data: mockLocations,
-      meta: { current_page: 1, per_page: 100, total: 1, last_page: 1 },
-    } as any)
-  })
+      vi.mocked(projectLocationService.getLocations).mockResolvedValue({
+        success: true,
+        message: 'OK',
+        data: mockLocations,
+        meta: { current_page: 1, per_page: 100, total: 1, last_page: 1 },
+      } as any)
+      vi.mocked(equipmentService.getModel).mockResolvedValue(mockModel as any)
+    })
 
   it('shows empty state when cart is empty', async () => {
     vi.mocked(cartService.getCart).mockResolvedValue({
@@ -287,9 +295,12 @@ describe('Cart UI Suite', () => {
       </MemoryRouter>
     )
 
-    // Fill dates
-    fireEvent.change(screen.getByLabelText(/tanggal mulai sewa/i), { target: { value: '2026-10-15' } })
-    fireEvent.change(screen.getByLabelText(/tanggal selesai sewa/i), { target: { value: '2026-10-20' } })
+    // Fill dates (future, so client-side validation accepts them)
+    const start = new Date(Date.now() + 86400000).toISOString().slice(0, 10)
+    const end = new Date(Date.now() + 6 * 86400000).toISOString().slice(0, 10)
+
+    fireEvent.change(screen.getByLabelText(/tanggal mulai sewa/i), { target: { value: start } })
+    fireEvent.change(screen.getByLabelText(/tanggal selesai sewa/i), { target: { value: end } })
 
     fireEvent.click(screen.getByRole('button', { name: /tambah ke keranjang/i }))
 
@@ -298,8 +309,8 @@ describe('Cart UI Suite', () => {
         expect.objectContaining({
           equipment_model_id: 5,
           is_all_in: false,
-          start_date: '2026-10-15',
-          end_date: '2026-10-20',
+          start_date: start,
+          end_date: end,
         })
       )
       expect(onClose).toHaveBeenCalled()

@@ -11,6 +11,8 @@ use App\Http\Resources\EquipmentModelResource;
 use App\Models\EquipmentModel;
 use App\Models\User;
 use App\Services\Equipment\EquipmentAvailabilityService;
+use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -45,15 +47,21 @@ class EquipmentModelController extends ApiController
         $perPage = (int) $request->query('per_page', 15);
         $models = $query->paginate($perPage);
 
-        // Attach real available unit counts (source of truth: physical unit status + booking buffer)
+        // Attach real availability status (source of truth: physical units + bookings)
         $availabilityService = app(EquipmentAvailabilityService::class);
         $modelIds = collect($models->items())->pluck('id')->all();
-        $availMap = $availabilityService->getAvailabilityMap($modelIds);
+        [$start, $end] = $this->periodFromRequest($request);
+        $summaries = $availabilityService->availabilitySummaryMap($modelIds, $start, $end);
 
-        $items = collect($models->items())->map(function (EquipmentModel $model) use ($availMap) {
+        $items = collect($models->items())->map(function (EquipmentModel $model) use ($summaries) {
             $resource = new EquipmentModelResource($model);
             $array = $resource->resolve();
-            $array['available_units_count'] = (int) ($availMap->get($model->id, 0));
+            $summary = $summaries->get($model->id, []);
+            $array['available_units_count'] = (int) ($summary['available_units'] ?? 0);
+            $array['total_units'] = (int) ($summary['total_units'] ?? 0);
+            $array['maintenance_units'] = (int) ($summary['maintenance_units'] ?? 0);
+            $array['rented_until'] = $summary['rented_until'] ?? null;
+            $array['availability_status'] = $summary['status'] ?? 'UNAVAILABLE';
             return $array;
         });
 
@@ -73,19 +81,52 @@ class EquipmentModelController extends ApiController
     /**
      * Show single equipment model details.
      */
-    public function show(EquipmentModel $model): JsonResponse
+    public function show(Request $request, EquipmentModel $model): JsonResponse
     {
         $model->load(['type', 'prices', 'attachments']);
         $model->loadCount('units');
 
         $availService = app(EquipmentAvailabilityService::class);
-        $availableUnitsCount = $availService->getAvailableUnitsCount($model);
+        [$start, $end] = $this->periodFromRequest($request);
+        $summary = $availService->availabilitySummaryMap([$model->id], $start, $end)->get($model->id, []);
 
         $resource = new EquipmentModelResource($model);
         $data = $resource->resolve();
-        $data['available_units_count'] = $availableUnitsCount;
+        $data['available_units_count'] = (int) ($summary['available_units'] ?? 0);
+        $data['total_units'] = (int) ($summary['total_units'] ?? 0);
+        $data['maintenance_units'] = (int) ($summary['maintenance_units'] ?? 0);
+        $data['rented_until'] = $summary['rented_until'] ?? null;
+        $data['availability_status'] = $summary['status'] ?? 'UNAVAILABLE';
 
         return $this->success($data, 'Detail model armada berhasil dimuat.');
+    }
+
+    /**
+     * Safely parse optional `start_date` / `end_date` query params.
+     *
+     * @return array{0: ?CarbonInterface, 1: ?CarbonInterface}
+     */
+    private function periodFromRequest(Request $request): array
+    {
+        $start = null;
+        $end = null;
+
+        try {
+            if ($request->filled('start_date')) {
+                $start = Carbon::parse((string) $request->query('start_date'))->startOfDay();
+            }
+            if ($request->filled('end_date')) {
+                $end = Carbon::parse((string) $request->query('end_date'))->startOfDay();
+            }
+        } catch (\Throwable) {
+            return [null, null];
+        }
+
+        if (! $start || ! $end || $end->lessThan($start)) {
+            return [null, null];
+        }
+
+        return [$start, $end];
     }
 
     /**

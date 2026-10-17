@@ -98,6 +98,46 @@ describe('User Equipment Catalog UI', () => {
     }, { timeout: 10000 })
   })
 
+  it('shows rented status with real end date when no unit is free', async () => {
+    vi.mocked(equipmentService.getModels).mockResolvedValue({
+      success: true,
+      message: 'OK',
+      data: [{ ...mockModels[0], available_units_count: 0, availability_status: 'RENTED', rented_until: '2026-11-15' }],
+      meta: { current_page: 1, per_page: 9, total: 1, last_page: 1 },
+    } as any)
+
+    render(
+      <MemoryRouter>
+        <ToastProvider>
+          <EquipmentCatalogPage />
+        </ToastProvider>
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByText(/sedang disewa hingga/i)).toBeInTheDocument()
+    expect(screen.getByText(/15 Nov 2026/i)).toBeInTheDocument()
+  })
+
+  it('shows maintenance status instead of rented', async () => {
+    vi.mocked(equipmentService.getModels).mockResolvedValue({
+      success: true,
+      message: 'OK',
+      data: [{ ...mockModels[0], available_units_count: 0, availability_status: 'MAINTENANCE', rented_until: null }],
+      meta: { current_page: 1, per_page: 9, total: 1, last_page: 1 },
+    } as any)
+
+    render(
+      <MemoryRouter>
+        <ToastProvider>
+          <EquipmentCatalogPage />
+        </ToastProvider>
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByText('Unit Maintenance')).toBeInTheDocument()
+    expect(screen.queryByText(/sedang disewa/i)).not.toBeInTheDocument()
+  })
+
   it('renders equipment detail page with specifications and pricing schemes', async () => {
     render(
       <MemoryRouter initialEntries={['/app/equipment/10']}>

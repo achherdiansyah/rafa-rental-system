@@ -53,14 +53,20 @@ export const equipmentService = {
     if (params.equipment_type_id) query.append('equipment_type_id', String(params.equipment_type_id))
     if (params.brand) query.append('brand', params.brand)
     if (params.is_active !== undefined) query.append('is_active', params.is_active ? '1' : '0')
+    if (params.start_date) query.append('start_date', params.start_date)
+    if (params.end_date) query.append('end_date', params.end_date)
     if (params.page) query.append('page', String(params.page))
     if (params.per_page) query.append('per_page', String(params.per_page))
 
     return api.getPaginated<EquipmentModel>(`/equipment/models?${query.toString()}`)
   },
 
-  getModel: async (id: number): Promise<EquipmentModel> => {
-    const response = await api.get<EquipmentModel>(`/equipment/models/${id}`)
+  getModel: async (id: number, params?: { start_date?: string; end_date?: string }): Promise<EquipmentModel> => {
+    const query = new URLSearchParams()
+    if (params?.start_date) query.append('start_date', params.start_date)
+    if (params?.end_date) query.append('end_date', params.end_date)
+    const qs = query.toString()
+    const response = await api.get<EquipmentModel>(`/equipment/models/${id}${qs ? `?${qs}` : ''}`)
     return response.data
   },
 
