@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, MapPin, Truck, Clock } from 'lucide-react'
+import { ArrowLeft, MapPin, Truck, Clock, Navigation } from 'lucide-react'
 import { operatorService } from '../services/operatorService'
 import type { OperatorAssignment } from '../services/operatorService'
 import { Card } from '@/components/ui/Card'
@@ -77,15 +77,35 @@ export const OperatorAssignmentDetailPage: React.FC = () => {
                     PIC: {assignment.project_location.pic_name} {assignment.project_location.pic_phone ? `- ${assignment.project_location.pic_phone}` : ''}
                   </p>
                 )}
-                {assignment.project_location.latitude !== null && assignment.project_location.longitude !== null && (
-                  <a
-                    className="inline-block text-primary-700 hover:underline text-xs mt-1"
-                    href={`https://www.google.com/maps?q=${assignment.project_location.latitude},${assignment.project_location.longitude}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Buka di Google Maps ({assignment.project_location.latitude}, {assignment.project_location.longitude})
-                  </a>
+
+                {assignment.project_location.latitude !== null && assignment.project_location.longitude !== null ? (
+                  <div className="pt-1 space-y-2">
+                    <p className="font-mono text-xs text-slate-500">
+                      Koordinat: {assignment.project_location.latitude}, {assignment.project_location.longitude}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <a
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-3 py-2 text-xs font-medium text-white hover:bg-primary-700"
+                        href={`https://www.google.com/maps/dir/?api=1&destination=${assignment.project_location.latitude},${assignment.project_location.longitude}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <Navigation size={13} /> Navigasi ke Lokasi
+                      </a>
+                      <a
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                        href={`https://www.google.com/maps?q=${assignment.project_location.latitude},${assignment.project_location.longitude}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <MapPin size={13} /> Lihat Titik Peta
+                      </a>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg p-2.5 mt-1" role="note">
+                    Titik koordinat belum tersedia pada lokasi proyek ini. Hubungi Admin untuk melengkapi koordinat.
+                  </p>
                 )}
               </div>
             ) : (
