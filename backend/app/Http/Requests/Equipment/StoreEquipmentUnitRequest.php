@@ -21,6 +21,7 @@ class StoreEquipmentUnitRequest extends FormRequest
     {
         return [
             'equipment_model_id' => ['required', 'integer', 'exists:equipment_models,id'],
+            'equipment_pool_id' => ['nullable', 'integer', 'exists:equipment_pools,id'],
             'serial_number' => ['required', 'string', 'max:100', 'unique:equipment_units,serial_number'],
             'plate_number' => ['nullable', 'string', 'max:30', 'unique:equipment_units,plate_number'],
             'status' => ['sometimes', new Enum(EquipmentStatus::class)],

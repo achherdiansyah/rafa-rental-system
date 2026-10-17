@@ -9,8 +9,10 @@ use App\Http\Requests\Equipment\StoreEquipmentModelRequest;
 use App\Http\Requests\Equipment\UpdateEquipmentModelRequest;
 use App\Http\Resources\EquipmentModelResource;
 use App\Models\EquipmentModel;
+use App\Models\ProjectLocation;
 use App\Models\User;
 use App\Services\Equipment\EquipmentAvailabilityService;
+use App\Services\Pricing\MobDemobEstimator;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Http\JsonResponse;
@@ -102,6 +104,42 @@ class EquipmentModelController extends ApiController
     }
 
     /**
+     * Estimate MOB/DEMOB for a model against the user's selected project location.
+     * Distance comes from the configured road-routing provider only; when it is
+     * unavailable the response explicitly says so and returns no fake amounts.
+     */
+    public function estimateMobDemob(
+        Request $request,
+        EquipmentModel $model,
+        MobDemobEstimator $estimator
+    ): JsonResponse {
+        /** @var User $user */
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'project_location_id' => ['required', 'integer', 'exists:project_locations,id'],
+            'is_all_in' => ['nullable', 'boolean'],
+        ]);
+
+        /** @var ProjectLocation $project */
+        $project = ProjectLocation::findOrFail($validated['project_location_id']);
+
+        if (! $user->isAdmin() && ! $user->isOwner() && (int) $project->user_id !== (int) $user->id) {
+            return $this->forbidden('Lokasi proyek bukan milik akun Anda.');
+        }
+
+        $model->loadMissing('pool');
+
+        $estimate = $estimator->estimate(
+            $model,
+            $project,
+            (bool) ($validated['is_all_in'] ?? true)
+        );
+
+        return $this->success($estimate, $estimate['message']);
+    }
+
+    /**
      * Safely parse optional `start_date` / `end_date` query params.
      *
      * @return array{0: ?CarbonInterface, 1: ?CarbonInterface}
@@ -170,3 +208,4 @@ class EquipmentModelController extends ApiController
         return $this->success(null, 'Model armada berhasil dihapus.');
     }
 }
+

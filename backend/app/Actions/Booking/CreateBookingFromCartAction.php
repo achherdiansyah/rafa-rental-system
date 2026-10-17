@@ -10,6 +10,7 @@ use App\Models\Cart;
 use App\Models\User;
 use App\Services\Booking\BookingAvailabilityPrecheckService;
 use App\Services\Pricing\PricingCalculatorService;
+use App\Services\Routing\RouteDistanceService;
 use App\Support\AuditLogger;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +19,8 @@ class CreateBookingFromCartAction
 {
     public function __construct(
         protected PricingCalculatorService $pricingCalculator,
-        protected BookingAvailabilityPrecheckService $precheck
+        protected BookingAvailabilityPrecheckService $precheck,
+        protected RouteDistanceService $routeDistance
     ) {}
 
     /**
@@ -39,7 +41,7 @@ class CreateBookingFromCartAction
             }
 
             // 1. Validate cart is populated and location set (BR-007 / BR-003)
-            $cart->load(['projectLocation', 'items.model.prices']);
+            $cart->load(['projectLocation', 'items.model.pool', 'items.model.prices']);
 
             if ($cart->items->isEmpty()) {
                 throw new BusinessRuleException('Keranjang sewa kosong. Tambahkan armada terlebih dahulu.');
@@ -58,9 +60,35 @@ class CreateBookingFromCartAction
                 }
             }
 
-            // 2. Build line items from selected cart items
+            // 2. Build line items from selected cart items (origin pool + destination project)
+            $destination = $cart->projectLocation;
             $lineItems = [];
             foreach ($itemsToProcess as $item) {
+                $origin = $item->model?->pool;
+
+                $routeDistanceKm = null;
+                if ($origin && $destination) {
+                    $routeDistanceKm = $this->routeDistance->distanceKm(
+                        $origin->latitude !== null ? (float) $origin->latitude : null,
+                        $origin->longitude !== null ? (float) $origin->longitude : null,
+                        $destination->latitude !== null ? (float) $destination->latitude : null,
+                        $destination->longitude !== null ? (float) $destination->longitude : null
+                    );
+                }
+
+                // If distance pricing is configured for this model but the road
+                // distance cannot be resolved, refuse to fabricate a price.
+                $distanceRate = (float) ($item->model?->prices
+                    ->where('is_all_in', $item->is_all_in)
+                    ->sortByDesc('effective_date')
+                    ->first()?->distance_rate_per_km ?? 0);
+
+                if ($origin && $destination && $distanceRate > 0 && $routeDistanceKm === null) {
+                    throw new BusinessRuleException(
+                        'Estimasi jarak rute MOB/DEMOB belum tersedia. Hubungi Admin (layanan routing belum dikonfigurasi).'
+                    );
+                }
+
                 $lineItems[] = [
                     'cart_item_id' => $item->id,
                     'equipment_model_id' => $item->equipment_model_id,
@@ -68,6 +96,15 @@ class CreateBookingFromCartAction
                     'start_date' => $item->start_date->toDateString(),
                     'end_date' => $item->end_date->toDateString(),
                     'is_all_in' => $item->is_all_in,
+                    'origin_pool_id' => $origin?->id,
+                    'origin_name' => $origin?->name,
+                    'origin_address' => $origin?->address,
+                    'origin_latitude' => $origin?->latitude,
+                    'origin_longitude' => $origin?->longitude,
+                    'destination_project_location_id' => $destination?->id,
+                    'destination_latitude' => $destination?->latitude,
+                    'destination_longitude' => $destination?->longitude,
+                    'route_distance_km' => $routeDistanceKm,
                 ];
             }
 
@@ -99,6 +136,11 @@ class CreateBookingFromCartAction
             foreach ($pricingResult->items as $idx => $lineResult) {
                 $sourceLine = $lineItems[$idx];
 
+                $originName = $sourceLine['origin_name'] ?? null;
+                $originAddress = $sourceLine['origin_address'] ?? null;
+                $destinationName = $destination?->project_name;
+                $destinationAddress = $destination?->address;
+
                 $booking->details()->create([
                     'equipment_model_id' => $lineResult->equipmentModelId,
                     'quantity' => $lineResult->quantity,
@@ -110,6 +152,19 @@ class CreateBookingFromCartAction
                     'mob_cost_snapshot' => $lineResult->mobRatePerUnit,
                     'demob_cost_snapshot' => $lineResult->demobRatePerUnit,
                     'subtotal' => $lineResult->mobSubtotal + $lineResult->demobSubtotal,
+                    // Distance pricing snapshot (immutable once the booking exists).
+                    'origin_pool_id' => $sourceLine['origin_pool_id'] ?? null,
+                    'origin_name' => $originName,
+                    'origin_address' => $originAddress,
+                    'origin_latitude' => $sourceLine['origin_latitude'] ?? null,
+                    'origin_longitude' => $sourceLine['origin_longitude'] ?? null,
+                    'destination_project_location_id' => $sourceLine['destination_project_location_id'] ?? null,
+                    'destination_name' => $destinationName,
+                    'destination_address' => $destinationAddress,
+                    'destination_latitude' => $sourceLine['destination_latitude'] ?? null,
+                    'destination_longitude' => $sourceLine['destination_longitude'] ?? null,
+                    'route_distance_km' => $lineResult->routeDistanceKm,
+                    'distance_rate_per_km' => $lineResult->distanceAvailable ? $lineResult->distanceRatePerKm : null,
                 ]);
             }
 

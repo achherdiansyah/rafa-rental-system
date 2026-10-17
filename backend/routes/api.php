@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\CmsController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\EquipmentMediaController;
 use App\Http\Controllers\Api\V1\EquipmentModelController;
+use App\Http\Controllers\Api\V1\EquipmentPoolController;
 use App\Http\Controllers\Api\V1\EquipmentPriceController;
 use App\Http\Controllers\Api\V1\EquipmentTypeController;
 use App\Http\Controllers\Api\V1\EquipmentUnitController;
@@ -73,6 +74,10 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
         // Unified Dashboard Summary (single round-trip batch endpoint)
         Route::get('/dashboard/summary', [DashboardController::class, 'userSummary'])->name('dashboard.summary');
+
+        // Distance-based MOB/DEMOB estimate for a model + selected project location.
+        Route::get('/equipment/models/{model}/mob-demob-estimate', [EquipmentModelController::class, 'estimateMobDemob'])
+            ->name('equipment.models.mob-demob-estimate');
 
         // Profile Management
         Route::prefix('profile')->name('profile.')->group(function () {
@@ -268,6 +273,14 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         |--------------------------------------------------------------------------
         | Endpoints restricted to ADMIN and OWNER roles.
           */
+
+        // Equipment origin pools (origin of MOB/DEMOB distance pricing)
+        Route::middleware('role:ADMIN')->prefix('admin/equipment-pools')->name('admin.equipment-pools.')->group(function () {
+            Route::get('/', [EquipmentPoolController::class, 'index'])->name('index');
+            Route::post('/', [EquipmentPoolController::class, 'store'])->name('store');
+            Route::put('/{equipmentPool}', [EquipmentPoolController::class, 'update'])->name('update');
+            Route::delete('/{equipmentPool}', [EquipmentPoolController::class, 'destroy'])->name('destroy');
+        });
 
         // Landing-page CMS (ADMIN only; public read is /cms/public)
         Route::middleware('role:ADMIN')->prefix('admin/cms')->name('admin.cms.')->group(function () {

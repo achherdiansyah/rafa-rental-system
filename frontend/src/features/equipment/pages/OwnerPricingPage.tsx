@@ -33,6 +33,7 @@ export const OwnerPricingPage: React.FC = () => {
   const [baseRate, setBaseRate] = useState('')
   const [minimumHours, setMinimumHours] = useState('8')
   const [overtimeRate, setOvertimeRate] = useState('0')
+  const [distanceRate, setDistanceRate] = useState('0')
   const [mobCost, setMobCost] = useState('0')
   const [demobCost, setDemobCost] = useState('0')
   const [effectiveDate, setEffectiveDate] = useState(new Date().toISOString().split('T')[0])
@@ -85,6 +86,7 @@ export const OwnerPricingPage: React.FC = () => {
     setBaseRate('')
     setMinimumHours('8')
     setOvertimeRate('0')
+    setDistanceRate('0')
     setMobCost('0')
     setDemobCost('0')
     setEffectiveDate(new Date().toISOString().split('T')[0])
@@ -100,6 +102,7 @@ export const OwnerPricingPage: React.FC = () => {
     setBaseRate(String(price.base_rate))
     setMinimumHours(String(price.minimum_hours))
     setOvertimeRate(String(price.overtime_rate))
+    setDistanceRate(String(price.distance_rate_per_km ?? 0))
     setMobCost(String(price.mob_cost ?? 0))
     setDemobCost(String(price.demob_cost ?? 0))
     setEffectiveDate(price.effective_date)
@@ -119,6 +122,7 @@ export const OwnerPricingPage: React.FC = () => {
       base_rate: parseFloat(baseRate) || 0,
       minimum_hours: parseInt(minimumHours, 10) || 0,
       overtime_rate: parseFloat(overtimeRate) || 0,
+      distance_rate_per_km: parseFloat(distanceRate) || 0,
       mob_cost: parseFloat(mobCost) || 0,
       demob_cost: parseFloat(demobCost) || 0,
       effective_date: effectiveDate,
@@ -130,6 +134,7 @@ export const OwnerPricingPage: React.FC = () => {
           base_rate: payload.base_rate,
           minimum_hours: payload.minimum_hours,
           overtime_rate: payload.overtime_rate,
+          distance_rate_per_km: payload.distance_rate_per_km,
           mob_cost: payload.mob_cost,
           demob_cost: payload.demob_cost,
           effective_date: payload.effective_date,
@@ -215,6 +220,7 @@ export const OwnerPricingPage: React.FC = () => {
                 <TableHead>Tarif Dasar / Jam</TableHead>
                 <TableHead>Min. Jam</TableHead>
                 <TableHead>Overtime / Jam</TableHead>
+                <TableHead>Tarif / km</TableHead>
                 <TableHead>Biaya MOB</TableHead>
                 <TableHead>Biaya DEMOB</TableHead>
                 <TableHead>Mulai Berlaku</TableHead>
@@ -240,6 +246,9 @@ export const OwnerPricingPage: React.FC = () => {
                   </TableCell>
                   <TableCell className="font-mono text-sm text-slate-600">
                     Rp {(price.overtime_rate ?? 0).toLocaleString('id-ID')}
+                  </TableCell>
+                  <TableCell className="font-mono text-sm text-slate-600">
+                    Rp {(price.distance_rate_per_km ?? 0).toLocaleString('id-ID')}
                   </TableCell>
                   <TableCell className="font-mono text-sm text-slate-600">
                     Rp {(price.mob_cost ?? 0).toLocaleString('id-ID')}
@@ -408,6 +417,25 @@ export const OwnerPricingPage: React.FC = () => {
             </div>
           </div>
 
+          {/* Bagian C: Tarif MOB/DEMOB per Kilometer */}
+          <div className="pt-2 border-t border-slate-100">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+              C. Tarif MOB/DEMOB per Kilometer (Jarak Rute)
+            </h4>
+            <Input
+              label="Tarif per Kilometer (Rp/km)"
+              type="number"
+              step="100"
+              value={distanceRate}
+              onChange={(e) => setDistanceRate(e.target.value)}
+              error={formErrors.distance_rate_per_km?.[0]}
+              placeholder="Contoh: 3500"
+            />
+            <p className="mt-1 text-xs text-slate-400">
+              MOB = jarak rute (km) x tarif/km. DEMOB = jarak rute yang sama x tarif/km. Total = MOB + DEMOB.
+            </p>
+          </div>
+
           <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
             <Button variant="outline" type="button" onClick={() => setIsModalOpen(false)}>
               Batal
@@ -473,3 +501,4 @@ export const OwnerPricingPage: React.FC = () => {
   )
 }
 export default OwnerPricingPage
+

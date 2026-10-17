@@ -16,6 +16,8 @@ class EquipmentPriceVersion extends Model
         'equipment_price_id',
         'old_base_rate',
         'new_base_rate',
+        'old_distance_rate_per_km',
+        'new_distance_rate_per_km',
         'changed_at',
         'changed_by',
     ];
@@ -25,6 +27,8 @@ class EquipmentPriceVersion extends Model
         return [
             'old_base_rate' => 'decimal:2',
             'new_base_rate' => 'decimal:2',
+            'old_distance_rate_per_km' => 'decimal:2',
+            'new_distance_rate_per_km' => 'decimal:2',
             'changed_at' => 'datetime',
         ];
     }

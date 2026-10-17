@@ -4,6 +4,7 @@ import { ShoppingCart, Truck } from 'lucide-react'
 import { cartService } from '../services/cartService'
 import { projectLocationService } from '@/features/project/services/projectLocationService'
 import { equipmentService } from '@/features/equipment/services/equipmentService'
+import type { MobDemobEstimate } from '@/features/equipment/services/equipmentService'
 import { availabilityLabel } from '@/features/equipment/availability'
 import type { ProjectLocation } from '@/types/projectLocation'
 import type { EquipmentModel } from '@/types/equipment'
@@ -28,6 +29,9 @@ type DateValidError = {
   location?: string
 }
 
+const formatRupiah = (value: number): string =>
+  new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
+
 export const AddToCartModal: React.FC<AddToCartModalProps> = ({
   isOpen,
   onClose,
@@ -51,6 +55,10 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
   // Period-aware availability: re-check the selected dates against real bookings.
   const [periodModel, setPeriodModel] = useState<EquipmentModel | null>(null)
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false)
+
+  // MOB/DEMOB estimate from the selected project location (backend calculation).
+  const [estimate, setEstimate] = useState<MobDemobEstimate | null>(null)
+  const [isEstimating, setIsEstimating] = useState(false)
 
   useEffect(() => {
     if (!isOpen) return
@@ -107,6 +115,38 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
       active = false
     }
   }, [isOpen, model.id, startDate, endDate])
+
+  // Estimate MOB/DEMOB once the user selects a project location.
+  useEffect(() => {
+    if (!isOpen || !projectLocationId) {
+      setEstimate(null)
+      return
+    }
+
+    let active = true
+    setIsEstimating(true)
+
+    try {
+      equipmentService
+        .estimateMobDemob(model.id, Number(projectLocationId), scheme)
+        .then((data) => {
+          if (active) setEstimate(data)
+        })
+        .catch(() => {
+          if (active) setEstimate(null)
+        })
+        .finally(() => {
+          if (active) setIsEstimating(false)
+        })
+    } catch {
+      setEstimate(null)
+      setIsEstimating(false)
+    }
+
+    return () => {
+      active = false
+    }
+  }, [isOpen, model.id, projectLocationId, scheme])
 
   const validate = (): boolean => {
     const next: DateValidError = {}
@@ -297,6 +337,28 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
             Lokasi dapat diatur ulang dari halaman keranjang sebelum checkout booking.
           </p>
         </div>
+
+        {/* MOB/DEMOB estimate from backend (route distance × per-km tariff) */}
+        {projectLocationId && (
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs space-y-1.5">
+            <p className="font-semibold text-slate-800">Estimasi MOB/DEMOB (berdasarkan lokasi proyek)</p>
+            {isEstimating ? (
+              <p className="text-slate-500">Menghitung estimasi jarak...</p>
+            ) : estimate?.distance_available ? (
+              <>
+                <div className="flex justify-between"><span className="text-slate-500">Jarak rute (1 arah)</span><span className="font-mono text-slate-800">{estimate.route_distance_km} km</span></div>
+                <div className="flex justify-between"><span className="text-slate-500">Tarif per km</span><span className="font-mono text-slate-800">{formatRupiah(estimate.distance_rate_per_km ?? 0)}</span></div>
+                <div className="flex justify-between"><span className="text-slate-500">MOB</span><span className="font-mono text-slate-800">{formatRupiah(estimate.mob_cost ?? 0)}</span></div>
+                <div className="flex justify-between"><span className="text-slate-500">DEMOB</span><span className="font-mono text-slate-800">{formatRupiah(estimate.demob_cost ?? 0)}</span></div>
+                <div className="flex justify-between border-t border-slate-200 pt-1.5"><span className="font-semibold text-slate-700">Total MOB/DEMOB</span><span className="font-mono font-bold text-slate-900">{formatRupiah(estimate.total_mob_demob ?? 0)}</span></div>
+              </>
+            ) : (
+              <p className="text-amber-700">
+                {estimate?.message ?? 'Estimasi jarak rute belum tersedia (layanan routing belum dikonfigurasi atau koordinat lokasi belum lengkap).'}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Rate summary (read-only, from API) */}
         <div className="flex items-center justify-between rounded-xl bg-slate-50 border border-slate-100 p-3 text-sm">

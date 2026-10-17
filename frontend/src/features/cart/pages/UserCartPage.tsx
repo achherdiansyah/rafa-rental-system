@@ -429,6 +429,23 @@ export const UserCartPage: React.FC = () => {
                       </Alert>
                     )}
 
+                    {item.mob_demob_estimate && (
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs space-y-1">
+                        <p className="font-semibold text-slate-800">Estimasi MOB/DEMOB</p>
+                        {item.mob_demob_estimate.distance_available ? (
+                          <>
+                            <div className="flex justify-between"><span className="text-slate-500">Jarak rute (1 arah)</span><span className="font-mono">{item.mob_demob_estimate.route_distance_km} km</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500">Tarif/km</span><span className="font-mono">{formatRupiah(item.mob_demob_estimate.distance_rate_per_km ?? 0)}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500">MOB</span><span className="font-mono">{formatRupiah(item.mob_demob_estimate.mob_cost ?? 0)}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500">DEMOB</span><span className="font-mono">{formatRupiah(item.mob_demob_estimate.demob_cost ?? 0)}</span></div>
+                            <div className="flex justify-between border-t border-slate-200 pt-1"><span className="font-semibold">Total MOB/DEMOB</span><span className="font-mono font-bold">{formatRupiah(item.mob_demob_estimate.total_mob_demob ?? 0)}</span></div>
+                          </>
+                        ) : (
+                          <p className="text-amber-700">{item.mob_demob_estimate.message}</p>
+                        )}
+                      </div>
+                    )}
+
                     <p className="text-[11px] text-slate-400 mt-2">
                       Harga indikatif sesuai tarif berlaku saat tampilan; tagihan akhir memakai snapshot tarif saat invoice diterbitkan.
                     </p>

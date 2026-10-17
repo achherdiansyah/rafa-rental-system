@@ -24,6 +24,7 @@ class CreateEquipmentPriceAction
                 'base_rate' => $data['base_rate'],
                 'minimum_hours' => $data['minimum_hours'] ?? 0,
                 'overtime_rate' => $data['overtime_rate'] ?? 0.00,
+                'distance_rate_per_km' => $data['distance_rate_per_km'] ?? 0.00,
                 'mob_cost' => $data['mob_cost'] ?? 0.00,
                 'demob_cost' => $data['demob_cost'] ?? 0.00,
                 'effective_date' => $data['effective_date'],
@@ -33,6 +34,8 @@ class CreateEquipmentPriceAction
             $price->versions()->create([
                 'old_base_rate' => 0.00,
                 'new_base_rate' => $data['base_rate'],
+                'old_distance_rate_per_km' => 0.00,
+                'new_distance_rate_per_km' => $data['distance_rate_per_km'] ?? 0.00,
                 'changed_by' => $creator->id,
                 'changed_at' => now(),
             ]);
@@ -43,3 +46,4 @@ class CreateEquipmentPriceAction
         });
     }
 }
+

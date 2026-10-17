@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\CartItem;
 use App\Services\Equipment\EquipmentAvailabilityService;
+use App\Services\Pricing\MobDemobEstimator;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -27,6 +28,16 @@ class CartItemResource extends JsonResource
 
         $isAvailable = $availableCount >= $this->quantity;
 
+        $estimate = null;
+        if ($this->model) {
+            $destination = $this->cart?->projectLocation;
+            $estimate = app(MobDemobEstimator::class)->estimate(
+                $this->model,
+                $destination,
+                (bool) $this->is_all_in
+            );
+        }
+
         return [
             'id' => $this->id,
             'cart_id' => $this->cart_id,
@@ -43,6 +54,7 @@ class CartItemResource extends JsonResource
                     ? 'Tersedia' 
                     : "Unit tidak tersedia untuk periode ini karena sudah dialokasikan pada booking lain yang sedang menunggu pembayaran.",
             ],
+            'mob_demob_estimate' => $estimate,
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
         ];

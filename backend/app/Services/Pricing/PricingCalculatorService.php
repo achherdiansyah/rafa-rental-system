@@ -61,10 +61,27 @@ class PricingCalculatorService
         // Per FIX-PHASE-1: hours > 8 are billed at overtime_rate from master data.
         $overtimeRate = (float) ($price->overtime_rate > 0 ? $price->overtime_rate : $price->base_rate);
 
-        // MOB & DEMOB are calculated strictly per physical unit.
-        // Source: master price (mob_cost/demob_cost) by default; cart may override per unit.
-        $mobRatePerUnit = $input->mobRatePerUnit > 0 ? $input->mobRatePerUnit : (float) $price->mob_cost;
-        $demobRatePerUnit = $input->demobRatePerUnit > 0 ? $input->demobRatePerUnit : (float) $price->demob_cost;
+        // MOB & DEMOB rules:
+        // 1) Primary (distance-based): distance (one-way, km) × per-km tariff,
+        //    applied identically to MOB and DEMOB.
+        // 2) Legacy fallback ONLY when no road distance is available yet: keep the
+        //    configured flat mob_cost/demob_cost so existing data keeps working;
+        //    callers/UI must surface that the estimate is not distance-based.
+        $distanceRatePerKm = (float) (
+            $input->distanceRatePerKm !== null && $input->distanceRatePerKm > 0
+                ? $input->distanceRatePerKm
+                : ($price->distance_rate_per_km ?? 0)
+        );
+
+        $distanceAvailable = $input->routeDistanceKm !== null && $distanceRatePerKm > 0;
+
+        if ($distanceAvailable) {
+            $mobRatePerUnit = round((float) $input->routeDistanceKm * $distanceRatePerKm, 2);
+            $demobRatePerUnit = $mobRatePerUnit;
+        } else {
+            $mobRatePerUnit = $input->mobRatePerUnit > 0 ? $input->mobRatePerUnit : (float) $price->mob_cost;
+            $demobRatePerUnit = $input->demobRatePerUnit > 0 ? $input->demobRatePerUnit : (float) $price->demob_cost;
+        }
 
         $mobSubtotal = $mobRatePerUnit * $input->quantity;
         $demobSubtotal = $demobRatePerUnit * $input->quantity;
@@ -86,6 +103,9 @@ class PricingCalculatorService
             mobSubtotal: $mobSubtotal,
             demobRatePerUnit: $demobRatePerUnit,
             demobSubtotal: $demobSubtotal,
+            routeDistanceKm: $input->routeDistanceKm,
+            distanceRatePerKm: $distanceRatePerKm,
+            distanceAvailable: $distanceAvailable,
             lineTotal: $lineTotal,
         );
     }

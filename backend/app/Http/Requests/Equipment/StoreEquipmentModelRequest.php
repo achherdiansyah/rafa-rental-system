@@ -19,6 +19,7 @@ class StoreEquipmentModelRequest extends FormRequest
     {
         return [
             'equipment_type_id' => ['required', 'integer', 'exists:equipment_types,id'],
+            'equipment_pool_id' => ['nullable', 'integer', 'exists:equipment_pools,id'],
             'brand' => ['required', 'string', 'max:100'],
             'model_name' => ['required', 'string', 'max:150', 'unique:equipment_models,model_name'],
             'capacity_value' => ['required', 'numeric', 'min:0.01', 'max:999999.99'],

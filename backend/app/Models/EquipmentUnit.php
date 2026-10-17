@@ -14,6 +14,7 @@ class EquipmentUnit extends Model
 
     protected $fillable = [
         'equipment_model_id',
+        'equipment_pool_id',
         'serial_number',
         'plate_number',
         'status',
@@ -34,4 +35,10 @@ class EquipmentUnit extends Model
     {
         return $this->belongsTo(EquipmentModel::class, 'equipment_model_id');
     }
+
+    public function pool(): BelongsTo
+    {
+        return $this->belongsTo(EquipmentPool::class, 'equipment_pool_id');
+    }
 }
+

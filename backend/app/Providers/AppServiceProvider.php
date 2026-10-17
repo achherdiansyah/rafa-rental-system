@@ -10,6 +10,8 @@ use App\Services\Payment\DeferredPaymentStatusProvider;
 use App\Services\Payment\PaymentStatusProvider;
 use App\Services\Refund\RefundBoundary;
 use App\Services\Refund\RefundRegistrationService;
+use App\Services\Routing\NullRouteDistanceProvider;
+use App\Services\Routing\RouteDistanceProvider;
 use App\Services\WhatsApp\NullWhatsAppGateway;
 use App\Services\WhatsApp\WhatsAppGateway;
 use Illuminate\Auth\Notifications\ResetPassword;
@@ -35,6 +37,19 @@ class AppServiceProvider extends ServiceProvider
             RefundBoundary::class,
             RefundRegistrationService::class
         );
+
+        // Road-routing seam for MOB/DEMOB distance. A concrete provider class must
+        // be configured (ROUTING_PROVIDER_CLASS). Until then, distance is null and
+        // callers must show "estimasi belum tersedia" — never invent a distance.
+        $this->app->bind(RouteDistanceProvider::class, function ($app) {
+            $class = config('routing.provider_class');
+
+            if (is_string($class) && $class !== '' && class_exists($class)) {
+                return $app->make($class);
+            }
+
+            return new NullRouteDistanceProvider;
+        });
 
         // WhatsApp provider seam (Phase 11E): provider selected via config;
         // unset → Null gateway (honest SKIPPED, system keeps running).

@@ -160,3 +160,4 @@ describe('Admin Equipment Master Page', () => {
     })
   })
 })
+

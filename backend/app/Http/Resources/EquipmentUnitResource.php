@@ -21,12 +21,14 @@ class EquipmentUnitResource extends JsonResource
         return [
             'id' => $this->id,
             'equipment_model_id' => $this->equipment_model_id,
+            'equipment_pool_id' => $this->equipment_pool_id,
             'serial_number' => $this->serial_number,
             'plate_number' => $this->plate_number,
             'status' => $this->status->value,
             'last_hour_meter' => (float) $this->last_hour_meter,
             'year_of_make' => $this->year_of_make,
             'model' => new EquipmentModelResource($this->whenLoaded('model')),
+            'pool' => new EquipmentPoolResource($this->whenLoaded('pool')),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

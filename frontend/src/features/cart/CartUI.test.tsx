@@ -29,6 +29,7 @@ vi.mock('@/features/project/services/projectLocationService', () => ({
 vi.mock('@/features/equipment/services/equipmentService', () => ({
   equipmentService: {
     getModel: vi.fn(),
+    estimateMobDemob: vi.fn(),
   },
 }))
 

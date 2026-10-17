@@ -23,6 +23,18 @@ class BookingDetail extends Model
         'mob_cost_snapshot',
         'demob_cost_snapshot',
         'subtotal',
+        'origin_pool_id',
+        'origin_name',
+        'origin_address',
+        'origin_latitude',
+        'origin_longitude',
+        'destination_project_location_id',
+        'destination_name',
+        'destination_address',
+        'destination_latitude',
+        'destination_longitude',
+        'route_distance_km',
+        'distance_rate_per_km',
     ];
 
     protected function casts(): array
@@ -37,7 +49,23 @@ class BookingDetail extends Model
             'mob_cost_snapshot' => 'decimal:2',
             'demob_cost_snapshot' => 'decimal:2',
             'subtotal' => 'decimal:2',
+            'origin_latitude' => 'decimal:8',
+            'origin_longitude' => 'decimal:8',
+            'destination_latitude' => 'decimal:8',
+            'destination_longitude' => 'decimal:8',
+            'route_distance_km' => 'decimal:2',
+            'distance_rate_per_km' => 'decimal:2',
         ];
+    }
+
+    public function originPool(): BelongsTo
+    {
+        return $this->belongsTo(EquipmentPool::class, 'origin_pool_id');
+    }
+
+    public function destinationProjectLocation(): BelongsTo
+    {
+        return $this->belongsTo(ProjectLocation::class, 'destination_project_location_id');
     }
 
     public function booking(): BelongsTo

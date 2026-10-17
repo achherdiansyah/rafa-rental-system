@@ -26,6 +26,18 @@ class BookingDetailResource extends JsonResource
             'mob_cost_snapshot' => (float) ($this->mob_cost_snapshot ?? 0),
             'demob_cost_snapshot' => (float) ($this->demob_cost_snapshot ?? 0),
             'subtotal' => (float) $this->subtotal,
+            'origin_pool_id' => $this->origin_pool_id,
+            'origin_name' => $this->origin_name,
+            'origin_address' => $this->origin_address,
+            'origin_latitude' => $this->origin_latitude !== null ? (float) $this->origin_latitude : null,
+            'origin_longitude' => $this->origin_longitude !== null ? (float) $this->origin_longitude : null,
+            'destination_project_location_id' => $this->destination_project_location_id,
+            'destination_name' => $this->destination_name,
+            'destination_address' => $this->destination_address,
+            'destination_latitude' => $this->destination_latitude !== null ? (float) $this->destination_latitude : null,
+            'destination_longitude' => $this->destination_longitude !== null ? (float) $this->destination_longitude : null,
+            'route_distance_km' => $this->route_distance_km !== null ? (float) $this->route_distance_km : null,
+            'distance_rate_per_km' => $this->distance_rate_per_km !== null ? (float) $this->distance_rate_per_km : null,
             'model' => new EquipmentModelResource($this->whenLoaded('model')),
             'unit_assignments' => $this->whenLoaded('unitAssignments', function () {
                 return $this->unitAssignments->map(fn ($assignment) => [

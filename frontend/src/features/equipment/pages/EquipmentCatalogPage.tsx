@@ -195,6 +195,12 @@ export const EquipmentCatalogPage: React.FC = () => {
                         <p className="text-sm font-bold text-slate-900 font-mono">
                           {lowestRate !== null ? `Rp ${lowestRate.toLocaleString('id-ID')}/jam` : 'Hubungi Admin'}
                         </p>
+                        {(() => {
+                          const kmRate = model.prices?.find((p) => (p.distance_rate_per_km ?? 0) > 0)?.distance_rate_per_km
+                          return kmRate ? (
+                            <p className="text-[11px] text-slate-500">MOB/DEMOB: Rp {kmRate.toLocaleString('id-ID')}/km</p>
+                          ) : null
+                        })()}
                       </div>
 
                     <Link to={`${basePath}/${model.id}`}>

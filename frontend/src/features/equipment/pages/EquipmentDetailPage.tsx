@@ -173,8 +173,14 @@ export const EquipmentDetailPage: React.FC = () => {
                     {nonAllInPrice ? `Rp ${nonAllInPrice.base_rate.toLocaleString('id-ID')}` : '-'}
                     <span className="text-xs font-normal text-slate-500"> /jam</span>
                   </p>
-                  <p className="text-xs text-slate-500 mt-1">Biaya MOB: {nonAllInPrice && nonAllInPrice.mob_cost ? `Rp ${nonAllInPrice.mob_cost.toLocaleString('id-ID')}` : '-'}</p>
-                  <p className="text-xs text-slate-500">Biaya DEMOB: {nonAllInPrice && nonAllInPrice.demob_cost ? `Rp ${nonAllInPrice.demob_cost.toLocaleString('id-ID')}` : '-'}</p>
+                  {nonAllInPrice && (nonAllInPrice.distance_rate_per_km ?? 0) > 0 ? (
+                    <p className="text-xs text-slate-500 mt-1">MOB/DEMOB: Rp {(nonAllInPrice.distance_rate_per_km ?? 0).toLocaleString('id-ID')}/km</p>
+                  ) : (
+                    <>
+                      <p className="text-xs text-slate-500 mt-1">Biaya MOB: {nonAllInPrice && nonAllInPrice.mob_cost ? `Rp ${nonAllInPrice.mob_cost.toLocaleString('id-ID')}` : '-'}</p>
+                      <p className="text-xs text-slate-500">Biaya DEMOB: {nonAllInPrice && nonAllInPrice.demob_cost ? `Rp ${nonAllInPrice.demob_cost.toLocaleString('id-ID')}` : '-'}</p>
+                    </>
+                  )}
                 </div>
               </div>
             </CardHeader>
@@ -225,8 +231,14 @@ export const EquipmentDetailPage: React.FC = () => {
                     {allInPrice ? `Rp ${allInPrice.base_rate.toLocaleString('id-ID')}` : '-'}
                     <span className="text-xs font-normal text-slate-500"> /jam</span>
                   </p>
-                  <p className="text-xs text-slate-500 mt-1">Biaya MOB: {allInPrice && allInPrice.mob_cost ? `Rp ${allInPrice.mob_cost.toLocaleString('id-ID')}` : '-'}</p>
-                  <p className="text-xs text-slate-500">Biaya DEMOB: {allInPrice && allInPrice.demob_cost ? `Rp ${allInPrice.demob_cost.toLocaleString('id-ID')}` : '-'}</p>
+                  {allInPrice && (allInPrice.distance_rate_per_km ?? 0) > 0 ? (
+                    <p className="text-xs text-slate-500 mt-1">MOB/DEMOB: Rp {(allInPrice.distance_rate_per_km ?? 0).toLocaleString('id-ID')}/km</p>
+                  ) : (
+                    <>
+                      <p className="text-xs text-slate-500 mt-1">Biaya MOB: {allInPrice && allInPrice.mob_cost ? `Rp ${allInPrice.mob_cost.toLocaleString('id-ID')}` : '-'}</p>
+                      <p className="text-xs text-slate-500">Biaya DEMOB: {allInPrice && allInPrice.demob_cost ? `Rp ${allInPrice.demob_cost.toLocaleString('id-ID')}` : '-'}</p>
+                    </>
+                  )}
                 </div>
               </div>
             </CardHeader>
@@ -270,6 +282,7 @@ export const EquipmentDetailPage: React.FC = () => {
           <ul className="text-xs text-amber-800 space-y-1.5 list-disc list-inside">
             <li><strong>Total Estimasi Booking:</strong> Tagihan awal saat persetujuan booking HANYA berisi Biaya Mobilisasi & Demobilisasi per unit fisik yang dipesan.</li>
             <li><strong>Biaya Penggunaan Alat (Hourly Rate):</strong> Tarif Rental per Jam BUKAN bagian dari harga di awal. Biaya sewa akan ditagihkan sebagai <strong>Daily Work Invoice</strong> (faktur harian) setelah rental berjalan dan berdasarkan jam kerja aktual yang diinput ke Timesheet Harian.</li>
+            <li><strong>MOB/DEMOB Berdasarkan Jarak:</strong> Estimasi biaya mengikuti jarak rute dari pool armada ke lokasi proyek yang Anda pilih. Rincian jarak, tarif per km, MOB, DEMOB, dan total muncul saat Anda memilih lokasi proyek pada formulir pemesanan.</li>
           </ul>
         </div>
       </div>

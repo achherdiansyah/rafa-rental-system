@@ -85,6 +85,7 @@ export const adminMenu: SidebarGroup[] = [
     items: [
       { label: 'Armada & Tipe', href: '/admin/equipment', icon: <Layers size={18} /> },
       { label: 'Unit Fisik', href: '/admin/units', icon: <Truck size={18} /> },
+      { label: 'Pool Armada', href: '/admin/pools', icon: <MapPin size={18} /> },
       { label: 'Tarif & Harga', href: '/admin/pricing', icon: <DollarSign size={18} /> },
       { label: 'Rekening Perusahaan', href: '/admin/banks', icon: <Building2 size={18} /> },
     ],

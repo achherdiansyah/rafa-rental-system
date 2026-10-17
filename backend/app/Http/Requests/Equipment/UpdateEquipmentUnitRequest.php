@@ -25,6 +25,7 @@ class UpdateEquipmentUnitRequest extends FormRequest
 
         return [
             'equipment_model_id' => ['sometimes', 'required', 'integer', 'exists:equipment_models,id'],
+            'equipment_pool_id' => ['sometimes', 'nullable', 'integer', 'exists:equipment_pools,id'],
             'serial_number' => [
                 'sometimes',
                 'required',

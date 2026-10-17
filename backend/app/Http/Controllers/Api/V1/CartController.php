@@ -32,6 +32,7 @@ class CartController extends ApiController
         $cart = $action->execute($user);
         $cart->load([
             'projectLocation',
+            'items.cart.projectLocation',
             'items.model' => function ($q) {
                 $q->with(['type', 'prices', 'attachments']);
             },
@@ -135,3 +136,4 @@ class CartController extends ApiController
         );
     }
 }
+

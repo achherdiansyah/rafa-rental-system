@@ -7,6 +7,16 @@ export interface CartItemAvailability {
   message: string
 }
 
+export interface CartItemMobDemobEstimate {
+  distance_available: boolean
+  route_distance_km: number | null
+  distance_rate_per_km: number | null
+  mob_cost: number | null
+  demob_cost: number | null
+  total_mob_demob: number | null
+  message: string
+}
+
 export interface CartItem {
   id: number
   cart_id: number
@@ -17,6 +27,7 @@ export interface CartItem {
   end_date: string
   model?: EquipmentModel
   availability?: CartItemAvailability
+  mob_demob_estimate?: CartItemMobDemobEstimate | null
   created_at: string
   updated_at: string
 }

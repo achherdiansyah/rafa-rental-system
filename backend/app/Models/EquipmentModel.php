@@ -14,6 +14,7 @@ class EquipmentModel extends Model
 
     protected $fillable = [
         'equipment_type_id',
+        'equipment_pool_id',
         'brand',
         'model_name',
         'capacity_value',
@@ -27,6 +28,11 @@ class EquipmentModel extends Model
             'capacity_value' => 'decimal:2',
             'is_active' => 'boolean',
         ];
+    }
+
+    public function pool(): BelongsTo
+    {
+        return $this->belongsTo(EquipmentPool::class, 'equipment_pool_id');
     }
 
     public function type(): BelongsTo
@@ -49,3 +55,4 @@ class EquipmentModel extends Model
         return $this->morphMany(Attachment::class, 'attachable');
     }
 }
+

@@ -26,6 +26,7 @@ class EquipmentPriceResource extends JsonResource
             'base_rate' => (float) $this->base_rate,
             'minimum_hours' => $this->minimum_hours,
             'overtime_rate' => (float) $this->overtime_rate,
+            'distance_rate_per_km' => (float) $this->distance_rate_per_km,
             'mob_cost' => (float) $this->mob_cost,
             'demob_cost' => (float) $this->demob_cost,
             'effective_date' => $this->effective_date?->format('Y-m-d'),
@@ -36,3 +37,4 @@ class EquipmentPriceResource extends JsonResource
         ];
     }
 }
+

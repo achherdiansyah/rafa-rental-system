@@ -23,6 +23,8 @@ class EquipmentPriceVersionResource extends JsonResource
             'equipment_price_id' => $this->equipment_price_id,
             'old_base_rate' => (float) $this->old_base_rate,
             'new_base_rate' => (float) $this->new_base_rate,
+            'old_distance_rate_per_km' => $this->old_distance_rate_per_km !== null ? (float) $this->old_distance_rate_per_km : null,
+            'new_distance_rate_per_km' => $this->new_distance_rate_per_km !== null ? (float) $this->new_distance_rate_per_km : null,
             'changed_at' => $this->changed_at?->toIso8601String(),
             'changed_by' => $this->changed_by,
             'changed_by_user' => new UserResource($this->whenLoaded('changedByUser')),

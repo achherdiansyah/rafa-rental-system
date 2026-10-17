@@ -28,6 +28,7 @@ const OwnerAuditTrailPage = lazy(() => import('@/features/reporting/pages/OwnerA
 const AdminCmsPage = lazy(() => import('@/features/cms/pages/AdminCmsPage'))
 const AdminEquipmentMasterPage = lazy(() => import('@/features/equipment/pages/AdminEquipmentMasterPage'))
 const AdminEquipmentUnitsPage = lazy(() => import('@/features/equipment/pages/AdminEquipmentUnitsPage'))
+const AdminPoolsPage = lazy(() => import('@/features/equipment/pages/AdminPoolsPage'))
 const AdminBankAccountsPage = lazy(() => import('@/features/bank/pages/AdminBankAccountsPage'))
 const EquipmentCatalogPage = lazy(() => import('@/features/equipment/pages/EquipmentCatalogPage'))
 const EquipmentDetailPage = lazy(() => import('@/features/equipment/pages/EquipmentDetailPage'))
@@ -108,6 +109,7 @@ export const AppRoutes: React.FC = () => {
               <Route path="reports/financial" element={<AdminFinancialReportsPage />} />
               <Route path="equipment" element={<AdminEquipmentMasterPage />} />
               <Route path="units" element={<AdminEquipmentUnitsPage />} />
+              <Route path="pools" element={<AdminPoolsPage />} />
               <Route path="banks" element={<AdminBankAccountsPage />} />
               <Route path="bookings" element={<AdminBookingsPage />} />
               <Route path="rentals" element={<AdminRentalsPage />} />
@@ -142,3 +144,4 @@ export const AppRoutes: React.FC = () => {
     </Suspense>
   )
 }
+

@@ -56,6 +56,8 @@ export const AdminEquipmentMasterPage: React.FC = () => {
   const [isModelModalOpen, setIsModelModalOpen] = useState(false)
   const [editingModel, setEditingModel] = useState<EquipmentModel | null>(null)
   const [modelTypeId, setModelTypeId] = useState<number | string>('')
+  const [modelPoolId, setModelPoolId] = useState<number | string>('')
+  const [pools, setPools] = useState<Array<{ id: number; name: string }>>([])
   const [modelBrand, setModelBrand] = useState('')
   const [modelName, setModelName] = useState('')
   const [capacityValue, setCapacityValue] = useState('')
@@ -132,6 +134,14 @@ export const AdminEquipmentMasterPage: React.FC = () => {
 
   useEffect(() => {
     fetchAllTypes()
+    try {
+      equipmentService
+        .getPools({ per_page: 100 })
+        .then((res) => setPools((res.data ?? []).map((p) => ({ id: p.id, name: p.name }))))
+        .catch(() => setPools([]))
+    } catch {
+      setPools([])
+    }
   }, [fetchAllTypes])
 
   useEffect(() => {
@@ -191,6 +201,7 @@ export const AdminEquipmentMasterPage: React.FC = () => {
   const handleOpenCreateModel = () => {
     setEditingModel(null)
     setModelTypeId(allTypesList[0]?.id || '')
+    setModelPoolId('')
     setModelBrand('')
     setModelName('')
     setCapacityValue('')
@@ -203,6 +214,7 @@ export const AdminEquipmentMasterPage: React.FC = () => {
   const handleOpenEditModel = (model: EquipmentModel) => {
     setEditingModel(model)
     setModelTypeId(model.equipment_type_id)
+    setModelPoolId(model.equipment_pool_id ?? '')
     setModelBrand(model.brand)
     setModelName(model.model_name)
     setCapacityValue(String(model.capacity_value))
@@ -223,6 +235,7 @@ export const AdminEquipmentMasterPage: React.FC = () => {
       model_name: modelName,
       capacity_value: parseFloat(capacityValue),
       capacity_unit: capacityUnit,
+      equipment_pool_id: modelPoolId ? Number(modelPoolId) : null,
       is_active: modelIsActive,
     }
 
@@ -684,17 +697,29 @@ export const AdminEquipmentMasterPage: React.FC = () => {
       >
         <form onSubmit={handleSaveModel} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Select
-              label="Kategori Tipe Alat"
-              value={modelTypeId}
-              onChange={(e) => setModelTypeId(e.target.value)}
-              error={formErrors.equipment_type_id?.[0]}
-              required
-            >
-              {allTypesList.map((t) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
-              ))}
-            </Select>
+              <Select
+                label="Kategori Tipe Alat"
+                value={modelTypeId}
+                onChange={(e) => setModelTypeId(e.target.value)}
+                error={formErrors.equipment_type_id?.[0]}
+                required
+              >
+                {allTypesList.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </Select>
+
+              <Select
+                label="Pool Asal Armada (untuk MOB/DEMOB)"
+                value={modelPoolId}
+                onChange={(e) => setModelPoolId(e.target.value)}
+                error={formErrors.equipment_pool_id?.[0]}
+              >
+                <option value="">-- Tanpa Pool (harga tetap) --</option>
+                {pools.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </Select>
 
             <Input
               label="Merk / Pabrikan"
@@ -884,3 +909,4 @@ export const AdminEquipmentMasterPage: React.FC = () => {
   )
 }
 export default AdminEquipmentMasterPage
+

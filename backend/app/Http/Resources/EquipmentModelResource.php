@@ -27,6 +27,7 @@ class EquipmentModelResource extends JsonResource
             'capacity_unit' => $this->capacity_unit,
             'is_active' => (bool) $this->is_active,
             'type' => new EquipmentTypeResource($this->whenLoaded('type')),
+            'pool' => new EquipmentPoolResource($this->whenLoaded('pool')),
             'prices' => EquipmentPriceResource::collection($this->whenLoaded('prices')),
             'attachments' => AttachmentResource::collection($this->whenLoaded('attachments')),
             'units_count' => $this->whenCounted('units'),
@@ -35,3 +36,4 @@ class EquipmentModelResource extends JsonResource
         ];
     }
 }
+

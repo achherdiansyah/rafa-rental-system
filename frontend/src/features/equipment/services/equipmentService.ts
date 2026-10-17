@@ -5,6 +5,8 @@ import type {
   EquipmentModel,
   EquipmentUnit,
   EquipmentPrice,
+  EquipmentPool,
+  EquipmentPoolPayload,
   CreateEquipmentTypePayload,
   UpdateEquipmentTypePayload,
   CreateEquipmentModelPayload,
@@ -169,6 +171,52 @@ uploadModelPhoto: async (modelId: number, file: File): Promise<EquipmentAttachme
     const response = await api.put<EquipmentPrice>(`/equipment/prices/${id}`, payload)
     return response.data
   },
+
+  // --- Equipment Pools (origin of MOB/DEMOB distance) ---
+  getPools: async (params?: { is_active?: boolean; per_page?: number }): Promise<PaginatedResponse<EquipmentPool>> => {
+    const query = new URLSearchParams()
+    if (params?.is_active !== undefined) query.append('is_active', params.is_active ? '1' : '0')
+    if (params?.per_page) query.append('per_page', String(params.per_page))
+    return api.getPaginated<EquipmentPool>(`/admin/equipment-pools?${query.toString()}`)
+  },
+
+  createPool: async (payload: EquipmentPoolPayload): Promise<EquipmentPool> => {
+    const response = await api.post<EquipmentPool>('/admin/equipment-pools', payload)
+    return response.data
+  },
+
+  updatePool: async (id: number, payload: Partial<EquipmentPoolPayload>): Promise<EquipmentPool> => {
+    const response = await api.put<EquipmentPool>(`/admin/equipment-pools/${id}`, payload)
+    return response.data
+  },
+
+  deletePool: async (id: number): Promise<void> => {
+    await api.delete(`/admin/equipment-pools/${id}`)
+  },
+
+  estimateMobDemob: async (
+    modelId: number,
+    projectLocationId: number,
+    isAllIn: boolean
+  ): Promise<MobDemobEstimate> => {
+    const response = await api.get<MobDemobEstimate>(
+      `/equipment/models/${modelId}/mob-demob-estimate`,
+      { params: { project_location_id: projectLocationId, is_all_in: isAllIn ? 1 : 0 } }
+    )
+    return response.data
+  },
+}
+
+export interface MobDemobEstimate {
+  distance_available: boolean
+  route_distance_km: number | null
+  distance_rate_per_km: number | null
+  mob_cost: number | null
+  demob_cost: number | null
+  total_mob_demob: number | null
+  origin_pool: { id: number; name: string; address: string; latitude: number | null; longitude: number | null } | null
+  destination: { id: number; name: string; address: string; latitude: number | null; longitude: number | null } | null
+  message: string
 }
 
 export default equipmentService

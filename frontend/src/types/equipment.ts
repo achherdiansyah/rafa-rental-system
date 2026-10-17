@@ -39,6 +39,8 @@ export interface EquipmentModel {
   type?: EquipmentType
   prices?: EquipmentPrice[]
   attachments?: EquipmentAttachment[]
+  equipment_pool_id?: number | null
+  pool?: EquipmentPool | null
   units_count?: number
   available_units_count?: number
   total_units?: number
@@ -74,6 +76,7 @@ export interface UpdateEquipmentTypePayload {
 
 export interface CreateEquipmentModelPayload {
   equipment_type_id: number
+  equipment_pool_id?: number | null
   brand: string
   model_name: string
   capacity_value: number
@@ -83,6 +86,7 @@ export interface CreateEquipmentModelPayload {
 
 export interface UpdateEquipmentModelPayload {
   equipment_type_id?: number
+  equipment_pool_id?: number | null
   brand?: string
   model_name?: string
   capacity_value?: number
@@ -152,6 +156,7 @@ export interface EquipmentPrice {
   base_rate: number
   minimum_hours: number
   overtime_rate: number
+  distance_rate_per_km?: number
   mob_cost: number
   demob_cost: number
   effective_date: string
@@ -168,6 +173,7 @@ export interface CreateEquipmentPricePayload {
   base_rate: number
   minimum_hours: number
   overtime_rate: number
+  distance_rate_per_km?: number
   mob_cost: number
   demob_cost: number
   effective_date: string
@@ -177,9 +183,31 @@ export interface UpdateEquipmentPricePayload {
   base_rate: number
   minimum_hours?: number
   overtime_rate?: number
+  distance_rate_per_km?: number
   mob_cost?: number
   demob_cost?: number
   effective_date?: string
+}
+
+export interface EquipmentPool {
+  id: number
+  name: string
+  address: string
+  city: string | null
+  latitude: number | null
+  longitude: number | null
+  is_active: boolean
+  created_at?: string
+  updated_at?: string
+}
+
+export interface EquipmentPoolPayload {
+  name: string
+  address: string
+  city?: string
+  latitude: number
+  longitude: number
+  is_active?: boolean
 }
 
 export interface EquipmentPriceFilterParams {
@@ -188,3 +216,5 @@ export interface EquipmentPriceFilterParams {
   page?: number
   per_page?: number
 }
+
+

@@ -90,3 +90,4 @@ describe('Master Data & Pricing Frontend Integration Suite', () => {
     expect(screen.getByPlaceholderText(/pc200-8/i)).toBeInTheDocument()
   })
 })
+

@@ -25,6 +25,7 @@ class UpdateEquipmentModelRequest extends FormRequest
 
         return [
             'equipment_type_id' => ['sometimes', 'required', 'integer', 'exists:equipment_types,id'],
+            'equipment_pool_id' => ['sometimes', 'nullable', 'integer', 'exists:equipment_pools,id'],
             'brand' => ['sometimes', 'required', 'string', 'max:100'],
             'model_name' => [
                 'sometimes',

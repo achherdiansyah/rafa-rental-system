@@ -19,6 +19,9 @@ readonly class LineItemPricingResult
         public float $demobRatePerUnit,
         public float $demobSubtotal,
         public float $lineTotal,
+        public ?float $routeDistanceKm = null,
+        public float $distanceRatePerKm = 0.00,
+        public bool $distanceAvailable = false,
     ) {}
 
     /**
@@ -41,6 +44,9 @@ readonly class LineItemPricingResult
             'demob_rate_per_unit' => $this->demobRatePerUnit,
             'demob_subtotal' => $this->demobSubtotal,
             'line_total' => $this->lineTotal,
+            'route_distance_km' => $this->routeDistanceKm,
+            'distance_rate_per_km' => $this->distanceRatePerKm,
+            'distance_available' => $this->distanceAvailable,
         ];
     }
 }
