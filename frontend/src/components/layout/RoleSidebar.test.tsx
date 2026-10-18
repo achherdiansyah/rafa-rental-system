@@ -66,11 +66,14 @@ describe('RoleSidebar grouped navigation', () => {
   it('SUPERVISOR and OPERATOR menus expose their own portals', () => {
     const supervisorLabels = supervisorMenu.flatMap((g) => g.items.map((i) => i.label))
     expect(supervisorLabels).toContain('Antrean Validasi')
+    expect(supervisorLabels).toContain('Riwayat Validasi')
     const supervisorHrefs = supervisorMenu.flatMap((g) => g.items.map((i) => i.href))
     expect(supervisorHrefs.some((h) => h.startsWith('/supervisor'))).toBe(true)
 
     const operatorLabels = operatorMenu.flatMap((g) => g.items.map((i) => i.label))
     expect(operatorLabels).toContain('Penugasan Saya')
+    expect(operatorLabels).toContain('Timesheet Harian')
+    expect(operatorLabels).toContain('Riwayat Timesheet')
     const operatorHrefs = operatorMenu.flatMap((g) => g.items.map((i) => i.href))
     expect(operatorHrefs).toContain('/operator/assignments')
     // No admin pages leak into the restricted portals.

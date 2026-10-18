@@ -61,6 +61,11 @@ export const OperatorAssignmentDetailPage: React.FC = () => {
             <p className="text-xs text-slate-500 flex items-center gap-1.5">
               <Clock size={12} /> Mulai: {assignment.started_at ? new Date(assignment.started_at).toLocaleString('id-ID') : '-'}
             </p>
+            {assignment.payment_hold && (
+              <p className="text-xs font-semibold text-rose-600">
+                PAYMENT HOLD — pekerjaan dihentikan sementara sampai tunggakan diselesaikan.
+              </p>
+            )}
           </Card>
 
           <Card className="p-5 space-y-3">

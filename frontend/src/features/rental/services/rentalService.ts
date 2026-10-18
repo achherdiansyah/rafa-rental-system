@@ -26,6 +26,10 @@ export const rentalService = {
     return response
   },
 
+  async resumePaymentHold(id: number, reason: string) {
+    return api.post(`/admin/rentals/${id}/payment-hold/resume`, { reason })
+  },
+
   async markReady(
     id: number,
     result: 'READY' | 'MAINTENANCE' | 'DAMAGED',

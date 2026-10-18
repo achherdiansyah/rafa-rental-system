@@ -110,6 +110,10 @@ export const adminMenu: SidebarGroup[] = [
     title: 'Website',
     items: [{ label: 'CMS Landing Page', href: '/admin/cms', icon: <Globe size={18} /> }],
   },
+  {
+    title: 'Akun',
+    items: [{ label: 'Profil & Password', href: '/admin/profile', icon: <User size={18} /> }],
+  },
 ]
 
 export const supervisorMenu: SidebarGroup[] = [
@@ -118,6 +122,7 @@ export const supervisorMenu: SidebarGroup[] = [
     items: [
       { label: 'Dashboard', href: '/supervisor', icon: <LayoutDashboard size={18} /> },
       { label: 'Antrean Validasi', href: '/supervisor/bookings', icon: <CheckSquare size={18} /> },
+      { label: 'Riwayat Validasi', href: '/supervisor/history', icon: <History size={18} /> },
     ],
   },
   {
@@ -135,6 +140,9 @@ export const operatorMenu: SidebarGroup[] = [
     items: [
       { label: 'Dashboard', href: '/operator', icon: <LayoutDashboard size={18} /> },
       { label: 'Penugasan Saya', href: '/operator/assignments', icon: <ClipboardList size={18} /> },
+      { label: 'Lokasi Proyek', href: '/operator/locations', icon: <MapPin size={18} /> },
+      { label: 'Timesheet Harian', href: '/operator/timesheets', icon: <Clock size={18} /> },
+      { label: 'Riwayat Timesheet', href: '/operator/timesheets/history', icon: <History size={18} /> },
     ],
   },
   {

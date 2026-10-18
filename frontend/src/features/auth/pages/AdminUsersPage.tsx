@@ -9,6 +9,9 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/feedback/EmptyState'
 import { Alert } from '@/components/feedback/Alert'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { Modal } from '@/components/ui/Modal'
+import { Input } from '@/components/form/Input'
+import { Select } from '@/components/form/Select'
 import { useToast } from '@/hooks/useToast'
 
 export const AdminUsersPage: React.FC = () => {
@@ -21,6 +24,16 @@ export const AdminUsersPage: React.FC = () => {
   const [roleFilter, setRoleFilter] = useState('')
   const [roleDraft, setRoleDraft] = useState<Record<number, string>>({})
   const [savingRoleId, setSavingRoleId] = useState<number | null>(null)
+
+  const [createOpen, setCreateOpen] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
+  const [createForm, setCreateForm] = useState({
+    name: '',
+    email: '',
+    phone_number: '',
+    role: 'SUPERVISOR' as 'SUPERVISOR' | 'OPERATOR',
+  })
+  const [tempCredential, setTempCredential] = useState<{ email: string; password: string } | null>(null)
 
   const [verifyTarget, setVerifyTarget] = useState<AdminUserData | null>(null)
   const [rejectTarget, setRejectTarget] = useState<AdminUserData | null>(null)
@@ -100,6 +113,34 @@ export const AdminUsersPage: React.FC = () => {
 
   const EDITABLE_ROLES = ['USER', 'SUPERVISOR', 'OPERATOR']
 
+  const handleCreateStaff = async () => {
+    if (!createForm.name.trim() || !createForm.email.trim()) {
+      showErrorToast('Nama dan email wajib diisi.')
+      return
+    }
+    setIsCreating(true)
+    try {
+      const res = await userService.createStaff({
+        name: createForm.name,
+        email: createForm.email,
+        phone_number: createForm.phone_number || undefined,
+        role: createForm.role,
+        is_active: true,
+      })
+      if (res.success && res.data) {
+        setTempCredential({ email: res.data.email, password: res.data.temporary_password })
+        setCreateOpen(false)
+        setCreateForm({ name: '', email: '', phone_number: '', role: 'SUPERVISOR' })
+        showSuccessToast('Akun staf berhasil dibuat.')
+        loadUsers()
+      }
+    } catch (err: any) {
+      showErrorToast(err?.message || 'Gagal membuat akun staf.')
+    } finally {
+      setIsCreating(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -109,19 +150,22 @@ export const AdminUsersPage: React.FC = () => {
             Verifikasi identitas pelanggan serta tugaskan role SUPERVISOR atau OPERATOR sesuai kebutuhan operasional.
           </p>
         </div>
-        <select
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-600"
-          aria-label="Filter role pengguna"
-        >
-          <option value="">Semua Role</option>
-          <option value="USER">USER</option>
-          <option value="SUPERVISOR">SUPERVISOR</option>
-          <option value="OPERATOR">OPERATOR</option>
-          <option value="ADMIN">ADMIN</option>
-          <option value="OWNER">OWNER</option>
-        </select>
+        <div className="flex items-center gap-2">
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-600"
+            aria-label="Filter role pengguna"
+          >
+            <option value="">Semua Role</option>
+            <option value="USER">USER</option>
+            <option value="SUPERVISOR">SUPERVISOR</option>
+            <option value="OPERATOR">OPERATOR</option>
+            <option value="ADMIN">ADMIN</option>
+            <option value="OWNER">OWNER</option>
+          </select>
+          <Button onClick={() => setCreateOpen(true)}>Tambah Akun Staf</Button>
+        </div>
       </div>
 
       {apiError && (
@@ -269,6 +313,38 @@ export const AdminUsersPage: React.FC = () => {
         isLoading={isActing}
         variant="primary"
       />
+
+      <Modal isOpen={createOpen} onClose={() => !isCreating && setCreateOpen(false)} title="Tambah Akun Supervisor / Operator" size="sm">
+        <div className="space-y-3">
+          <Input label="Nama *" value={createForm.name} onChange={(e) => setCreateForm((p) => ({ ...p, name: e.target.value }))} />
+          <Input label="Email *" type="email" value={createForm.email} onChange={(e) => setCreateForm((p) => ({ ...p, email: e.target.value }))} />
+          <Input label="Nomor Telepon" value={createForm.phone_number} onChange={(e) => setCreateForm((p) => ({ ...p, phone_number: e.target.value }))} />
+          <Select label="Role *" value={createForm.role} onChange={(e) => setCreateForm((p) => ({ ...p, role: e.target.value as 'SUPERVISOR' | 'OPERATOR' }))}>
+            <option value="SUPERVISOR">SUPERVISOR</option>
+            <option value="OPERATOR">OPERATOR</option>
+          </Select>
+          <p className="text-xs text-slate-500">Password sementara dibuat otomatis dan wajib diganti saat login pertama.</p>
+          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+            <Button variant="outline" onClick={() => setCreateOpen(false)} disabled={isCreating}>Batal</Button>
+            <Button onClick={handleCreateStaff} isLoading={isCreating}>Buat Akun</Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal isOpen={tempCredential !== null} onClose={() => setTempCredential(null)} title="Password Sementara" size="sm">
+        <div className="space-y-3 text-sm">
+          <Alert variant="warning" title="Catat sekarang">
+            Password sementara hanya ditampilkan sekali. Jangan dikirim melalui saluran tidak aman.
+          </Alert>
+          <div className="rounded-lg bg-slate-50 border border-slate-100 p-3 font-mono text-xs space-y-1">
+            <p>Email: {tempCredential?.email}</p>
+            <p>Password: {tempCredential?.password}</p>
+          </div>
+          <div className="flex justify-end">
+            <Button onClick={() => setTempCredential(null)}>Tutup</Button>
+          </div>
+        </div>
+      </Modal>
 
       <ConfirmDialog
         isOpen={rejectTarget !== null}

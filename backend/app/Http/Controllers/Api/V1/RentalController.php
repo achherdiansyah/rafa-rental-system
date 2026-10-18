@@ -34,6 +34,7 @@ class RentalController extends ApiController
         $query = Rental::with([
             'booking.projectLocation',
             'details.assignment.unit.model',
+            'activePaymentHold.triggerInvoice',
         ])->latest();
 
         if (! $user->isAdmin() && ! $user->isOwner()) {
@@ -90,6 +91,7 @@ class RentalController extends ApiController
         $rental->load([
             'booking.projectLocation',
             'details.assignment.unit.model',
+            'activePaymentHold.triggerInvoice',
         ]);
 
         return $this->success(

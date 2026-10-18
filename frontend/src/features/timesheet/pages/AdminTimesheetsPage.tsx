@@ -232,6 +232,15 @@ reason: '',
     }
   }
 
+  const openPaper = async (id: number) => {
+    try {
+      const blob = await timesheetService.getPaperPhoto(id)
+      window.open(URL.createObjectURL(blob), '_blank', 'noopener,noreferrer')
+    } catch (err: any) {
+      showErrorToast(err?.message || 'Gagal membuka foto Timesheet.')
+    }
+  }
+
   const toggleRevisions = async (id: number) => {
     if (expandedRevision === id) {
       setExpandedRevision(null)
@@ -319,14 +328,25 @@ reason: '',
 
                     {ts.notes && <p className="text-xs text-slate-500 italic">"{ts.notes}"</p>}
 
-                    <button
-                      type="button"
-                      onClick={() => toggleRevisions(ts.id)}
-                      className="inline-flex items-center gap-1 text-xs text-primary-600 hover:underline"
-                    >
-                      <History size={13} />
-                      Riwayat revisi
-                    </button>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => toggleRevisions(ts.id)}
+                        className="inline-flex items-center gap-1 text-xs text-primary-600 hover:underline"
+                      >
+                        <History size={13} />
+                        Riwayat revisi
+                      </button>
+                      {ts.paper_form && (
+                        <button
+                          type="button"
+                          onClick={() => openPaper(ts.id)}
+                          className="inline-flex items-center gap-1 text-xs text-primary-600 hover:underline"
+                        >
+                          Lihat Foto Kertas
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2 shrink-0">
@@ -390,7 +410,7 @@ reason: '',
       >
         <div className="space-y-4">
           <p className="text-xs text-slate-500">
-            Catat pekerjaan aktual berdasarkan laporan operator. Timesheet langsung tersimpan sebagai APPROVED dan Tagihan Harian otomatis diterbitkan.
+            Catat pekerjaan aktual berdasarkan laporan operator. Entri Admin langsung final; entri Operator menunggu validasi Admin sebelum Tagihan Harian diterbitkan.
           </p>
           <Select
             label="Unit Rental (ONGOING) *"

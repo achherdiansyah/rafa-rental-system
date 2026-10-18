@@ -20,6 +20,8 @@ export const ProfilePage: React.FC = () => {
   const [isError, setIsError] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({})
+  const [passwordForm, setPasswordForm] = useState({ current_password: '', password: '', password_confirmation: '' })
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
 
   // Form State
   const [formData, setFormData] = useState<UpdateProfilePayload>({})
@@ -73,6 +75,29 @@ export const ProfilePage: React.FC = () => {
     }
   }
 
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsChangingPassword(true)
+    setValidationErrors({})
+    try {
+      await api.put('/profile/password', passwordForm)
+      success('Password berhasil diperbarui.')
+      setPasswordForm({ current_password: '', password: '', password_confirmation: '' })
+      setProfile((prev) => (prev ? { ...prev, must_change_password: false } : prev))
+      await refreshUser()
+    } catch (err) {
+      const apiErr = err as ApiError
+      if (apiErr.status === 422) {
+        setValidationErrors(apiErr.errors)
+        toastError('Periksa kembali isian password Anda.')
+      } else {
+        toastError(apiErr.message || 'Gagal mengubah password.')
+      }
+    } finally {
+      setIsChangingPassword(false)
+    }
+  }
+
   if (isLoading) return <FormSkeleton fields={5} className="max-w-3xl" />
   if (isError || !profile) return <ErrorState message="Gagal memuat profil. Silakan coba lagi." onRetry={() => window.location.reload()} />
 
@@ -92,6 +117,51 @@ export const ProfilePage: React.FC = () => {
           </Badge>
         </div>
       </div>
+
+      {profile.must_change_password && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          Anda menggunakan password sementara. Ganti password terlebih dahulu sebelum mengakses menu operasional.
+        </div>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Ganti Password</CardTitle>
+          <CardDescription>Wajib diganti pada login pertama untuk akun staf baru.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleChangePassword} className="space-y-4">
+            <Input
+              label="Password Saat Ini"
+              type="password"
+              value={passwordForm.current_password}
+              onChange={(e) => setPasswordForm((p) => ({ ...p, current_password: e.target.value }))}
+              error={validationErrors.current_password?.[0]}
+              required
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label="Password Baru"
+                type="password"
+                value={passwordForm.password}
+                onChange={(e) => setPasswordForm((p) => ({ ...p, password: e.target.value }))}
+                error={validationErrors.password?.[0]}
+                required
+              />
+              <Input
+                label="Konfirmasi Password Baru"
+                type="password"
+                value={passwordForm.password_confirmation}
+                onChange={(e) => setPasswordForm((p) => ({ ...p, password_confirmation: e.target.value }))}
+                required
+              />
+            </div>
+            <div className="flex justify-end">
+              <Button type="submit" isLoading={isChangingPassword}>Simpan Password</Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

@@ -9,8 +9,11 @@ use App\Http\Requests\Profile\UpdateProfileRequest;
 use App\Http\Requests\Profile\VerifyCustomerProfileRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Support\AuditLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 class ProfileController extends ApiController
 {
@@ -37,6 +40,41 @@ class ProfileController extends ApiController
         $updatedUser = $action->execute($user, $request->validated());
 
         return $this->success(new UserResource($updatedUser), 'Profil berhasil diperbarui.');
+    }
+
+    /**
+     * Change the authenticated user's password (also clears the forced-change flag).
+     */
+    public function changePassword(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'current_password' => ['required', 'string'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        if (! Hash::check($validated['current_password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['Password saat ini tidak sesuai.'],
+            ]);
+        }
+
+        $user->update([
+            'password' => $validated['password'],
+            'must_change_password' => false,
+        ]);
+
+        if ($request->user()->currentAccessToken()) {
+            $user->tokens()->whereKeyNot($request->user()->currentAccessToken()->getKey())->delete();
+        }
+
+        AuditLogger::log('USER_PASSWORD_CHANGED', $user, [], [
+            'changed_by' => $user->id,
+        ]);
+
+        return $this->success(new UserResource($user->fresh()), 'Password berhasil diperbarui.');
     }
 
     /**

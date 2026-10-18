@@ -3,7 +3,7 @@ import type { ApiResponse } from '@/types/api'
 import type { Booking } from '@/types/booking'
 
 export const supervisorService = {
-  async getQueue(params?: { queue?: 'pending' | 'revision'; page?: number; per_page?: number }): Promise<ApiResponse<Booking[]>> {
+  async getQueue(params?: { queue?: 'pending' | 'revision' | 'history'; page?: number; per_page?: number }): Promise<ApiResponse<Booking[]>> {
     return api.get<Booking[]>('/supervisor/bookings', { params })
   },
 

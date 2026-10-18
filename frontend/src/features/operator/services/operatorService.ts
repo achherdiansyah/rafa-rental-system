@@ -15,6 +15,7 @@ export interface OperatorProjectLocation {
 export interface OperatorAssignment {
   id: number
   rental_id: number
+  rental_detail_id: number
   rental_status: string | null
   booking_code: string | null
   project_location: OperatorProjectLocation | null
@@ -22,6 +23,12 @@ export interface OperatorAssignment {
   status: string
   started_at: string | null
   ended_at: string | null
+  payment_hold?: {
+    id: number
+    reason_code: string
+    outstanding_amount: number
+    started_at: string | null
+  } | null
 }
 
 export interface OperatorDashboard {

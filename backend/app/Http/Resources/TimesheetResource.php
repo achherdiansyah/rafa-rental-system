@@ -35,6 +35,22 @@ class TimesheetResource extends JsonResource
 
                 return $sig ? new AttachmentResource($sig) : null;
             }),
+            'rejection_reason' => $this->whenLoaded('revisions', function () {
+                return $this->revisions->sortByDesc('version')->first()?->revision_reason;
+            }),
+            'paper_form' => $this->whenLoaded('attachments', function () {
+                $paper = $this->attachments
+                    ->where('document_type', 'TIMESHEET_PAPER')
+                    ->sortByDesc('id')
+                    ->first();
+
+                return $paper ? [
+                    'id' => $paper->id,
+                    'file_name' => $paper->file_name,
+                    'mime_type' => $paper->mime_type,
+                    'file_size' => $paper->file_size,
+                ] : null;
+            }),
             'rental' => $this->whenLoaded('rentalDetail', function () {
                 $rental = $this->rentalDetail?->rental;
                 $unit = $this->rentalDetail?->assignment?->unit;

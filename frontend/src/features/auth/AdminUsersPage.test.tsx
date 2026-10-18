@@ -11,6 +11,8 @@ vi.mock('./services/userService', () => ({
     getUsers: vi.fn(),
     getUser: vi.fn(),
     verifyAccount: vi.fn(),
+    createStaff: vi.fn(),
+    updateUserRole: vi.fn(),
   },
 }))
 
@@ -60,6 +62,37 @@ describe('AdminUsersPage UI', () => {
     expect(screen.getByText('PT Maju Konstruksi')).toBeInTheDocument()
     expect(screen.getByText('Belum Verifikasi')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /verifikasi akun/i })).toBeInTheDocument()
+  })
+
+  it('creates a staff account and shows the temporary password once', async () => {
+    vi.mocked(userService.createStaff).mockResolvedValue({
+      success: true,
+      message: 'OK',
+      data: {
+        ...mockUsers[0],
+        id: 9,
+        name: 'Supervisor Baru',
+        email: 'sup@rafa.test',
+        role: 'SUPERVISOR',
+        temporary_password: 'TempPass-123',
+      },
+    } as any)
+
+    renderComponent()
+    fireEvent.click(await screen.findByRole('button', { name: /tambah akun staf/i }))
+
+    fireEvent.change(screen.getByLabelText(/^nama \*/i), { target: { value: 'Supervisor Baru' } })
+    fireEvent.change(screen.getByLabelText(/^email \*/i), { target: { value: 'sup@rafa.test' } })
+    fireEvent.click(screen.getByRole('button', { name: /^buat akun$/i }))
+
+    await waitFor(() => {
+      expect(userService.createStaff).toHaveBeenCalledWith(expect.objectContaining({
+        name: 'Supervisor Baru',
+        email: 'sup@rafa.test',
+        role: 'SUPERVISOR',
+      }))
+      expect(screen.getByText(/TempPass-123/)).toBeInTheDocument()
+    })
   })
 
   it('triggers verification confirm modal and calls verifyAccount API', async () => {

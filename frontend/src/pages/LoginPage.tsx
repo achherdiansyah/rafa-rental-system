@@ -29,14 +29,23 @@ export const LoginPage: React.FC = () => {
 
       const from = (location.state as { from?: { pathname: string } })?.from?.pathname
 
-      if (from) {
+      const base =
+        user.role === 'ADMIN'
+          ? '/admin'
+          : user.role === 'OWNER'
+            ? '/owner'
+            : user.role === 'SUPERVISOR'
+              ? '/supervisor'
+              : user.role === 'OPERATOR'
+                ? '/operator'
+                : '/app'
+
+      if (user.must_change_password && user.role !== 'OWNER') {
+        navigate(`${base}/profile`, { replace: true })
+      } else if (from) {
         navigate(from, { replace: true })
-      } else if (user.role === 'ADMIN') {
-        navigate('/admin', { replace: true })
-      } else if (user.role === 'OWNER') {
-        navigate('/owner', { replace: true })
       } else {
-        navigate('/app', { replace: true })
+        navigate(base, { replace: true })
       }
     } catch (err) {
       const apiError = err as ApiError

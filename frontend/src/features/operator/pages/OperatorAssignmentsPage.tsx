@@ -71,6 +71,11 @@ export const OperatorAssignmentsPage: React.FC = () => {
                     <MapPin size={12} /> {a.project_location?.project_name ?? '-'}
                     {a.project_location?.city ? ` - ${a.project_location.city}` : ''}
                   </p>
+                  {a.payment_hold && (
+                    <p className="text-xs font-semibold text-rose-600">
+                      PAYMENT HOLD — pekerjaan dihentikan sementara.
+                    </p>
+                  )}
                 </div>
                 <ChevronRight size={18} className="text-slate-300 shrink-0 mt-1" />
               </Link>

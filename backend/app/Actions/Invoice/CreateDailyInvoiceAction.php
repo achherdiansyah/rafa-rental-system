@@ -11,6 +11,7 @@ use App\Models\Invoice;
 use App\Models\Timesheet;
 use App\Models\User;
 use App\Services\Billing\InvoiceNumberGenerator;
+use App\Services\Billing\PaymentHoldService;
 use App\Support\AuditLogger;
 
 class CreateDailyInvoiceAction
@@ -18,7 +19,8 @@ class CreateDailyInvoiceAction
     public const STANDARD_HOURS = 8;
 
     public function __construct(
-        private readonly InvoiceNumberGenerator $numberGenerator
+        private readonly InvoiceNumberGenerator $numberGenerator,
+        private readonly PaymentHoldService $paymentHolds
     ) {}
 
     public function execute(User $admin, Timesheet $timesheet): Invoice
@@ -35,11 +37,12 @@ class CreateDailyInvoiceAction
             throw new BusinessRuleException('Booking terkait tidak ditemukan.');
         }
 
-        // Check duplicate: 1 timesheet = 1 daily invoice
-        $existingDailyInvoice = Invoice::where('timesheet_id', $timesheet->id)->exists();
+        // Idempotent: 1 timesheet = 1 daily invoice. Repeated approvals/retries
+        // return the existing invoice instead of creating a duplicate.
+        $existingDailyInvoice = Invoice::where('timesheet_id', $timesheet->id)->first();
 
         if ($existingDailyInvoice) {
-            throw new BusinessRuleException('Daily invoice untuk timesheet ini sudah diterbitkan.');
+            return $existingDailyInvoice;
         }
 
         // 3-day outstanding check per unit (rental_detail)
@@ -135,6 +138,10 @@ class CreateDailyInvoiceAction
             'grand_total' => $grandTotal,
             'created_by' => $admin->id,
         ]);
+
+        if ($rentalDetail?->rental) {
+            $this->paymentHolds->evaluate($rentalDetail->rental, $admin);
+        }
 
         return $invoice;
     }

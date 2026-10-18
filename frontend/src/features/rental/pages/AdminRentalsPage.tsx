@@ -205,6 +205,34 @@ export const AdminRentalsPage: React.FC = () => {
                       {rental.started_at ? ` • Mulai ${new Date(rental.started_at).toLocaleString('id-ID')}` : ''}
                     </div>
 
+                    {rental.payment_hold && (
+                      <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800 space-y-1">
+                        <p className="font-semibold">PAYMENT HOLD ({rental.payment_hold.reason_code})</p>
+                        <p>
+                          Outstanding Rp {Number(rental.payment_hold.outstanding_amount).toLocaleString('id-ID')}
+                          {rental.payment_hold.trigger_invoice_number ? ` • Invoice ${rental.payment_hold.trigger_invoice_number}` : ''}
+                        </p>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="mt-1"
+                          onClick={async () => {
+                            const reason = window.prompt('Alasan resume PAYMENT HOLD (wajib):')?.trim() ?? ''
+                            if (reason.length < 5) return
+                            try {
+                              await rentalService.resumePaymentHold(rental.id, reason)
+                              showSuccessToast('PAYMENT HOLD berhasil di-resume.')
+                              loadRentals()
+                            } catch (err: any) {
+                              showErrorToast(err?.message || 'Gagal resume PAYMENT HOLD.')
+                            }
+                          }}
+                        >
+                          Resume Pekerjaan
+                        </Button>
+                      </div>
+                    )}
+
                     {/* Unit list */}
                     <div className="flex flex-wrap gap-2 mt-1">
                       {rental.details.map((d) => (

@@ -6,11 +6,13 @@ use App\Actions\Timesheet\CreateTimesheetAction;
 use App\Actions\Timesheet\ReviseTimesheetAction;
 use App\Actions\Timesheet\SignTimesheetAction;
 use App\Actions\Timesheet\SubmitTimesheetAction;
+use App\Actions\Timesheet\UploadTimesheetPaperAction;
 use App\Actions\Timesheet\ValidateTimesheetAction;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Requests\Timesheet\RejectTimesheetRequest;
 use App\Http\Requests\Timesheet\ReviseTimesheetRequest;
 use App\Http\Requests\Timesheet\StoreTimesheetRequest;
+use App\Http\Requests\Timesheet\UploadTimesheetPaperRequest;
 use App\Http\Requests\Timesheet\UploadTimesheetSignatureRequest;
 use App\Http\Resources\AttachmentResource;
 use App\Http\Resources\TimesheetResource;
@@ -20,6 +22,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 
 class TimesheetController extends ApiController
 {
@@ -32,9 +35,15 @@ class TimesheetController extends ApiController
             'rentalDetail.assignment.unit',
             'rentalDetail.rental.booking.projectLocation',
             'attachments',
+            'revisions',
         ])->latest('report_date');
 
-        if (! $user->isAdmin() && ! $user->isOwner()) {
+        if ($user->isOperator()) {
+            $query->whereHas(
+                'rentalDetail.operatorAssignments',
+                fn ($q) => $q->where('operator_user_id', $user->id)
+            );
+        } elseif (! $user->isAdmin() && ! $user->isOwner()) {
             $query->whereHas(
                 'rentalDetail.rental.booking',
                 fn ($q) => $q->where('user_id', $user->id)
@@ -91,6 +100,7 @@ class TimesheetController extends ApiController
             'rentalDetail.assignment.unit',
             'rentalDetail.rental.booking.projectLocation',
             'attachments',
+            'revisions',
         ]);
 
         return $this->success(
@@ -133,6 +143,37 @@ class TimesheetController extends ApiController
             new AttachmentResource($attachment),
             'Tanda tangan timesheet berhasil dilampirkan.'
         );
+    }
+
+    /**
+     * Operator uploads the signed paper timesheet photo (private storage).
+     */
+    public function uploadPaper(UploadTimesheetPaperRequest $request, Timesheet $timesheet, UploadTimesheetPaperAction $action): JsonResponse
+    {
+        Gate::authorize('uploadPaper', $timesheet);
+
+        $attachment = $action->execute($timesheet, $request->file('paper_form'), $request->user());
+
+        return $this->success(new AttachmentResource($attachment), 'Foto formulir Timesheet berhasil diunggah.');
+    }
+
+    /**
+     * Authorized private download of the paper timesheet photo.
+     */
+    public function paperPhoto(Request $request, Timesheet $timesheet)
+    {
+        Gate::authorize('view', $timesheet);
+
+        $attachment = $timesheet->attachments()
+            ->where('document_type', 'TIMESHEET_PAPER')
+            ->latest()
+            ->first();
+
+        if (! $attachment || ! Storage::disk('local')->exists($attachment->file_path)) {
+            return $this->notFound('Foto formulir Timesheet tidak ditemukan.');
+        }
+
+        return response()->file(Storage::disk('local')->path($attachment->file_path));
     }
 
     /**

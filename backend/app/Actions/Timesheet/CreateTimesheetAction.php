@@ -6,16 +6,20 @@ use App\Enums\RentalStatus;
 use App\Enums\TimesheetStatus;
 use App\Exceptions\BusinessRuleException;
 use App\Models\RentalDetail;
+use App\Models\RentalOperatorAssignment;
 use App\Models\Timesheet;
 use App\Models\User;
+use App\Services\Billing\PaymentHoldService;
 use App\Support\AuditLogger;
 use App\Actions\Invoice\CreateDailyInvoiceAction;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 
 class CreateTimesheetAction
 {
     public function __construct(
-        private readonly CreateDailyInvoiceAction $createDailyInvoice
+        private readonly CreateDailyInvoiceAction $createDailyInvoice,
+        private readonly PaymentHoldService $paymentHolds
     ) {}
 
     public function execute(User $operator, array $data): Timesheet
@@ -28,12 +32,27 @@ class CreateTimesheetAction
                 throw new BusinessRuleException('Rincian rental tidak ditemukan.');
             }
 
-            if (! $operator->isAdmin() && ! $operator->isOwner()) {
-                throw new BusinessRuleException('Hanya Admin yang dapat menginput timesheet.');
+            if (! $operator->isAdmin() && ! $operator->isOwner() && ! $operator->isOperator()) {
+                throw new BusinessRuleException('Hanya Admin atau Operator yang dapat menginput timesheet.');
+            }
+
+            if ($operator->isOperator()) {
+                $assigned = RentalOperatorAssignment::where('rental_detail_id', $rentalDetail->id)
+                    ->where('operator_user_id', $operator->id)
+                    ->where('status', RentalOperatorAssignment::ACTIVE)
+                    ->exists();
+
+                if (! $assigned) {
+                    throw new AuthorizationException('Anda hanya dapat menginput Timesheet untuk unit yang ditugaskan kepada Anda.');
+                }
             }
 
             if ($rentalDetail->rental->status !== RentalStatus::ONGOING) {
                 throw new BusinessRuleException('Timesheet hanya dapat dicatat untuk rental yang sedang berstatus ONGOING.');
+            }
+
+            if ($this->paymentHolds->isHeld($rentalDetail->rental)) {
+                throw new BusinessRuleException('Rental sedang dalam PAYMENT HOLD. Selesaikan tunggakan sebelum menginput Timesheet.');
             }
 
             $exists = Timesheet::where('rental_detail_id', $rentalDetail->id)
@@ -77,6 +96,10 @@ class CreateTimesheetAction
                 throw new BusinessRuleException('Jam kerja aktual tidak konsisten dengan total breakdown + standby.');
             }
 
+            $status = $operator->isAdmin() || $operator->isOwner()
+                ? TimesheetStatus::APPROVED
+                : TimesheetStatus::DRAFT;
+
             $timesheet = Timesheet::create([
                 'rental_detail_id' => $rentalDetail->id,
                 'report_date' => $data['report_date'],
@@ -91,8 +114,8 @@ class CreateTimesheetAction
                 'operator_name' => $data['operator_name'] ?? $operator->name,
                 'notes' => $data['notes'] ?? null,
                 'signature_reference' => $data['signature_reference'] ?? null,
-                'status' => TimesheetStatus::APPROVED, // Directly APPROVED
-                'approved_by' => $operator->id,
+                'status' => $status,
+                'approved_by' => $status === TimesheetStatus::APPROVED ? $operator->id : null,
             ]);
 
             AuditLogger::log('TIMESHEET_CREATED', $timesheet, [], [
@@ -100,11 +123,14 @@ class CreateTimesheetAction
                 'report_date' => $data['report_date'],
                 'total_work_hours' => $workHours,
                 'created_by' => $operator->id,
-                'status' => 'APPROVED',
+                'status' => $status->value,
             ]);
 
-            // Auto-create Daily Invoice
-            $this->createDailyInvoice->execute($operator, $timesheet);
+            // Admin legacy direct-entry is final immediately; Operator entries
+            // wait for Admin validation before a Daily Work Invoice exists.
+            if ($status === TimesheetStatus::APPROVED) {
+                $this->createDailyInvoice->execute($operator, $timesheet);
+            }
 
             $timesheet->load([
                 'rentalDetail.assignment.unit',

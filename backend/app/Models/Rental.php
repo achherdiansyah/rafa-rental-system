@@ -42,5 +42,15 @@ class Rental extends Model
     {
         return $this->hasMany(RentalOperatorAssignment::class);
     }
+
+    public function paymentHolds(): HasMany
+    {
+        return $this->hasMany(RentalPaymentHold::class);
+    }
+
+    public function activePaymentHold(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(RentalPaymentHold::class)->where('status', RentalPaymentHold::ACTIVE);
+    }
 }
 

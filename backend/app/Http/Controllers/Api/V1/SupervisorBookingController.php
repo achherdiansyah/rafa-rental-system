@@ -21,21 +21,30 @@ class SupervisorBookingController extends ApiController
      */
     public function index(Request $request): JsonResponse
     {
+        /** @var User $user */
+        $user = $request->user();
+        $queue = (string) $request->query('queue', 'pending');
+
         $query = Booking::with([
             'user:id,name',
             'projectLocation',
             'details.model' => fn ($q) => $q->with(['type', 'prices', 'attachments']),
             'details.unitAssignments.unit',
-        ])
-            ->where('status', BookingStatus::PENDING_APPROVAL)
-            ->latest();
+        ])->latest();
 
-        if ($request->filled('queue') && $request->query('queue') === 'revision') {
-            $query->where('supervisor_decision', 'REVISION');
-        } elseif (! $request->filled('queue') || $request->query('queue') === 'pending') {
-            $query->where(function ($q) {
-                $q->whereNull('supervisor_decision')->orWhere('supervisor_decision', 'REVISION');
-            });
+        if ($queue === 'history') {
+            $query->where('supervisor_user_id', $user->id)
+                ->whereNotNull('supervisor_decision');
+        } else {
+            $query->where('status', BookingStatus::PENDING_APPROVAL);
+
+            if ($queue === 'revision') {
+                $query->where('supervisor_decision', 'REVISION');
+            } else {
+                $query->where(function ($q) {
+                    $q->whereNull('supervisor_decision')->orWhere('supervisor_decision', 'REVISION');
+                });
+            }
         }
 
         $perPage = min(max((int) $request->query('per_page', 15), 1), 50);

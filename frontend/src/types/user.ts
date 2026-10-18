@@ -15,6 +15,7 @@ export interface UserProfile {
   role: UserRole
   phone_number: string | null
   is_active: boolean
+  must_change_password?: boolean
   email_verified_at: string | null
   customer_profile?: CustomerProfile | null
   created_at: string

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Truck, MapPin } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { rentalService } from '../services/rentalService'
 import type { Rental } from '@/types/rental'
 import { Card } from '@/components/ui/Card'
@@ -98,6 +99,17 @@ export const UserRentalsPage: React.FC = () => {
                     Dibuat {new Date(rental.created_at).toLocaleDateString('id-ID', { dateStyle: 'medium' })}
                     {rental.started_at ? ` • Mulai ${new Date(rental.started_at).toLocaleString('id-ID')}` : ''}
                   </div>
+
+                  {rental.payment_hold && (
+                    <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800 space-y-1">
+                      <p className="font-semibold">Pekerjaan dihentikan sementara (PAYMENT HOLD)</p>
+                      <p>
+                        Tunggakan Rp {Number(rental.payment_hold.outstanding_amount).toLocaleString('id-ID')}
+                        {rental.payment_hold.trigger_invoice_number ? ` pada invoice ${rental.payment_hold.trigger_invoice_number}` : ''}.
+                      </p>
+                      <Link to="/app/invoices" className="inline-block font-semibold underline">Lihat & Bayar Tagihan</Link>
+                    </div>
+                  )}
 
                   <div className="flex flex-wrap gap-2 mt-1">
                     {rental.details.map((d) => (

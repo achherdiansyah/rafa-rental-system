@@ -57,9 +57,12 @@ const AdminOperationalReportsPage = lazy(() => import('@/features/reporting/page
 const AdminFinancialReportsPage = lazy(() => import('@/features/reporting/pages/AdminFinancialReportsPage'))
 const AdminUsersPage = lazy(() => import('@/features/auth/pages/AdminUsersPage'))
 const SupervisorBookingsPage = lazy(() => import('@/features/supervisor/pages/SupervisorBookingsPage'))
+const SupervisorHistoryPage = lazy(() => import('@/features/supervisor/pages/SupervisorHistoryPage'))
 const OperatorDashboardPage = lazy(() => import('@/features/operator/pages/OperatorDashboardPage'))
 const OperatorAssignmentsPage = lazy(() => import('@/features/operator/pages/OperatorAssignmentsPage'))
 const OperatorAssignmentDetailPage = lazy(() => import('@/features/operator/pages/OperatorAssignmentDetailPage'))
+const OperatorLocationsPage = lazy(() => import('@/features/operator/pages/OperatorLocationsPage'))
+const OperatorTimesheetsPage = lazy(() => import('@/features/operator/pages/OperatorTimesheetsPage'))
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -127,6 +130,7 @@ export const AppRoutes: React.FC = () => {
               <Route path="pricing" element={<OwnerPricingPage />} />
               <Route path="notifications" element={<AdminNotificationsPage />} />
               <Route path="users" element={<AdminUsersPage />} />
+              <Route path="profile" element={<ProfilePage />} />
               <Route path="cms" element={<AdminCmsPage />} />
             </Route>
           </Route>
@@ -136,6 +140,7 @@ export const AppRoutes: React.FC = () => {
             <Route path="/supervisor" element={<SupervisorLayout />}>
               <Route index element={<SupervisorBookingsPage />} />
               <Route path="bookings" element={<SupervisorBookingsPage />} />
+              <Route path="history" element={<SupervisorHistoryPage />} />
               <Route path="notifications" element={<UserNotificationsPage />} />
               <Route path="profile" element={<ProfilePage />} />
             </Route>
@@ -147,6 +152,9 @@ export const AppRoutes: React.FC = () => {
               <Route index element={<OperatorDashboardPage />} />
               <Route path="assignments" element={<OperatorAssignmentsPage />} />
               <Route path="assignments/:id" element={<OperatorAssignmentDetailPage />} />
+              <Route path="locations" element={<OperatorLocationsPage />} />
+              <Route path="timesheets" element={<OperatorTimesheetsPage />} />
+              <Route path="timesheets/history" element={<OperatorTimesheetsPage history />} />
               <Route path="notifications" element={<UserNotificationsPage />} />
               <Route path="profile" element={<ProfilePage />} />
             </Route>

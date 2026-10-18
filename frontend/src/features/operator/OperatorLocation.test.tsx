@@ -17,6 +17,7 @@ vi.mock('./services/operatorService', () => ({
 const baseAssignment: OperatorAssignment = {
   id: 12,
   rental_id: 5,
+  rental_detail_id: 77,
   rental_status: 'ASSIGNED',
   booking_code: 'RFA-BKG-20261001-0001',
   project_location: {

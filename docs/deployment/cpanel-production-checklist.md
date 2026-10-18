@@ -53,7 +53,8 @@ Status validasi akhir sebelum rilis produksi di shared hosting cPanel.
   * * * * * php /path/backend/artisan queue:work database --once --tries=1 --max-time=60 >> /path/backend/storage/logs/queue.log 2>&1
   ```
   (bukan daemon; `--once` aman utk shared hosting; job WhatsApp `$tries=1` anti-duplikasi)
-- [ ] Jadwal aktif: `bookings:expire`, `invoices:expire` (tiap menit), `outstanding:remind` (07:30), `db:backup` (01:00) — semua `withoutOverlapping`
+- [ ] Jadwal aktif: `bookings:expire`, `invoices:expire` (tiap menit), `rentals:evaluate-payment-holds` (tiap 5 menit), `outstanding:remind` (07:30), `db:backup` (01:00) — semua `withoutOverlapping`
+- [ ] PAYMENT HOLD: ambang `PAYMENT_HOLD_MAX_INVOICES` (default 3) dan `PAYMENT_HOLD_MAX_HOURS` (default 72); resume tetap manual oleh Admin setelah invoice lunas/terverifikasi
 
 ## Cache / Config / Route Optimization
 

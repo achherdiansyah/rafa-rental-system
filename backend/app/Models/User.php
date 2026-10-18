@@ -25,6 +25,7 @@ class User extends Authenticatable
         'role',
         'phone_number',
         'is_active',
+        'must_change_password',
     ];
 
     /**
@@ -49,6 +50,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'role' => UserRole::class,
             'is_active' => 'boolean',
+            'must_change_password' => 'boolean',
         ];
     }
 

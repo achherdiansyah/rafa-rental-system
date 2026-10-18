@@ -8,6 +8,8 @@ export const EVENT_LABEL: Record<string, string> = {
   BOOKING_SUPERVISOR_REVISION: 'Booking dikembalikan Supervisor',
   OPERATOR_ASSIGNED: 'Penugasan Operator baru',
   USER_ROLE_UPDATED: 'Role akun diperbarui',
+  PAYMENT_HOLD_STARTED: 'Pekerjaan dihentikan sementara (PAYMENT HOLD)',
+  PAYMENT_HOLD_RESOLVED: 'PAYMENT HOLD dihentikan',
   PAYMENT_SUBMITTED: 'Pembayaran perlu verifikasi',
   PAYMENT_APPROVED: 'Pembayaran disetujui',
   PAYMENT_REJECTED: 'Pembayaran ditolak',
@@ -35,7 +37,11 @@ export const targetFor = (item: InAppNotification, role: 'ADMIN' | 'OWNER' | 'US
   const t = item.type || ''
 
   if (role === 'SUPERVISOR') return evt.includes('BOOKING') ? `${base}/bookings` : `${base}/notifications`
-  if (role === 'OPERATOR') return evt.includes('OPERATOR') ? `${base}/assignments` : `${base}/notifications`
+  if (role === 'OPERATOR') {
+    if (evt.includes('PAYMENT_HOLD') || evt.includes('OPERATOR')) return `${base}/assignments`
+    return `${base}/notifications`
+  }
+  if (evt.includes('PAYMENT_HOLD')) return role === 'ADMIN' ? `${base}/rentals` : `${base}/invoices`
   
   // Specific entity targets using URL hashes/queries to locate elements (or main views)
   if (evt.includes('BOOKING') && role === 'ADMIN') return `${base}/bookings`

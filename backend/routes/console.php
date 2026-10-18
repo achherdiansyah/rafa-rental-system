@@ -21,6 +21,12 @@ Schedule::command('invoices:expire')
     ->appendOutputTo(storage_path('logs/scheduler.log'));
 
 // Phase 11E: outstanding reminder (idempotent — same-day guard inside command).
+// Phase 14: operational payment hold (3 unpaid daily invoices / oldest 72h).
+Schedule::command('rentals:evaluate-payment-holds')
+    ->everyFiveMinutes()
+    ->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/scheduler.log'));
+
 Schedule::command('outstanding:remind')
     ->dailyAt('07:30')
     ->withoutOverlapping()

@@ -28,6 +28,8 @@ export interface Timesheet {
   signature_reference: string | null
   status: TimesheetStatus
   signature?: TimesheetSignature | null
+  paper_form?: { id: number; file_name: string; mime_type: string; file_size: number } | null
+  rejection_reason?: string | null
   rental?: {
     rental_id: number
     booking_code: string | null

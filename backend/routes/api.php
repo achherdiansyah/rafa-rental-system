@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\OutstandingController;
 use App\Http\Controllers\Api\V1\Owner\OwnerUserController;
 use App\Http\Controllers\Api\V1\PaymentController;
+use App\Http\Controllers\Api\V1\PaymentHoldController;
 use App\Http\Controllers\Api\V1\PricingCalculationController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\ProjectLocationController;
@@ -68,7 +69,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::post('/pricing/calculate', PricingCalculationController::class)->name('pricing.calculate');
 
     // 4. Authenticated Routes (Sanctum)
-    Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
+    Route::middleware(['auth:sanctum', 'throttle:api', 'password.changed'])->group(function () {
         // Auth Session management
         Route::prefix('auth')->name('auth.')->group(function () {
             Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -87,6 +88,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('/', [ProfileController::class, 'show'])->name('show');
             Route::put('/', [ProfileController::class, 'update'])->name('update');
             Route::patch('/', [ProfileController::class, 'update'])->name('update.patch');
+            Route::put('/password', [ProfileController::class, 'changePassword'])->name('password');
 
             // Profile Verification (Admin/Owner only via Gate in Request)
             Route::post('/verify', [ProfileController::class, 'verify'])->name('verify');
@@ -162,6 +164,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::post('/', [TimesheetController::class, 'store'])->name('store');
             Route::get('/{timesheet}', [TimesheetController::class, 'show'])->name('show');
             Route::post('/{timesheet}/submit', [TimesheetController::class, 'submit'])->name('submit');
+            Route::post('/{timesheet}/paper-photo', [TimesheetController::class, 'uploadPaper'])->name('paper-photo')->middleware('throttle:file-upload');
+            Route::get('/{timesheet}/paper-photo', [TimesheetController::class, 'paperPhoto'])->name('paper-photo.show');
             Route::post('/{timesheet}/signature', [TimesheetController::class, 'sign'])->name('signature')->middleware('throttle:file-upload');
             Route::post('/{timesheet}/approve', [TimesheetController::class, 'approve'])->name('approve');
             Route::post('/{timesheet}/reject', [TimesheetController::class, 'reject'])->name('reject');
@@ -298,6 +302,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::middleware('role:ADMIN,OWNER')->prefix('admin')->name('admin.')->group(function () {
             // User Management
             Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
+            Route::post('/users', [AdminUserController::class, 'store'])->name('users.store');
             Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('users.show');
             Route::patch('/users/{user}/role', [AdminUserController::class, 'updateRole'])->name('users.role');
         });
@@ -324,6 +329,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::post('/rentals/{rental}/operator-assignments', [AdminRentalOperatorController::class, 'store'])->name('assignments.store');
             Route::post('/operator-assignments/{assignment}/replace', [AdminRentalOperatorController::class, 'replace'])->name('assignments.replace');
             Route::post('/operator-assignments/{assignment}/end', [AdminRentalOperatorController::class, 'end'])->name('assignments.end');
+            Route::get('/payment-holds', [PaymentHoldController::class, 'index'])->name('payment-holds.index');
+            Route::post('/rentals/{rental}/payment-hold/resume', [PaymentHoldController::class, 'resume'])->name('payment-holds.resume');
         });
 
         /*

@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Enums\UserRole;
 use App\Http\Controllers\Api\ApiController;
+use App\Http\Requests\Admin\StoreManagedUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Support\AuditLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class AdminUserController extends ApiController
@@ -32,6 +34,38 @@ class AdminUserController extends ApiController
             'total' => $users->total(),
             'last_page' => $users->lastPage(),
         ]);
+    }
+
+    /**
+     * Create a staff account (SUPERVISOR/OPERATOR). ADMIN/OWNER cannot be
+     * created here. A temporary password is returned exactly once and the user
+     * must change it before using operational endpoints.
+     */
+    public function store(StoreManagedUserRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+        $temporaryPassword = Str::password(16);
+
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone_number' => $validated['phone_number'] ?? null,
+            'role' => $validated['role'],
+            'is_active' => (bool) ($validated['is_active'] ?? true),
+            'password' => $temporaryPassword,
+            'must_change_password' => true,
+            'email_verified_at' => now(),
+        ]);
+
+        AuditLogger::log('USER_CREATED', $user, [], [
+            'role' => $user->role->value,
+            'created_by' => $request->user()->id,
+        ]);
+
+        $data = (new UserResource($user))->resolve();
+        $data['temporary_password'] = $temporaryPassword;
+
+        return $this->created($data, 'Akun staf berhasil dibuat. Password sementara wajib diganti saat login pertama.');
     }
 
     /**

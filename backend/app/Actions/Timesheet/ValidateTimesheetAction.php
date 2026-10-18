@@ -2,6 +2,7 @@
 
 namespace App\Actions\Timesheet;
 
+use App\Actions\Invoice\CreateDailyInvoiceAction;
 use App\Enums\TimesheetStatus;
 use App\Exceptions\InvalidStateTransitionException;
 use App\Models\Timesheet;
@@ -11,6 +12,10 @@ use Illuminate\Support\Facades\DB;
 
 class ValidateTimesheetAction
 {
+    public function __construct(
+        private readonly CreateDailyInvoiceAction $dailyInvoice
+    ) {}
+
     /**
      * SUBMITTED -> APPROVED (Admin validation, audited).
      *
@@ -42,6 +47,9 @@ class ValidateTimesheetAction
                 'new_status' => TimesheetStatus::APPROVED->value,
                 'approved_by' => $admin->id,
             ]);
+
+            // Exactly one Daily Work Invoice per approved Timesheet (idempotent).
+            $this->dailyInvoice->execute($admin, $timesheet);
 
             return $timesheet->fresh()->load([
                 'rentalDetail.assignment.unit',

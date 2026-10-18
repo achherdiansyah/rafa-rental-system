@@ -18,6 +18,12 @@ class TimesheetPolicy
             return true;
         }
 
+        if ($user->isOperator()) {
+            return (bool) $timesheet->rentalDetail?->operatorAssignments()
+                ->where('operator_user_id', $user->id)
+                ->exists();
+        }
+
         return (int) $user->id === (int) $timesheet->rentalDetail?->rental?->booking?->user_id;
     }
 
@@ -27,7 +33,7 @@ class TimesheetPolicy
      */
     public function create(User $user): bool
     {
-        return $user->isAdmin();
+        return $user->isAdmin() || $user->isOperator();
     }
 
     /**
@@ -36,7 +42,19 @@ class TimesheetPolicy
      */
     public function submit(User $user, Timesheet $timesheet): bool
     {
-        return $user->isAdmin();
+        if ($user->isAdmin()) {
+            return true;
+        }
+
+        return $user->isOperator()
+            && $timesheet->rentalDetail?->operatorAssignments()
+                ->where('operator_user_id', $user->id)
+                ->exists() ?? false;
+    }
+
+    public function uploadPaper(User $user, Timesheet $timesheet): bool
+    {
+        return $this->submit($user, $timesheet);
     }
 
     /**

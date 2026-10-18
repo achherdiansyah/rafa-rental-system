@@ -21,7 +21,8 @@ class BookingPolicy
         }
 
         if ($user->isSupervisor()) {
-            return $booking->status === BookingStatus::PENDING_APPROVAL;
+            return $booking->status === BookingStatus::PENDING_APPROVAL
+                || (int) $booking->supervisor_user_id === (int) $user->id;
         }
 
         return (int) $user->id === (int) $booking->user_id;

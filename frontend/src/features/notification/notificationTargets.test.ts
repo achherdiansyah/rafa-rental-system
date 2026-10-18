@@ -33,4 +33,11 @@ describe('notification role targets', () => {
     expect(labelFor({ ...base, event: 'BOOKING_SUPERVISOR_REVISION' })).toContain('Supervisor')
     expect(labelFor({ ...base, event: 'OPERATOR_ASSIGNED' })).toContain('Operator')
   })
+
+  it('routes payment hold notifications to the relevant resource', () => {
+    expect(targetFor({ ...base, event: 'PAYMENT_HOLD_STARTED' }, 'ADMIN')).toBe('/admin/rentals')
+    expect(targetFor({ ...base, event: 'PAYMENT_HOLD_STARTED' }, 'OPERATOR')).toBe('/operator/assignments')
+    expect(targetFor({ ...base, event: 'PAYMENT_HOLD_STARTED' }, 'USER')).toBe('/app/invoices')
+    expect(labelFor({ ...base, event: 'PAYMENT_HOLD_STARTED' })).toContain('PAYMENT HOLD')
+  })
 })

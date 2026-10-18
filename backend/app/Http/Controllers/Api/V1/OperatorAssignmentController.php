@@ -19,7 +19,7 @@ class OperatorAssignmentController extends ApiController
         /** @var User $user */
         $user = $request->user();
 
-        $active = RentalOperatorAssignment::with(['rental.booking.projectLocation', 'rentalDetail.assignment.unit'])
+        $active = RentalOperatorAssignment::with(['rental.booking.projectLocation', 'rental.activePaymentHold.triggerInvoice', 'rentalDetail.assignment.unit'])
             ->where('operator_user_id', $user->id)
             ->where('status', RentalOperatorAssignment::ACTIVE)
             ->get();
@@ -42,6 +42,7 @@ class OperatorAssignmentController extends ApiController
 
         $assignments = RentalOperatorAssignment::with([
             'rental.booking.projectLocation',
+            'rental.activePaymentHold.triggerInvoice',
             'rentalDetail.assignment.unit',
             'assignedByUser:id,name',
         ])
@@ -65,6 +66,7 @@ class OperatorAssignmentController extends ApiController
 
         $assignment->load([
             'rental.booking.projectLocation',
+            'rental.activePaymentHold.triggerInvoice',
             'rentalDetail.assignment.unit',
             'assignedByUser:id,name',
         ]);
@@ -82,6 +84,7 @@ class OperatorAssignmentController extends ApiController
         return [
             'id' => $assignment->id,
             'rental_id' => $assignment->rental_id,
+            'rental_detail_id' => $assignment->rental_detail_id,
             'rental_status' => $rental?->status?->value ?? $rental?->status,
             'booking_code' => $booking?->booking_code,
             'project_location' => $project ? [
@@ -103,6 +106,12 @@ class OperatorAssignmentController extends ApiController
             'status' => $assignment->status,
             'started_at' => $assignment->started_at?->toIso8601String(),
             'ended_at' => $assignment->ended_at?->toIso8601String(),
+            'payment_hold' => $rental?->activePaymentHold ? [
+                'id' => $rental->activePaymentHold->id,
+                'reason_code' => $rental->activePaymentHold->reason_code,
+                'outstanding_amount' => (float) $rental->activePaymentHold->outstanding_amount,
+                'started_at' => $rental->activePaymentHold->started_at?->toIso8601String(),
+            ] : null,
         ];
     }
 }

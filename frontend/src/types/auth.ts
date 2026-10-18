@@ -17,6 +17,7 @@ export interface AuthUser {
   role: UserRole
   phone_number: string | null
   is_active: boolean
+  must_change_password?: boolean
   customer_profile?: CustomerProfile | null
   created_at?: string
 }

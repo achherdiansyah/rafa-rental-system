@@ -29,6 +29,16 @@ export const userService = {
     return await api.get<AdminUserData>(`/admin/users/${id}`)
   },
 
+  createStaff: async (payload: {
+    name: string
+    email: string
+    phone_number?: string
+    role: 'SUPERVISOR' | 'OPERATOR'
+    is_active?: boolean
+  }): Promise<ApiResponse<AdminUserData & { temporary_password: string }>> => {
+    return await api.post<AdminUserData & { temporary_password: string }>('/admin/users', payload)
+  },
+
   updateUserRole: async (userId: number, role: 'USER' | 'SUPERVISOR' | 'OPERATOR'): Promise<ApiResponse<AdminUserData>> => {
     return await api.patch<AdminUserData, { role: string }>(`/admin/users/${userId}/role`, { role })
   },

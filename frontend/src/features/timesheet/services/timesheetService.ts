@@ -1,4 +1,4 @@
-import { api } from '@/lib/api'
+import { api, default as apiClient } from '@/lib/api'
 import type { ApiResponse } from '@/types/api'
 import type { Timesheet, TimesheetRevision, TimesheetSignature } from '@/types/timesheet'
 
@@ -47,6 +47,18 @@ export const timesheetService = {
   async submit(id: number): Promise<ApiResponse<Timesheet>> {
     const response = await api.post<Timesheet>(`/timesheets/${id}/submit`, {})
     return response
+  },
+
+  async uploadPaper(id: number, file: File): Promise<ApiResponse<{ id: number; file_name: string }>> {
+    const formData = new FormData()
+    formData.append('paper_form', file)
+    const response = await api.post<{ id: number; file_name: string }>(`/timesheets/${id}/paper-photo`, formData)
+    return response
+  },
+
+  async getPaperPhoto(id: number): Promise<Blob> {
+    const response = await apiClient.get(`/timesheets/${id}/paper-photo`, { responseType: 'blob' })
+    return response.data as Blob
   },
 
   async sign(id: number, file: File): Promise<ApiResponse<TimesheetSignature>> {

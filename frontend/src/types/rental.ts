@@ -35,6 +35,15 @@ export interface Rental {
   started_at: string | null
   completed_at: string | null
   booking?: Booking
+  payment_hold?: {
+    id: number
+    status: string
+    reason_code: string
+    trigger_invoice_id: number | null
+    trigger_invoice_number: string | null
+    outstanding_amount: number
+    started_at: string | null
+  } | null
   details: RentalDetail[]
   created_at: string
   updated_at: string
