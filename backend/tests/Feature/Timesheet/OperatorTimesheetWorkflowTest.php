@@ -19,6 +19,7 @@ use App\Models\ProjectLocation;
 use App\Models\Rental;
 use App\Models\RentalDetail;
 use App\Models\RentalOperatorAssignment;
+use App\Models\RentalPaymentHold;
 use App\Models\Timesheet;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -153,6 +154,27 @@ class OperatorTimesheetWorkflowTest extends TestCase
             'start_time' => '08:00',
             'end_time' => '17:00',
         ])->assertForbidden();
+    }
+
+    public function test_payment_hold_blocks_new_timesheet_input(): void
+    {
+        ['operator' => $operator, 'rental' => $rental, 'detail' => $detail] = $this->scenario();
+
+        RentalPaymentHold::create([
+            'rental_id' => $rental->id,
+            'status' => RentalPaymentHold::ACTIVE,
+            'reason_code' => RentalPaymentHold::REASON_INVOICE_COUNT,
+            'outstanding_amount' => 3000000,
+            'started_at' => now(),
+        ]);
+
+        Sanctum::actingAs($operator);
+        $this->postJson('/api/v1/timesheets', [
+            'rental_detail_id' => $detail->id,
+            'report_date' => now()->toDateString(),
+            'start_time' => '08:00',
+            'end_time' => '17:00',
+        ])->assertStatus(409)->assertJsonPath('code', 'BUSINESS_RULE_VIOLATION');
     }
 
     public function test_rejection_requires_reason_and_operator_can_fix_and_resubmit(): void
