@@ -159,11 +159,20 @@ class PaymentHoldService
                 'resolved_by' => $admin->id,
             ]);
 
+            $recipients = User::where('role', 'ADMIN')->get();
+            if ($rental->booking?->user) {
+                $recipients->push($rental->booking->user);
+            }
+            $operatorIds = RentalOperatorAssignment::where('rental_id', $rental->id)
+                ->where('status', RentalOperatorAssignment::ACTIVE)
+                ->pluck('operator_user_id');
+            $recipients = $recipients->merge(User::whereIn('id', $operatorIds)->get())->unique('id');
+
             $this->notifications->send(
-                $rental->booking?->user,
+                $recipients,
                 'PAYMENT_HOLD_RESOLVED',
                 $hold,
-                'PAYMENT HOLD rental telah dihentikan; pekerjaan dapat dilanjutkan.'
+                'PAYMENT HOLD rental dihentikan. Alasan resume: '.$reason
             );
 
             return $hold->fresh();

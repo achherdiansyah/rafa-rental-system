@@ -40,6 +40,7 @@ const UserCartPage = lazy(() => import('@/features/cart/pages/UserCartPage'))
 const UserBookingsPage = lazy(() => import('@/features/booking/pages/UserBookingsPage'))
 const AdminBookingsPage = lazy(() => import('@/features/booking/pages/AdminBookingsPage'))
 const AdminRentalsPage = lazy(() => import('@/features/rental/pages/AdminRentalsPage'))
+const AdminPaymentHoldsPage = lazy(() => import('@/features/rental/pages/AdminPaymentHoldsPage'))
 const UserRentalsPage = lazy(() => import('@/features/rental/pages/UserRentalsPage'))
 const UserTimesheetsPage = lazy(() => import('@/features/timesheet/pages/UserTimesheetsPage'))
 const AdminTimesheetsPage = lazy(() => import('@/features/timesheet/pages/AdminTimesheetsPage'))
@@ -122,6 +123,7 @@ export const AppRoutes: React.FC = () => {
               <Route path="banks" element={<AdminBankAccountsPage />} />
               <Route path="bookings" element={<AdminBookingsPage />} />
               <Route path="rentals" element={<AdminRentalsPage />} />
+              <Route path="payment-holds" element={<AdminPaymentHoldsPage />} />
               <Route path="timesheets" element={<AdminTimesheetsPage />} />
               <Route path="invoices" element={<AdminInvoicesPage />} />
               <Route path="payments" element={<AdminPaymentsPage />} />

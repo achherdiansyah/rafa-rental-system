@@ -25,6 +25,7 @@ import {
   TrendingUp,
   History,
   Settings,
+  AlertTriangle,
 } from 'lucide-react'
 import type { SidebarGroup } from './sidebar/RoleSidebar'
 
@@ -71,6 +72,7 @@ export const adminMenu: SidebarGroup[] = [
       { label: 'Dashboard', href: '/admin', icon: <LayoutDashboard size={18} /> },
       { label: 'Approval Booking', href: '/admin/bookings', icon: <CheckSquare size={18} /> },
       { label: 'Eksekusi Rental', href: '/admin/rentals', icon: <ClipboardList size={18} /> },
+      { label: 'Riwayat Payment Hold', href: '/admin/payment-holds', icon: <AlertTriangle size={18} /> },
       { label: 'Validasi Timesheet', href: '/admin/timesheets', icon: <Clock size={18} /> },
     ],
   },
