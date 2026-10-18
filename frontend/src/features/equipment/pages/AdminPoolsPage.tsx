@@ -13,12 +13,21 @@ import { Alert } from '@/components/feedback/Alert'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { useToast } from '@/hooks/useToast'
 
-const emptyForm: EquipmentPoolPayload = {
+interface PoolForm {
+  name: string
+  address: string
+  city: string
+  latitude: string
+  longitude: string
+  is_active: boolean
+}
+
+const emptyForm: PoolForm = {
   name: '',
   address: '',
   city: '',
-  latitude: 0,
-  longitude: 0,
+  latitude: '',
+  longitude: '',
   is_active: true,
 }
 
@@ -31,7 +40,8 @@ export const AdminPoolsPage: React.FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editing, setEditing] = useState<EquipmentPool | null>(null)
-  const [form, setForm] = useState<EquipmentPoolPayload>(emptyForm)
+  const [form, setForm] = useState<PoolForm>(emptyForm)
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const [isSaving, setIsSaving] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<EquipmentPool | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -56,6 +66,7 @@ export const AdminPoolsPage: React.FC = () => {
   const openCreate = () => {
     setEditing(null)
     setForm(emptyForm)
+    setFormErrors({})
     setIsModalOpen(true)
   }
 
@@ -65,22 +76,71 @@ export const AdminPoolsPage: React.FC = () => {
       name: pool.name,
       address: pool.address,
       city: pool.city ?? '',
-      latitude: pool.latitude ?? 0,
-      longitude: pool.longitude ?? 0,
+      latitude: pool.latitude !== null && pool.latitude !== undefined ? String(pool.latitude) : '',
+      longitude: pool.longitude !== null && pool.longitude !== undefined ? String(pool.longitude) : '',
       is_active: pool.is_active,
     })
+    setFormErrors({})
     setIsModalOpen(true)
+  }
+
+  const updateField = (key: keyof PoolForm, value: string | boolean) => {
+    setForm((prev) => ({ ...prev, [key]: value }))
+    setFormErrors((prev) => {
+      if (!(key in prev)) return prev
+      const next = { ...prev }
+      delete next[key]
+      return next
+    })
+  }
+
+  const validateCoordinates = (): Record<string, string> => {
+    const next: Record<string, string> = {}
+    const latRaw = form.latitude.trim()
+    const lngRaw = form.longitude.trim()
+
+    if (!latRaw) next.latitude = 'Latitude wajib diisi.'
+    if (!lngRaw) next.longitude = 'Longitude wajib diisi.'
+
+    const lat = Number(latRaw)
+    const lng = Number(lngRaw)
+
+    if (latRaw && (!Number.isFinite(lat) || lat < -90 || lat > 90)) {
+      next.latitude = 'Latitude harus berupa angka antara -90 dan 90.'
+    }
+    if (lngRaw && (!Number.isFinite(lng) || lng < -180 || lng > 180)) {
+      next.longitude = 'Longitude harus berupa angka antara -180 dan 180.'
+    }
+    if (latRaw && lngRaw && lat === 0 && lng === 0) {
+      next.latitude = 'Koordinat 0,0 tidak dapat dipakai. Isi koordinat lokasi pool sebenarnya.'
+      next.longitude = 'Koordinat 0,0 tidak dapat dipakai. Isi koordinat lokasi pool sebenarnya.'
+    }
+
+    return next
   }
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
+    const validation = validateCoordinates()
+    setFormErrors(validation)
+    if (Object.keys(validation).length > 0) return
+
+    const payload: EquipmentPoolPayload = {
+      name: form.name,
+      address: form.address,
+      city: form.city,
+      latitude: Number(form.latitude),
+      longitude: Number(form.longitude),
+      is_active: form.is_active,
+    }
+
     setIsSaving(true)
     try {
       if (editing) {
-        await equipmentService.updatePool(editing.id, form)
+        await equipmentService.updatePool(editing.id, payload)
         showSuccessToast('Pool armada berhasil diperbarui.')
       } else {
-        await equipmentService.createPool(form)
+        await equipmentService.createPool(payload)
         showSuccessToast('Pool armada berhasil ditambahkan.')
       }
       setIsModalOpen(false)
@@ -188,18 +248,22 @@ export const AdminPoolsPage: React.FC = () => {
             <Input
               label="Latitude *"
               type="number"
-              step="0.00000001"
+              inputMode="decimal"
+              step="any"
+              placeholder="Contoh: -7.3275"
               value={form.latitude}
-              onChange={(e) => setForm((f) => ({ ...f, latitude: Number(e.target.value) }))}
-              required
+              onChange={(e) => updateField('latitude', e.target.value)}
+              error={formErrors.latitude}
             />
             <Input
               label="Longitude *"
               type="number"
-              step="0.00000001"
+              inputMode="decimal"
+              step="any"
+              placeholder="Contoh: 112.7122"
               value={form.longitude}
-              onChange={(e) => setForm((f) => ({ ...f, longitude: Number(e.target.value) }))}
-              required
+              onChange={(e) => updateField('longitude', e.target.value)}
+              error={formErrors.longitude}
             />
           </div>
           <label className="flex items-center gap-2 text-sm text-slate-700">
