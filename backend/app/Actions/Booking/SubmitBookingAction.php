@@ -9,6 +9,7 @@ use App\Models\Booking;
 use App\Models\User;
 use App\Services\Booking\BookingAvailabilityPrecheckService;
 use App\Support\AuditLogger;
+use App\Support\RentalDateWindow;
 use Illuminate\Support\Facades\DB;
 
 class SubmitBookingAction
@@ -47,6 +48,16 @@ class SubmitBookingAction
                       'Akun Anda belum terverifikasi. Tim kami akan menghubungi Anda untuk menyelesaikan verifikasi akun sebelum mengajukan booking.'
                   );
               }
+
+            // H-1 re-check: a draft created before the day rolled over must
+            // still satisfy the minimum start date at submission time.
+            $booking->loadMissing('details');
+            foreach ($booking->details as $detail) {
+                RentalDateWindow::assertAllowed(
+                    $detail->start_date->toDateString(),
+                    $detail->end_date->toDateString()
+                );
+            }
 
             // Availability final pre-check before submission (no reservation)
             $this->precheck->assertBookingAvailable($booking);

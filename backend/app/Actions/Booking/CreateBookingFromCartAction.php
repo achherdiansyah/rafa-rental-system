@@ -12,6 +12,7 @@ use App\Services\Booking\BookingAvailabilityPrecheckService;
 use App\Services\Pricing\PricingCalculatorService;
 use App\Services\Routing\RouteDistanceService;
 use App\Support\AuditLogger;
+use App\Support\RentalDateWindow;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -112,6 +113,12 @@ class CreateBookingFromCartAction
                     'destination_longitude' => $destination?->longitude,
                     'route_distance_km' => $routeDistanceKm,
                 ];
+            }
+
+            // 2b. H-1 rule re-check: a cart saved yesterday must not bypass the
+            // minimum start date after the day rolls over.
+            foreach ($lineItems as $line) {
+                RentalDateWindow::assertAllowed($line['start_date'], $line['end_date']);
             }
 
             // 3. Availability pre-check (soft check - NOT a reservation)

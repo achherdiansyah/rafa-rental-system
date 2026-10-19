@@ -14,6 +14,13 @@ import { Input } from '@/components/form/Input'
 import { Select } from '@/components/form/Select'
 import { Alert } from '@/components/feedback/Alert'
 import { useToast } from '@/hooks/useToast'
+import {
+  minRentalStartDate,
+  isRentalStartValid,
+  isRentalEndValid,
+  RENTAL_START_MESSAGE,
+  RENTAL_END_MESSAGE,
+} from '@/utils/rentalDates'
 
 interface AddToCartModalProps {
   isOpen: boolean
@@ -156,17 +163,16 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
       next.quantity = 'Jumlah unit minimal 1.'
     }
 
-    const today = new Date().toISOString().split('T')[0]
     if (!startDate) {
       next.start = 'Tanggal mulai wajib diisi.'
-    } else if (startDate < today) {
-      next.start = 'Tanggal mulai tidak boleh sebelum hari ini.'
+    } else if (!isRentalStartValid(startDate)) {
+      next.start = RENTAL_START_MESSAGE
     }
 
     if (!endDate) {
       next.end = 'Tanggal selesai wajib diisi.'
-    } else if (startDate && endDate < startDate) {
-      next.end = 'Tanggal selesai tidak boleh sebelum tanggal mulai.'
+    } else if (!isRentalEndValid(startDate, endDate)) {
+      next.end = RENTAL_END_MESSAGE
     }
 
     setErrors(next)
@@ -231,7 +237,7 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
           </div>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} noValidate className="space-y-5">
         {/* Scheme Selector */}
         <div>
           <span className="block text-sm font-medium text-slate-700 mb-2">Pilih Skema Sewa</span>
@@ -285,14 +291,23 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
           <Input
             label="Tanggal Mulai Sewa *"
             type="date"
+            min={minRentalStartDate()}
             value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value
+              setStartDate(value)
+              if (endDate && !isRentalEndValid(value, endDate)) {
+                setEndDate('')
+                setErrors((prev) => ({ ...prev, end: RENTAL_END_MESSAGE }))
+              }
+            }}
             error={errors.start}
             disabled={isSubmitting}
           />
           <Input
             label="Tanggal Selesai Sewa *"
             type="date"
+            min={startDate || minRentalStartDate()}
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
             error={errors.end}

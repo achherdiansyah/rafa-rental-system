@@ -16,6 +16,13 @@ import { Alert } from '@/components/feedback/Alert'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Pagination } from '@/components/data-display/Pagination'
 import { useToast } from '@/hooks/useToast'
+import {
+  minRentalStartDate,
+  isRentalStartValid,
+  isRentalEndValid,
+  RENTAL_START_MESSAGE,
+  RENTAL_END_MESSAGE,
+} from '@/utils/rentalDates'
 
 const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'success' | 'warning' | 'danger' | 'outline'> = {
   DRAFT: 'secondary',
@@ -159,8 +166,11 @@ export const UserBookingsPage: React.FC = () => {
     const errs: string[] = []
     if (!rescheduleStart) errs.push('Tanggal mulai baru wajib diisi.')
     if (!rescheduleEnd) errs.push('Tanggal selesai baru wajib diisi.')
-    if (rescheduleStart && rescheduleEnd && rescheduleEnd < rescheduleStart) {
-      errs.push('Tanggal selesai tidak boleh sebelum tanggal mulai.')
+    if (rescheduleStart && !isRentalStartValid(rescheduleStart)) {
+      errs.push(RENTAL_START_MESSAGE)
+    }
+    if (rescheduleStart && rescheduleEnd && !isRentalEndValid(rescheduleStart, rescheduleEnd)) {
+      errs.push(RENTAL_END_MESSAGE)
     }
     if (rescheduleReason.trim().length < 5) errs.push('Alasan reschedule minimal 5 karakter.')
     if (errs.length) {
@@ -213,8 +223,12 @@ export const UserBookingsPage: React.FC = () => {
   const handleCorrect = async () => {
     if (!correctTarget) return
     for (const d of correctDetails) {
-      if (!d.start_date || !d.end_date || d.end_date < d.start_date) {
-        setCorrectError('Tanggal selesai tidak boleh sebelum tanggal mulai.')
+      if (!isRentalStartValid(d.start_date)) {
+        setCorrectError(RENTAL_START_MESSAGE)
+        return
+      }
+      if (!isRentalEndValid(d.start_date, d.end_date)) {
+        setCorrectError(RENTAL_END_MESSAGE)
         return
       }
     }
@@ -501,13 +515,21 @@ export const UserBookingsPage: React.FC = () => {
             <Input
               label="Tanggal Mulai Baru *"
               type="date"
+              min={minRentalStartDate()}
               value={rescheduleStart}
-              onChange={(e) => setRescheduleStart(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value
+                setRescheduleStart(value)
+                if (rescheduleEnd && !isRentalEndValid(value, rescheduleEnd)) {
+                  setRescheduleEnd('')
+                }
+              }}
               disabled={submittingId !== null}
             />
             <Input
               label="Tanggal Selesai Baru *"
               type="date"
+              min={rescheduleStart || minRentalStartDate()}
               value={rescheduleEnd}
               onChange={(e) => setRescheduleEnd(e.target.value)}
               disabled={submittingId !== null}
@@ -571,15 +593,24 @@ export const UserBookingsPage: React.FC = () => {
               <Input
                 label={`Mulai Item #${idx + 1}`}
                 type="date"
+                min={minRentalStartDate()}
                 value={d.start_date}
                 disabled={submittingId !== null}
-                onChange={(e) =>
-                  setCorrectDetails((prev) => prev.map((x) => (x.id === d.id ? { ...x, start_date: e.target.value } : x)))
-                }
+                onChange={(e) => {
+                  const value = e.target.value
+                  setCorrectDetails((prev) =>
+                    prev.map((x) =>
+                      x.id === d.id
+                        ? { ...x, start_date: value, end_date: isRentalEndValid(value, x.end_date) ? x.end_date : '' }
+                        : x
+                    )
+                  )
+                }}
               />
               <Input
                 label={`Selesai Item #${idx + 1}`}
                 type="date"
+                min={d.start_date || minRentalStartDate()}
                 value={d.end_date}
                 disabled={submittingId !== null}
                 onChange={(e) =>

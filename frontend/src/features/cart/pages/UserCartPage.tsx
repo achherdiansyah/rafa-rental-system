@@ -16,6 +16,13 @@ import { EmptyState } from '@/components/feedback/EmptyState'
 import { Alert } from '@/components/feedback/Alert'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { useToast } from '@/hooks/useToast'
+import {
+  minRentalStartDate,
+  isRentalStartValid,
+  isRentalEndValid,
+  RENTAL_START_MESSAGE,
+  RENTAL_END_MESSAGE,
+} from '@/utils/rentalDates'
 
 const formatRupiah = (val: number) => {
   return new Intl.NumberFormat('id-ID', {
@@ -44,6 +51,7 @@ export const UserCartPage: React.FC = () => {
   const [quantityInputs, setQuantityInputs] = useState<Record<number, number>>({})
   const [startDates, setStartDates] = useState<Record<number, string>>({})
   const [endDates, setEndDates] = useState<Record<number, string>>({})
+  const [dateErrors, setDateErrors] = useState<Record<number, string>>({})
 
   // Delete dialog
   const [itemToDelete, setItemToDelete] = useState<CartItem | null>(null)
@@ -120,7 +128,22 @@ export const UserCartPage: React.FC = () => {
     }
   }
 
+  const validateDates = (itemId: number): string | null => {
+    const start = startDates[itemId]
+    const end = endDates[itemId]
+    if (!isRentalStartValid(start)) return RENTAL_START_MESSAGE
+    if (!isRentalEndValid(start, end)) return RENTAL_END_MESSAGE
+    return null
+  }
+
   const handleUpdateItem = async (item: CartItem) => {
+    const dateError = validateDates(item.id)
+    if (dateError) {
+      setDateErrors((prev) => ({ ...prev, [item.id]: dateError }))
+      showErrorToast(dateError)
+      return
+    }
+    setDateErrors((prev) => ({ ...prev, [item.id]: '' }))
     setUpdatingItemId(item.id)
     try {
       const data = {
@@ -192,6 +215,11 @@ export const UserCartPage: React.FC = () => {
     }
 
     const selectedItems = (cart?.items ?? []).filter((it) => selectedItemIds.includes(it.id))
+    const invalidDate = selectedItems.find((it) => !isRentalStartValid(it.start_date) || !isRentalEndValid(it.start_date, it.end_date))
+    if (invalidDate) {
+      showErrorToast(RENTAL_START_MESSAGE)
+      return
+    }
     const unavailableSelection = selectedItems.some((it) => it.availability && !it.availability.is_available)
     if (unavailableSelection) {
       showErrorToast('Terdapat unit yang tidak tersedia pada pilihan Anda. Silakan atur ulang tanggal atau hapus item.')
@@ -462,16 +490,34 @@ export const UserCartPage: React.FC = () => {
                       <Input
                         label="Mulai"
                         type="date"
+                        min={minRentalStartDate()}
                         value={startDates[item.id] ?? item.start_date}
-                        onChange={(e) => setStartDates({ ...startDates, [item.id]: e.target.value })}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          setStartDates({ ...startDates, [item.id]: value })
+                          const end = endDates[item.id] ?? item.end_date
+                          if (end && !isRentalEndValid(value, end)) {
+                            setEndDates({ ...endDates, [item.id]: '' })
+                            setDateErrors((prev) => ({ ...prev, [item.id]: RENTAL_END_MESSAGE }))
+                          } else {
+                            setDateErrors((prev) => ({ ...prev, [item.id]: '' }))
+                          }
+                        }}
                       />
                       <Input
                         label="Selesai"
                         type="date"
+                        min={(startDates[item.id] ?? item.start_date) || minRentalStartDate()}
                         value={endDates[item.id] ?? item.end_date}
-                        onChange={(e) => setEndDates({ ...endDates, [item.id]: e.target.value })}
+                        onChange={(e) => {
+                          setEndDates({ ...endDates, [item.id]: e.target.value })
+                          setDateErrors((prev) => ({ ...prev, [item.id]: '' }))
+                        }}
                       />
                     </div>
+                    {dateErrors[item.id] && (
+                      <p className="text-xs text-rose-600 font-medium">{dateErrors[item.id]}</p>
+                    )}
 
                     {/* Actions */}
                     <div className="flex items-center justify-end gap-2">

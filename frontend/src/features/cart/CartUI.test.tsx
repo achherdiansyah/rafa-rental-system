@@ -8,6 +8,12 @@ import { projectLocationService } from '@/features/project/services/projectLocat
 import { equipmentService } from '@/features/equipment/services/equipmentService'
 import { ToastProvider } from '@/app/ToastContext'
 import type { Cart } from '@/types/cart'
+import { jakartaToday, minRentalStartDate } from '@/utils/rentalDates'
+
+const addDays = (ymd: string, days: number): string => {
+  const [y, m, d] = ymd.split('-').map(Number)
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10)
+}
 
 vi.mock('./services/cartService', () => ({
   cartService: {
@@ -73,8 +79,8 @@ const mockCart: Cart = {
       equipment_model_id: 5,
       quantity: 2,
       is_all_in: false,
-      start_date: '2026-10-05',
-      end_date: '2026-10-12',
+      start_date: addDays(minRentalStartDate(), 1),
+      end_date: addDays(minRentalStartDate(), 8),
       model: mockModel,
     } as any,
   ],
@@ -283,6 +289,67 @@ describe('Cart UI Suite', () => {
     expect(cartService.addItem).not.toHaveBeenCalled()
   })
 
+  it('rejects today as the rental start date (H-1 rule)', async () => {
+    vi.mocked(cartService.addItem).mockResolvedValue({ success: true, message: 'OK', data: mockCart } as any)
+
+    render(
+      <MemoryRouter>
+        <ToastProvider>
+          <AddToCartModal isOpen model={mockModel} onClose={vi.fn()} />
+        </ToastProvider>
+      </MemoryRouter>
+    )
+
+    const startInput = screen.getByLabelText(/tanggal mulai sewa/i) as HTMLInputElement
+    fireEvent.change(startInput, { target: { value: jakartaToday() } })
+    fireEvent.change(screen.getByLabelText(/tanggal selesai sewa/i), { target: { value: addDays(jakartaToday(), 3) } })
+    expect(startInput.value).toBe(jakartaToday())
+    expect(startInput.min).toBe(minRentalStartDate())
+
+    const submit = screen.getByRole('button', { name: /tambah ke keranjang/i })
+    await waitFor(() => expect(submit).toBeEnabled())
+    fireEvent.click(submit)
+
+    await waitFor(() => expect(startInput.getAttribute('aria-invalid')).toBe('true'))
+    expect(screen.getByText(/pemesanan wajib dilakukan H-1/i)).toBeInTheDocument()
+    expect(cartService.addItem).not.toHaveBeenCalled()
+  })
+
+  it('clears an invalid end date when the start date moves later', async () => {
+    render(
+      <MemoryRouter>
+        <ToastProvider>
+          <AddToCartModal isOpen model={mockModel} onClose={vi.fn()} />
+        </ToastProvider>
+      </MemoryRouter>
+    )
+
+    const startInput = screen.getByLabelText(/tanggal mulai sewa/i) as HTMLInputElement
+    const endInput = screen.getByLabelText(/tanggal selesai sewa/i) as HTMLInputElement
+
+    fireEvent.change(startInput, { target: { value: minRentalStartDate() } })
+    fireEvent.change(endInput, { target: { value: addDays(minRentalStartDate(), 3) } })
+    expect(endInput.value).toBe(addDays(minRentalStartDate(), 3))
+
+    fireEvent.change(startInput, { target: { value: addDays(minRentalStartDate(), 10) } })
+
+    expect(endInput.value).toBe('')
+    expect(await screen.findByText(/tidak boleh mendahului tanggal mulai/i)).toBeInTheDocument()
+  })
+
+  it('start date input exposes tomorrow as the minimum selectable date', async () => {
+    render(
+      <MemoryRouter>
+        <ToastProvider>
+          <AddToCartModal isOpen model={mockModel} onClose={vi.fn()} />
+        </ToastProvider>
+      </MemoryRouter>
+    )
+
+    const startInput = screen.getByLabelText(/tanggal mulai sewa/i) as HTMLInputElement
+    expect(startInput.min).toBe(minRentalStartDate())
+  })
+
   it('add to cart modal submits successful payload', async () => {
     vi.mocked(cartService.addItem).mockResolvedValue({
       success: true,
@@ -300,9 +367,9 @@ describe('Cart UI Suite', () => {
       </MemoryRouter>
     )
 
-    // Fill dates (future, so client-side validation accepts them)
-    const start = new Date(Date.now() + 86400000).toISOString().slice(0, 10)
-    const end = new Date(Date.now() + 6 * 86400000).toISOString().slice(0, 10)
+    // Fill dates (H-1 compliant, so client-side validation accepts them)
+    const start = minRentalStartDate()
+    const end = addDays(start, 5)
 
     fireEvent.change(screen.getByLabelText(/tanggal mulai sewa/i), { target: { value: start } })
     fireEvent.change(screen.getByLabelText(/tanggal selesai sewa/i), { target: { value: end } })
