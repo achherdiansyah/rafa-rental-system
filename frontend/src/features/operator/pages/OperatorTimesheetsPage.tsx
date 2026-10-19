@@ -152,7 +152,14 @@ export const OperatorTimesheetsPage: React.FC<{ history?: boolean }> = ({ histor
         </p>
       </div>
 
-      {apiError && <Alert variant="danger" title="Gagal Memuat">{apiError}</Alert>}
+      {apiError && (
+        <Alert variant="danger" title="Gagal Memuat">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span>{apiError}</span>
+            <Button size="sm" variant="outline" onClick={load}>Muat Ulang</Button>
+          </div>
+        </Alert>
+      )}
 
       {!history && (
         <Card className="p-5 space-y-3">

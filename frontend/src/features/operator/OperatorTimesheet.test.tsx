@@ -115,6 +115,63 @@ describe('Operator Timesheet UI', () => {
     })
   })
 
+  it('shows loading state while assignments/timesheets are fetched', async () => {
+    let resolveAssignments: (value: any) => void = () => undefined
+    vi.mocked(operatorService.getAssignments).mockReturnValue(new Promise((resolve) => { resolveAssignments = resolve }) as any)
+
+    renderPage()
+    expect(document.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0)
+
+    resolveAssignments({ success: true, message: 'OK', data: [assignment] })
+    expect(await screen.findByText(/KM-001/)).toBeInTheDocument()
+  })
+
+  it('does not upload/submit when create API fails and shows the error', async () => {
+    vi.mocked(timesheetService.create).mockRejectedValue({ message: 'Gagal membuat Timesheet.' })
+
+    renderPage()
+    await screen.findByText(/KM-001/)
+    const input = fillForm()
+    fireEvent.change(input, { target: { files: [new File(['x'], 'paper.png', { type: 'image/png' })] } })
+    fireEvent.click(screen.getByRole('button', { name: /kirim untuk validasi/i }))
+
+    expect(await screen.findByText(/Gagal membuat Timesheet/)).toBeInTheDocument()
+    expect(timesheetService.create).toHaveBeenCalled()
+    expect(timesheetService.uploadPaper).not.toHaveBeenCalled()
+    expect(timesheetService.submit).not.toHaveBeenCalled()
+  })
+
+  it('does not submit when photo upload or submit API fails', async () => {
+    vi.mocked(timesheetService.create).mockResolvedValue({ success: true, message: 'OK', data: { id: 9 } } as any)
+    vi.mocked(timesheetService.uploadPaper).mockRejectedValue({ message: 'Gagal upload foto.' })
+
+    renderPage()
+    await screen.findByText(/KM-001/)
+    const input = fillForm()
+    fireEvent.change(input, { target: { files: [new File(['x'], 'paper.png', { type: 'image/png' })] } })
+    fireEvent.click(screen.getByRole('button', { name: /kirim untuk validasi/i }))
+
+    expect(await screen.findByText(/Gagal upload foto/)).toBeInTheDocument()
+    expect(timesheetService.submit).not.toHaveBeenCalled()
+
+    vi.mocked(timesheetService.uploadPaper).mockResolvedValue({ success: true, message: 'OK', data: { id: 1, file_name: 'paper.png' } } as any)
+    vi.mocked(timesheetService.submit).mockRejectedValue({ message: 'Gagal submit Timesheet.' })
+    fireEvent.click(screen.getByRole('button', { name: /kirim untuk validasi/i }))
+    expect(await screen.findByText(/Gagal submit Timesheet/)).toBeInTheDocument()
+  })
+
+  it('handles 403 assignment access error and can retry', async () => {
+    vi.mocked(operatorService.getAssignments)
+      .mockRejectedValueOnce({ status: 403, message: 'Anda tidak memiliki akses ke penugasan ini.' })
+      .mockResolvedValueOnce({ success: true, message: 'OK', data: [assignment] } as any)
+
+    renderPage()
+    expect(await screen.findByText(/Anda tidak memiliki akses ke penugasan ini/)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /muat ulang/i }))
+    expect(await screen.findByText(/KM-001/)).toBeInTheDocument()
+  })
+
   it('shows approved status and Daily Work Invoice information', async () => {
     vi.mocked(timesheetService.getTimesheets).mockResolvedValue({
       success: true, message: 'OK', data: [{

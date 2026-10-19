@@ -75,7 +75,14 @@ export const AdminPaymentHoldsPage: React.FC = () => {
         <Input label="Tanggal Mulai" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
       </Card>
 
-      {error && <Alert variant="danger" title="Gagal Memuat">{error}</Alert>}
+      {error && (
+        <Alert variant="danger" title="Gagal Memuat">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span>{error}</span>
+            <button type="button" onClick={() => window.location.reload()} className="font-semibold underline">Muat Ulang</button>
+          </div>
+        </Alert>
+      )}
 
       {isLoading ? (
         <Card className="p-5"><Skeleton className="h-24 w-full" /></Card>

@@ -41,6 +41,45 @@ describe('Admin payment hold history', () => {
     expect(screen.getAllByText('RESOLVED').length).toBeGreaterThanOrEqual(1)
   })
 
+  it('shows loading, error and empty states', async () => {
+    let resolveGet: (value: any) => void = () => undefined
+    vi.mocked(api.get).mockReturnValueOnce(new Promise((resolve) => { resolveGet = resolve }) as any)
+
+    const { unmount } = renderPage()
+    expect(document.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0)
+    resolveGet({ success: true, message: 'OK', data: [] })
+    expect(await screen.findByText(/Tidak Ada Data/i)).toBeInTheDocument()
+    unmount()
+
+    vi.mocked(api.get).mockRejectedValueOnce({ status: 403, message: 'Anda tidak memiliki izin.' })
+    renderPage()
+    expect(await screen.findByText(/Anda tidak memiliki izin/)).toBeInTheDocument()
+  })
+
+  it('shows links to the working rental and invoice list routes', async () => {
+    renderPage()
+    await screen.findByText('RFA-BKG-1')
+
+    const rentalLinks = screen.getAllByRole('link', { name: /buka rental/i })
+    expect(rentalLinks[0]).toHaveAttribute('href', '/admin/rentals')
+    const invoiceLinks = screen.getAllByRole('link', { name: /buka invoice/i })
+    expect(invoiceLinks[0]).toHaveAttribute('href', '/admin/invoices')
+  })
+
+  it('filters by reason and date', async () => {
+    renderPage()
+    await screen.findByText('RFA-BKG-1')
+
+    fireEvent.change(screen.getByLabelText('Alasan'), { target: { value: 'INVOICE_COUNT_3' } })
+    expect(screen.getByText('RFA-BKG-1')).toBeInTheDocument()
+    expect(screen.queryByText('RFA-BKG-2')).not.toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Alasan'), { target: { value: '' } })
+    fireEvent.change(screen.getByLabelText(/tanggal mulai/i), { target: { value: '2026-10-15' } })
+    expect(screen.getByText('RFA-BKG-2')).toBeInTheDocument()
+    expect(screen.queryByText('RFA-BKG-1')).not.toBeInTheDocument()
+  })
+
   it('filters by status and booking code', async () => {
     renderPage()
     await screen.findByText('RFA-BKG-1')
