@@ -351,25 +351,6 @@ export const UserProjectLocationsPage: React.FC = () => {
             disabled={isSubmitting}
           />
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              label="Nama PIC Lapangan *"
-              placeholder="Contoh: Budi Santoso"
-              value={formData.pic_name}
-              onChange={(e) => setFormData({ ...formData, pic_name: e.target.value })}
-              error={errors.pic_name}
-              disabled={isSubmitting}
-            />
-            <Input
-              label="Nomor Telepon PIC *"
-              placeholder="Contoh: 08123456789"
-              value={formData.pic_phone}
-              onChange={(e) => setFormData({ ...formData, pic_phone: e.target.value })}
-              error={errors.pic_phone}
-              disabled={isSubmitting}
-            />
-          </div>
-
           <RegionSelects
             value={region}
             onChange={setRegion}
@@ -394,6 +375,25 @@ export const UserProjectLocationsPage: React.FC = () => {
             disabled={isSubmitting}
             rows={3}
           />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Nama PIC Lapangan *"
+              placeholder="Contoh: Budi Santoso"
+              value={formData.pic_name}
+              onChange={(e) => setFormData({ ...formData, pic_name: e.target.value })}
+              error={errors.pic_name}
+              disabled={isSubmitting}
+            />
+            <Input
+              label="Nomor Telepon PIC *"
+              placeholder="Contoh: 08123456789"
+              value={formData.pic_phone}
+              onChange={(e) => setFormData({ ...formData, pic_phone: e.target.value })}
+              error={errors.pic_phone}
+              disabled={isSubmitting}
+            />
+          </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
             <Button
