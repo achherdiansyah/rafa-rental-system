@@ -25,7 +25,7 @@ class EquipmentModelController extends ApiController
      */
     public function index(Request $request): JsonResponse
     {
-        $query = EquipmentModel::with(['type', 'attachments', 'prices'])->withCount('units')->latest();
+        $query = EquipmentModel::with(['type', 'pool', 'attachments', 'prices'])->withCount('units')->latest();
 
         if ($search = $request->query('search')) {
             $query->where(function ($q) use ($search) {
@@ -86,7 +86,7 @@ class EquipmentModelController extends ApiController
      */
     public function show(Request $request, EquipmentModel $model): JsonResponse
     {
-        $model->load(['type', 'prices', 'attachments']);
+        $model->load(['type', 'pool', 'prices', 'attachments']);
         $model->loadCount('units');
 
         $availService = app(EquipmentAvailabilityService::class);
@@ -210,4 +210,5 @@ class EquipmentModelController extends ApiController
         return $this->success(null, 'Model armada berhasil dihapus.');
     }
 }
+
 

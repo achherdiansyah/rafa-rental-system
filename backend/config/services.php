@@ -44,4 +44,8 @@ return [
         'queue' => (bool) env('WHATSAPP_QUEUE', false),
     ],
 
+    'region' => [
+        'base_url' => env('REGION_API_BASE_URL', 'https://www.emsifa.com/api-wilayah-indonesia/api'),
+    ],
+
 ];

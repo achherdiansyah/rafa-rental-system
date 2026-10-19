@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\ProjectLocationController;
 use App\Http\Controllers\Api\V1\RecommendationController;
 use App\Http\Controllers\Api\V1\RefundController;
+use App\Http\Controllers\Api\V1\RegionController;
 use App\Http\Controllers\Api\V1\AdminRentalOperatorController;
 use App\Http\Controllers\Api\V1\OperatorAssignmentController;
 use App\Http\Controllers\Api\V1\SupervisorBookingController;
@@ -111,6 +112,14 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::put('/{projectLocation}', [ProjectLocationController::class, 'update'])->name('update');
             Route::patch('/{projectLocation}', [ProjectLocationController::class, 'update'])->name('update.patch');
             Route::delete('/{projectLocation}', [ProjectLocationController::class, 'destroy'])->name('destroy');
+        });
+
+        // Indonesian administrative regions (cached proxy).
+        Route::prefix('regions')->name('regions.')->group(function () {
+            Route::get('/provinces', [RegionController::class, 'provinces'])->name('provinces');
+            Route::get('/provinces/{province}/regencies', [RegionController::class, 'regencies'])->name('regencies');
+            Route::get('/regencies/{regency}/districts', [RegionController::class, 'districts'])->name('districts');
+            Route::get('/districts/{district}/villages', [RegionController::class, 'villages'])->name('villages');
         });
 
         // Recommendation System (Decision support for equipment selection)
@@ -345,4 +354,5 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         });
     });
 });
+
 

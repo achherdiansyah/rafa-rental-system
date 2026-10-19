@@ -2,11 +2,14 @@
 
 namespace App\Http\Requests\Equipment;
 
+use App\Http\Requests\Concerns\ValidatesRegionSelection;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreEquipmentPoolRequest extends FormRequest
 {
+    use ValidatesRegionSelection;
+
     public function authorize(): bool
     {
         /** @var User|null $user */
@@ -21,7 +24,14 @@ class StoreEquipmentPoolRequest extends FormRequest
             'name' => ['required', 'string', 'max:150'],
             'address' => ['required', 'string', 'max:2000'],
             'city' => ['nullable', 'string', 'max:100'],
-            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'province_code' => ['nullable', 'string', 'max:20'],
+            'province_name' => ['nullable', 'string', 'max:150'],
+            'regency_code' => ['nullable', 'string', 'max:20'],
+            'regency_name' => ['nullable', 'string', 'max:150'],
+            'district_code' => ['nullable', 'string', 'max:20'],
+            'district_name' => ['nullable', 'string', 'max:150'],
+            'village_code' => ['nullable', 'string', 'max:20'],
+            'village_name' => ['nullable', 'string', 'max:150'],            'latitude' => ['required', 'numeric', 'between:-90,90'],
             'longitude' => ['required', 'numeric', 'between:-180,180'],
             'is_active' => ['sometimes', 'boolean'],
         ];
@@ -41,6 +51,8 @@ class StoreEquipmentPoolRequest extends FormRequest
 
     public function withValidator($validator): void
     {
+        $this->validateRegionHierarchy($validator);
+
         $validator->after(function ($validator) {
             if ($validator->errors()->isNotEmpty()) {
                 return;
@@ -53,3 +65,4 @@ class StoreEquipmentPoolRequest extends FormRequest
         });
     }
 }
+

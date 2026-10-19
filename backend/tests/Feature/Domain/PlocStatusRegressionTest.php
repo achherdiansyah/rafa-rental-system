@@ -33,6 +33,8 @@ class PlocStatusRegressionTest extends TestCase
             'pic_phone' => '081155556666',
             'city' => 'Bandung',
             'address' => 'Jl. Status',
+            'latitude' => -6.9,
+            'longitude' => 107.6,
         ]);
         $create->assertCreated();
 
@@ -62,3 +64,4 @@ class PlocStatusRegressionTest extends TestCase
         $this->assertContains($create->json('data.id'), collect($search->json('data'))->pluck('id')->all());
     }
 }
+

@@ -24,6 +24,14 @@ class ProjectLocationResource extends JsonResource
             'project_name' => $this->project_name,
             'address' => $this->address,
             'city' => $this->city,
+            'province_code' => $this->province_code,
+            'province_name' => $this->province_name,
+            'regency_code' => $this->regency_code,
+            'regency_name' => $this->regency_name,
+            'district_code' => $this->district_code,
+            'district_name' => $this->district_name,
+            'village_code' => $this->village_code,
+            'village_name' => $this->village_name,
             'pic_name' => $this->pic_name,
             'pic_phone' => $this->pic_phone,
             'latitude' => $this->latitude !== null ? (float) $this->latitude : null,
@@ -34,3 +42,4 @@ class ProjectLocationResource extends JsonResource
         ];
     }
 }
+

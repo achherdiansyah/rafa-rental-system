@@ -6,6 +6,12 @@ import { equipmentService } from './services/equipmentService'
 import { ToastProvider } from '@/app/ToastContext'
 import type { EquipmentPool } from '@/types/equipment'
 
+vi.mock('@/features/location/RegionSelects', () => ({
+  RegionSelects: ({ onChange }: any) => (<button type="button" onClick={() => onChange({ province_code: '32', province_name: 'Jawa Barat', regency_code: '32.73', regency_name: 'Kota Bandung', district_code: '32.73.01', district_name: 'Sukasari', village_code: '32.73.01.1001', village_name: 'Sukarasa' })}>Pilih Wilayah</button>),
+}))
+vi.mock('@/features/location/MapLocationPicker', () => ({
+  MapLocationPicker: ({ onChange }: any) => (<button type="button" onClick={() => onChange(-7.3275, 112.7122)}>Pilih Titik</button>),
+}))
 vi.mock('./services/equipmentService', () => ({
   equipmentService: {
     getPools: vi.fn(),
@@ -29,6 +35,7 @@ const pool: EquipmentPool = {
   name: 'Pool Bandung',
   address: 'Jl. Contoh No. 1',
   city: 'Bandung',
+  province_code: '32', province_name: 'Jawa Barat', regency_code: '32.73', regency_name: 'Kota Bandung', district_code: '32.73.01', district_name: 'Sukasari', village_code: '32.73.01.1001', village_name: 'Sukarasa',
   latitude: -7.3275,
   longitude: 112.7122,
   is_active: true,
@@ -68,6 +75,8 @@ describe('Admin pool coordinate inputs', () => {
     expect((await screen.findAllByText(/koordinat 0,0 tidak dapat dipakai/i)).length).toBeGreaterThanOrEqual(1)
     expect(equipmentService.createPool).not.toHaveBeenCalled()
 
+    fireEvent.click(within(dialog).getByRole('button', { name: /pilih wilayah/i }))
+    fireEvent.click(within(dialog).getByRole('button', { name: /pilih titik/i }))
     fireEvent.change(latitude, { target: { value: '-7.3275' } })
     fireEvent.change(longitude, { target: { value: '112.7122' } })
     fireEvent.click(within(dialog).getByRole('button', { name: /^tambah pool$/i }))
@@ -127,3 +136,4 @@ describe('Admin pool coordinate inputs', () => {
     expect(screen.getByText(/longitude harus berupa angka antara -180 dan 180/i)).toBeInTheDocument()
   })
 })
+

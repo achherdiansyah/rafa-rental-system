@@ -17,6 +17,10 @@ import { useDebounce } from '@/hooks/useDebounce'
 import { useLatestCall } from '@/hooks/useLatestCall'
 import { useAuth } from '@/hooks/useAuth'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { RegionSelects } from '@/features/location/RegionSelects'
+import { MapLocationPicker } from '@/features/location/MapLocationPicker'
+import { emptyRegion } from '@/features/location/regionService'
+import type { RegionValue } from '@/features/location/regionService'
 
 export const UserProjectLocationsPage: React.FC = () => {
   const { success: showSuccessToast, error: showErrorToast } = useToast()
@@ -48,6 +52,8 @@ export const UserProjectLocationsPage: React.FC = () => {
     pic_name: '',
     pic_phone: '',
   })
+  const [region, setRegion] = useState<RegionValue>(emptyRegion)
+  const [coordinates, setCoordinates] = useState<{ lat: number | null; lng: number | null }>({ lat: null, lng: null })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -90,7 +96,14 @@ export const UserProjectLocationsPage: React.FC = () => {
     const newErrors: Record<string, string> = {}
     if (!formData.project_name.trim()) newErrors.project_name = 'Nama proyek wajib diisi.'
     if (!formData.address.trim()) newErrors.address = 'Alamat proyek wajib diisi.'
-    if (!formData.city.trim()) newErrors.city = 'Kota wajib diisi.'
+    if (!region.province_code || !region.regency_code || !region.district_code || !region.village_code) {
+      newErrors.region = 'Provinsi, kabupaten/kota, kecamatan, dan desa/kelurahan wajib dipilih.'
+    }
+    if (coordinates.lat === null || coordinates.lng === null) {
+      newErrors.coordinates = 'Titik koordinat proyek wajib dipilih pada peta.'
+    } else if (coordinates.lat === 0 && coordinates.lng === 0) {
+      newErrors.coordinates = 'Koordinat 0,0 tidak dapat dipakai.'
+    }
     if (!formData.pic_name.trim()) newErrors.pic_name = 'Nama PIC wajib diisi.'
     if (!formData.pic_phone.trim()) newErrors.pic_phone = 'Nomor telepon PIC wajib diisi.'
     
@@ -102,10 +115,18 @@ export const UserProjectLocationsPage: React.FC = () => {
     e.preventDefault()
     if (!validateForm()) return
 
+    const payload = {
+      ...formData,
+      city: region.regency_name || formData.city,
+      ...region,
+      latitude: coordinates.lat,
+      longitude: coordinates.lng,
+    }
+
     setIsSubmitting(true)
     try {
       if (editingLocation) {
-        const res = await projectLocationService.updateLocation(editingLocation.id, formData)
+        const res = await projectLocationService.updateLocation(editingLocation.id, payload)
         // No fake success: toast only when the backend confirms an id
         if (!res?.data?.id) {
           const invalid = new Error('Respons tidak valid dari server.')
@@ -114,7 +135,7 @@ export const UserProjectLocationsPage: React.FC = () => {
         }
         showSuccessToast('Lokasi proyek berhasil diperbarui.')
       } else {
-        const res = await projectLocationService.createLocation(formData)
+        const res = await projectLocationService.createLocation(payload)
         // Persistence proof: created resource must carry its id back
         if (!res?.data?.id) {
           const invalid = new Error('Respons tidak valid dari server.')
@@ -150,6 +171,8 @@ export const UserProjectLocationsPage: React.FC = () => {
       pic_name: '',
       pic_phone: '',
     })
+    setRegion(emptyRegion)
+    setCoordinates({ lat: null, lng: null })
     setErrors({})
     setIsModalOpen(true)
   }
@@ -163,6 +186,13 @@ export const UserProjectLocationsPage: React.FC = () => {
       pic_name: loc.pic_name,
       pic_phone: loc.pic_phone,
     })
+    setRegion({
+      province_code: loc.province_code ?? '', province_name: loc.province_name ?? '',
+      regency_code: loc.regency_code ?? '', regency_name: loc.regency_name ?? '',
+      district_code: loc.district_code ?? '', district_name: loc.district_name ?? '',
+      village_code: loc.village_code ?? '', village_name: loc.village_name ?? '',
+    })
+    setCoordinates({ lat: loc.latitude ?? null, lng: loc.longitude ?? null })
     setErrors({})
     setIsModalOpen(true)
   }
@@ -340,12 +370,18 @@ export const UserProjectLocationsPage: React.FC = () => {
             />
           </div>
 
-          <Input
-            label="Kota / Kabupaten *"
-            placeholder="Contoh: Tangerang Selatan"
-            value={formData.city}
-            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-            error={errors.city}
+          <RegionSelects
+            value={region}
+            onChange={setRegion}
+            errors={{ province_code: errors.region, regency_code: errors.region, district_code: errors.region, village_code: errors.region }}
+            disabled={isSubmitting}
+          />
+
+          <MapLocationPicker
+            latitude={coordinates.lat}
+            longitude={coordinates.lng}
+            onChange={(lat, lng) => setCoordinates({ lat, lng })}
+            error={errors.coordinates}
             disabled={isSubmitting}
           />
 
@@ -390,3 +426,4 @@ export const UserProjectLocationsPage: React.FC = () => {
   )
 }
 export default UserProjectLocationsPage
+

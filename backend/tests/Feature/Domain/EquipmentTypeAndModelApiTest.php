@@ -395,4 +395,43 @@ class EquipmentTypeAndModelApiTest extends TestCase
         $this->deleteJson("/api/v1/equipment/models/{$modelId}")->assertStatus(200);
         $this->deleteJson("/api/v1/equipment/types/{$typeId}")->assertStatus(200);
     }
+
+    public function test_model_pool_reference_persists_and_is_returned_by_api(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $type = EquipmentType::factory()->create();
+        $poolA = \App\Models\EquipmentPool::factory()->create(['name' => 'Pool A', 'latitude' => -6.2, 'longitude' => 106.8]);
+        $poolB = \App\Models\EquipmentPool::factory()->create(['name' => 'Pool B', 'latitude' => -6.9, 'longitude' => 107.6]);
+        Sanctum::actingAs($admin);
+
+        $created = $this->postJson('/api/v1/equipment/models', [
+            'equipment_type_id' => $type->id,
+            'equipment_pool_id' => $poolA->id,
+            'brand' => 'Komatsu',
+            'model_name' => 'PC-POOL-TEST',
+            'capacity_value' => 20,
+            'capacity_unit' => 'Ton',
+        ])->assertCreated()->assertJsonPath('data.equipment_pool_id', $poolA->id);
+
+        $id = $created->json('data.id');
+        $this->assertDatabaseHas('equipment_models', ['id' => $id, 'equipment_pool_id' => $poolA->id]);
+
+        $this->putJson("/api/v1/equipment/models/{$id}", ['equipment_pool_id' => $poolB->id])
+            ->assertOk()
+            ->assertJsonPath('data.equipment_pool_id', $poolB->id)
+            ->assertJsonPath('data.pool.id', $poolB->id);
+
+        $this->assertDatabaseHas('equipment_models', ['id' => $id, 'equipment_pool_id' => $poolB->id]);
+
+        $this->getJson("/api/v1/equipment/models/{$id}")
+            ->assertOk()
+            ->assertJsonPath('data.equipment_pool_id', $poolB->id)
+            ->assertJsonPath('data.pool.name', 'Pool B');
+
+        $this->getJson('/api/v1/equipment/models?search=PC-POOL-TEST')
+            ->assertOk()
+            ->assertJsonPath('data.0.equipment_pool_id', $poolB->id)
+            ->assertJsonPath('data.0.pool.id', $poolB->id);
+    }
 }
+

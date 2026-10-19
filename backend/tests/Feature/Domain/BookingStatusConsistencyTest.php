@@ -51,6 +51,8 @@ class BookingStatusConsistencyTest extends TestCase
             'pic_name' => 'A',
             'pic_phone' => '0812',
             'address' => 'Jl. Tes',
+            'latitude' => -6.2,
+            'longitude' => 106.8,
         ])->assertCreated()->json('data.id');
 
         $this->postJson('/api/v1/cart/items', [

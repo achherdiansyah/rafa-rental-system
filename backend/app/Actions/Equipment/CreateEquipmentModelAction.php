@@ -15,8 +15,9 @@ class CreateEquipmentModelAction
     {
         /** @var EquipmentModel $model */
         $model = EquipmentModel::create($data);
-        $model->load('type');
+        $model->load(['type', 'pool']);
 
         return $model;
     }
 }
+

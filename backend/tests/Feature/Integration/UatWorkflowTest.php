@@ -86,6 +86,8 @@ class UatWorkflowTest extends TestCase
             'pic_name' => 'Dono UAT',
             'pic_phone' => '081299887766',
             'address' => 'Jl. Inspeksi Tol',
+            'latitude' => -6.2,
+            'longitude' => 106.8,
         ])->assertCreated()->json('data.id');
 
         $this->postJson('/api/v1/cart/items', [
@@ -246,4 +248,5 @@ class UatWorkflowTest extends TestCase
             ->assertJson(['code' => 'BUSINESS_RULE_VIOLATION']);
     }
 }
+
 

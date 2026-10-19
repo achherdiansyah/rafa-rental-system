@@ -21,6 +21,7 @@ class EquipmentModelResource extends JsonResource
         return [
             'id' => $this->id,
             'equipment_type_id' => $this->equipment_type_id,
+            'equipment_pool_id' => $this->equipment_pool_id,
             'brand' => $this->brand,
             'model_name' => $this->model_name,
             'capacity_value' => (float) $this->capacity_value,
@@ -36,4 +37,5 @@ class EquipmentModelResource extends JsonResource
         ];
     }
 }
+
 

@@ -16,6 +16,8 @@ class ProjectLocation extends Model
         'project_name',
         'address',
         'city',
+        'province_code', 'province_name', 'regency_code', 'regency_name',
+        'district_code', 'district_name', 'village_code', 'village_name',
         'pic_name',
         'pic_phone',
         'latitude',
@@ -37,3 +39,4 @@ class ProjectLocation extends Model
         return $this->belongsTo(User::class);
     }
 }
+

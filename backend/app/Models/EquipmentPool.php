@@ -15,6 +15,8 @@ class EquipmentPool extends Model
         'name',
         'address',
         'city',
+        'province_code', 'province_name', 'regency_code', 'regency_name',
+        'district_code', 'district_name', 'village_code', 'village_name',
         'latitude',
         'longitude',
         'is_active',

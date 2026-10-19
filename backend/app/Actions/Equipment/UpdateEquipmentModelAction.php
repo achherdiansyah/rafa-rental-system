@@ -14,8 +14,9 @@ class UpdateEquipmentModelAction
     public function execute(EquipmentModel $model, array $data): EquipmentModel
     {
         $model->update($data);
-        $model->load('type');
+        $model->load(['type', 'pool']);
 
         return $model;
     }
 }
+

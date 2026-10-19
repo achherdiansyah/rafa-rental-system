@@ -12,6 +12,10 @@ import { EmptyState } from '@/components/feedback/EmptyState'
 import { Alert } from '@/components/feedback/Alert'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { useToast } from '@/hooks/useToast'
+import { RegionSelects } from '@/features/location/RegionSelects'
+import { MapLocationPicker } from '@/features/location/MapLocationPicker'
+import { emptyRegion } from '@/features/location/regionService'
+import type { RegionValue } from '@/features/location/regionService'
 
 interface PoolForm {
   name: string
@@ -41,6 +45,7 @@ export const AdminPoolsPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editing, setEditing] = useState<EquipmentPool | null>(null)
   const [form, setForm] = useState<PoolForm>(emptyForm)
+  const [region, setRegion] = useState<RegionValue>(emptyRegion)
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const [isSaving, setIsSaving] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<EquipmentPool | null>(null)
@@ -66,6 +71,7 @@ export const AdminPoolsPage: React.FC = () => {
   const openCreate = () => {
     setEditing(null)
     setForm(emptyForm)
+    setRegion(emptyRegion)
     setFormErrors({})
     setIsModalOpen(true)
   }
@@ -79,6 +85,12 @@ export const AdminPoolsPage: React.FC = () => {
       latitude: pool.latitude !== null && pool.latitude !== undefined ? String(pool.latitude) : '',
       longitude: pool.longitude !== null && pool.longitude !== undefined ? String(pool.longitude) : '',
       is_active: pool.is_active,
+    })
+    setRegion({
+      province_code: pool.province_code ?? '', province_name: pool.province_name ?? '',
+      regency_code: pool.regency_code ?? '', regency_name: pool.regency_name ?? '',
+      district_code: pool.district_code ?? '', district_name: pool.district_name ?? '',
+      village_code: pool.village_code ?? '', village_name: pool.village_name ?? '',
     })
     setFormErrors({})
     setIsModalOpen(true)
@@ -99,6 +111,7 @@ export const AdminPoolsPage: React.FC = () => {
     const latRaw = form.latitude.trim()
     const lngRaw = form.longitude.trim()
 
+    if (!region.province_code || !region.regency_code || !region.district_code || !region.village_code) next.region = 'Wilayah lengkap wajib dipilih.'
     if (!latRaw) next.latitude = 'Latitude wajib diisi.'
     if (!lngRaw) next.longitude = 'Longitude wajib diisi.'
 
@@ -128,7 +141,8 @@ export const AdminPoolsPage: React.FC = () => {
     const payload: EquipmentPoolPayload = {
       name: form.name,
       address: form.address,
-      city: form.city,
+      city: region.regency_name || form.city,
+      ...region,
       latitude: Number(form.latitude),
       longitude: Number(form.longitude),
       is_active: form.is_active,
@@ -239,10 +253,13 @@ export const AdminPoolsPage: React.FC = () => {
             onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
             required
           />
-          <Input
-            label="Kota"
-            value={form.city ?? ''}
-            onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
+          <RegionSelects value={region} onChange={setRegion} errors={{ province_code: formErrors.region, regency_code: formErrors.region, district_code: formErrors.region, village_code: formErrors.region }} disabled={isSaving} />
+          <MapLocationPicker
+            latitude={form.latitude ? Number(form.latitude) : null}
+            longitude={form.longitude ? Number(form.longitude) : null}
+            onChange={(lat, lng) => setForm((f) => ({ ...f, latitude: String(lat), longitude: String(lng) }))}
+            error={formErrors.latitude || formErrors.longitude}
+            disabled={isSaving}
           />
           <div className="grid grid-cols-2 gap-3">
             <Input

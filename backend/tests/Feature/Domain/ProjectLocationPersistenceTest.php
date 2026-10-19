@@ -46,6 +46,8 @@ class ProjectLocationPersistenceTest extends TestCase
             'city' => 'Karawang',
             'pic_name' => 'PIC A',
             'pic_phone' => '081211111111',
+            'latitude' => -6.3,
+            'longitude' => 107.3,
         ]);
         $create->assertCreated();
         $createdId = $create->json('data.id');
@@ -91,6 +93,8 @@ class ProjectLocationPersistenceTest extends TestCase
             'city' => 'Jakarta',
             'pic_name' => 'A',
             'pic_phone' => '081200',
+            'latitude' => -6.3,
+            'longitude' => 107.3,
         ])->assertCreated()->json('data.id');
 
         Sanctum::actingAs($userB);
@@ -114,6 +118,8 @@ class ProjectLocationPersistenceTest extends TestCase
             'city' => 'Depok',
             'pic_name' => 'Dono',
             'pic_phone' => '0813',
+            'latitude' => -6.3,
+            'longitude' => 107.3,
         ])->assertCreated()->json('data.id');
 
         // UPDATE → persist → re-read
@@ -132,3 +138,4 @@ class ProjectLocationPersistenceTest extends TestCase
         $this->assertNotContains($id, collect($this->getJson('/api/v1/project-locations')->json('data'))->pluck('id')->all());
     }
 }
+

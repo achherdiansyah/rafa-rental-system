@@ -15,6 +15,18 @@ vi.mock('./services/projectLocationService', () => ({
   },
 }))
 
+vi.mock('@/features/location/RegionSelects', () => ({
+  RegionSelects: ({ onChange }: any) => (
+    <button type="button" onClick={() => onChange({ province_code: '32', province_name: 'Jawa Barat', regency_code: '32.73', regency_name: 'Kota Bandung', district_code: '32.73.01', district_name: 'Sukasari', village_code: '32.73.01.1001', village_name: 'Sukarasa' })}>Pilih Wilayah</button>
+  ),
+}))
+
+vi.mock('@/features/location/MapLocationPicker', () => ({
+  MapLocationPicker: ({ onChange }: any) => (
+    <button type="button" onClick={() => onChange(-6.3, 107.3)}>Pilih Titik</button>
+  ),
+}))
+
 vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({ isAuthenticated: true }),
 }))
@@ -84,7 +96,7 @@ describe('Project Locations UI Suite', () => {
     await waitFor(() => {
       expect(screen.getByText(/nama proyek wajib diisi/i)).toBeInTheDocument()
       expect(screen.getByText(/alamat proyek wajib diisi/i)).toBeInTheDocument()
-      expect(screen.getByText(/kota wajib diisi/i)).toBeInTheDocument()
+      expect(projectLocationService.createLocation).not.toHaveBeenCalled()
     })
   })
 
@@ -103,7 +115,8 @@ describe('Project Locations UI Suite', () => {
     fireEvent.change(screen.getByLabelText(/nama proyek \/ area/i), { target: { value: 'Tol Serpong Balaraja' } })
     fireEvent.change(screen.getByLabelText(/nama pic lapangan/i), { target: { value: 'Dedi Kusnadi' } })
     fireEvent.change(screen.getByLabelText(/nomor telepon pic/i), { target: { value: '0811223344' } })
-    fireEvent.change(screen.getByLabelText(/kota \/ kabupaten/i), { target: { value: 'Tangerang' } })
+    fireEvent.click(screen.getByRole('button', { name: /pilih wilayah/i }))
+    fireEvent.click(screen.getByRole('button', { name: /pilih titik/i }))
     fireEvent.change(screen.getByLabelText(/alamat lengkap proyek/i), { target: { value: 'KM 12 Tol Serpong' } })
 
     const submitBtn = screen.getByRole('button', { name: /daftarkan lokasi/i })
@@ -156,7 +169,8 @@ describe('Project Locations UI Suite', () => {
     fireEvent.change(screen.getByLabelText(/nama proyek \/ area/i), { target: { value: 'Site Baru Karawang' } })
     fireEvent.change(screen.getByLabelText(/nama pic lapangan/i), { target: { value: 'Agus' } })
     fireEvent.change(screen.getByLabelText(/nomor telepon pic/i), { target: { value: '0811112222' } })
-    fireEvent.change(screen.getByLabelText(/kota \/ kabupaten/i), { target: { value: 'Karawang' } })
+    fireEvent.click(screen.getByRole('button', { name: /pilih wilayah/i }))
+    fireEvent.click(screen.getByRole('button', { name: /pilih titik/i }))
     fireEvent.change(screen.getByLabelText(/alamat lengkap proyek/i), { target: { value: 'MM2100' } })
 
     // After create, the list refresh returns BOTH existing + new location
@@ -179,3 +193,6 @@ describe('Project Locations UI Suite', () => {
     })
   })
 })
+
+
+

@@ -195,6 +195,14 @@ export interface EquipmentPool {
   name: string
   address: string
   city: string | null
+  province_code?: string | null
+  province_name?: string | null
+  regency_code?: string | null
+  regency_name?: string | null
+  district_code?: string | null
+  district_name?: string | null
+  village_code?: string | null
+  village_name?: string | null
   latitude: number | null
   longitude: number | null
   is_active: boolean
@@ -206,6 +214,14 @@ export interface EquipmentPoolPayload {
   name: string
   address: string
   city?: string
+  province_code?: string | null
+  province_name?: string | null
+  regency_code?: string | null
+  regency_name?: string | null
+  district_code?: string | null
+  district_name?: string | null
+  village_code?: string | null
+  village_name?: string | null
   latitude: number
   longitude: number
   is_active?: boolean
@@ -217,5 +233,7 @@ export interface EquipmentPriceFilterParams {
   page?: number
   per_page?: number
 }
+
+
 
 

@@ -56,6 +56,8 @@ class BookingWorkflowIntegrationTest extends TestCase
             'city' => 'Tangerang',
             'pic_name' => 'Budi',
             'pic_phone' => '08123',
+            'latitude' => -6.2,
+            'longitude' => 106.8,
         ]);
         $locRes->assertStatus(201);
         $locationId = $locRes->json('data.id');
@@ -240,3 +242,4 @@ class BookingWorkflowIntegrationTest extends TestCase
         $this->assertEquals($units[1]->id, $newAssignment->equipment_unit_id);
     }
 }
+
