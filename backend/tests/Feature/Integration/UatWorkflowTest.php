@@ -142,9 +142,7 @@ class UatWorkflowTest extends TestCase
             'end_hm' => 16,
         ])->assertCreated()->json('data.id');
 
-        Sanctum::actingAs($admin);
-        $this->postJson("/api/v1/timesheets/{$tsId}/submit")->assertOk();
-        $this->postJson("/api/v1/timesheets/{$tsId}/approve")->assertOk();
+        $this->finalizeTimesheet((int) $tsId, $admin);
         $this->assertEquals('APPROVED', Timesheet::find($tsId)->status->value);
 
         // ---------- 7) Return + inspection -> READY ----------

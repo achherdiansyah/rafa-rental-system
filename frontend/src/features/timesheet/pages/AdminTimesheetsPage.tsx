@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { Clock, CheckCircle2, XCircle, PenLine, History, Search, Plus } from 'lucide-react'
+import { Clock, CheckCircle2, XCircle, PenLine, History, Search } from 'lucide-react'
 import { timesheetService } from '../services/timesheetService'
-import { rentalService } from '@/features/rental/services/rentalService'
 import type { Timesheet, TimesheetRevision } from '@/types/timesheet'
 import type { Rental } from '@/types/rental'
 import { Card } from '@/components/ui/Card'
@@ -67,7 +66,7 @@ export const AdminTimesheetsPage: React.FC = () => {
   // Input Timesheet (admin records the field/operator daily report)
   const [createOpen, setCreateOpen] = useState(false)
   const [creating, setCreating] = useState(false)
-  const [rentals, setRentals] = useState<Rental[]>([])
+  const [rentals] = useState<Rental[]>([])
   const [createForm, setCreateForm] = useState({
     rental_detail_id: '',
     report_date: new Date().toISOString().slice(0, 10),
@@ -86,18 +85,6 @@ export const AdminTimesheetsPage: React.FC = () => {
         label: `${r.booking?.booking_code ?? `Rental #${r.id}`} · ${d.unit?.serial_number ?? 'unit'} · ${r.booking?.project_location?.project_name ?? ''}`,
       })),
     )
-
-  const openCreate = async () => {
-    setCreateErrors({})
-    setCreateForm((prev) => ({ ...prev, report_date: new Date().toISOString().slice(0, 10) }))
-    setCreateOpen(true)
-    try {
-      const res = await rentalService.getRentals({ per_page: 50 })
-      if (res.success && res.data) setRentals(res.data)
-    } catch {
-      // Rental list stays empty; the dropdown will show no selectable units
-    }
-  }
 
   const handleCreate = async () => {
     const errors: Record<string, string> = {}
@@ -261,9 +248,6 @@ reason: '',
           <p className="text-sm text-slate-500 mt-1">Setujui, tolak, atau koreksi timesheet harian dari unit rental.</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="primary" size="sm" className="gap-1.5 shrink-0" onClick={openCreate} leftIcon={<Plus size={14} />}>
-            Input Timesheet
-          </Button>
           <Search size={15} className="text-slate-400" />
           <Select
             value={filter}

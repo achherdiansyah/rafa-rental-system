@@ -71,6 +71,8 @@ class TimesheetValidationTest extends TestCase
             'operator_name' => 'Bambang',
         ])->json('data.id');
 
+        $this->finalizeTimesheet((int) $timesheetId, $admin);
+
         return [$admin, $owner, Timesheet::find($timesheetId)];
     }
 

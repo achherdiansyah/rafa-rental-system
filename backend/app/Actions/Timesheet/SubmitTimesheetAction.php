@@ -48,14 +48,14 @@ class SubmitTimesheetAction
                 if (! $assigned) {
                     throw new AuthorizationException('Anda hanya dapat submit Timesheet untuk penugasan aktif Anda.');
                 }
+            }
 
-                $hasPaper = $timesheet->attachments
-                    ->where('document_type', 'TIMESHEET_PAPER')
-                    ->isNotEmpty();
+            $hasPaper = $timesheet->attachments
+                ->where('document_type', 'TIMESHEET_PAPER')
+                ->isNotEmpty();
 
-                if (! $hasPaper) {
-                    throw new BusinessRuleException('Foto formulir Timesheet kertas wajib diunggah sebelum submit.');
-                }
+            if (! $hasPaper) {
+                throw new BusinessRuleException('Foto formulir Timesheet kertas wajib diunggah sebelum submit.');
             }
 
             if ($timesheet->rentalDetail?->rental && $this->paymentHolds->isHeld($timesheet->rentalDetail->rental)) {

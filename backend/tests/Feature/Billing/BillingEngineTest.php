@@ -121,9 +121,7 @@ class BillingEngineTest extends TestCase
                 'break_minutes' => 0,
             ])->json('data.id');
 
-            Sanctum::actingAs($admin);
-            $this->postJson("/api/v1/timesheets/{$tsId}/submit")->assertOk();
-            $this->postJson("/api/v1/timesheets/{$tsId}/approve")->assertOk();
+            $this->finalizeTimesheet((int) $tsId, $admin);
         }
 
         // Return -> inspect -> READY
@@ -275,6 +273,7 @@ class BillingEngineTest extends TestCase
             'start_hm' => 8,
             'end_hm' => 18.5,
         ])->json('data.id');
+        $this->finalizeTimesheet((int) $tsApprovedId, $admin);
 
         $this->assertSame(TimesheetStatus::DRAFT->value, Timesheet::find($tsDraft->id)->status->value);
 

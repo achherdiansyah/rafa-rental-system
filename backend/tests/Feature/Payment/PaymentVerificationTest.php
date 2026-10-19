@@ -86,6 +86,7 @@ class PaymentVerificationTest extends TestCase
             'start_hm' => 8,
             'end_hm' => 8 + $hours,
         ])->json('data.id');
+        $this->finalizeTimesheet((int) $tsId, $admin);
 
         foreach (['return', 'inspect'] as $target) {
             $this->postJson("/api/v1/rentals/{$rentalId}/{$target}")->assertOk();

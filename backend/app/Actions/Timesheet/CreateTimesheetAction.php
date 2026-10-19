@@ -11,14 +11,12 @@ use App\Models\Timesheet;
 use App\Models\User;
 use App\Services\Billing\PaymentHoldService;
 use App\Support\AuditLogger;
-use App\Actions\Invoice\CreateDailyInvoiceAction;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 
 class CreateTimesheetAction
 {
     public function __construct(
-        private readonly CreateDailyInvoiceAction $createDailyInvoice,
         private readonly PaymentHoldService $paymentHolds
     ) {}
 
@@ -96,10 +94,8 @@ class CreateTimesheetAction
                 throw new BusinessRuleException('Jam kerja aktual tidak konsisten dengan total breakdown + standby.');
             }
 
-            $status = $operator->isAdmin() || $operator->isOwner()
-                ? TimesheetStatus::APPROVED
-                : TimesheetStatus::DRAFT;
-
+            // No direct-entry bypass: every new operational Timesheet is DRAFT
+            // until Admin approval (only approval creates the Daily Invoice).
             $timesheet = Timesheet::create([
                 'rental_detail_id' => $rentalDetail->id,
                 'report_date' => $data['report_date'],
@@ -114,8 +110,8 @@ class CreateTimesheetAction
                 'operator_name' => $data['operator_name'] ?? $operator->name,
                 'notes' => $data['notes'] ?? null,
                 'signature_reference' => $data['signature_reference'] ?? null,
-                'status' => $status,
-                'approved_by' => $status === TimesheetStatus::APPROVED ? $operator->id : null,
+                'status' => TimesheetStatus::DRAFT,
+                'approved_by' => null,
             ]);
 
             AuditLogger::log('TIMESHEET_CREATED', $timesheet, [], [
@@ -123,14 +119,8 @@ class CreateTimesheetAction
                 'report_date' => $data['report_date'],
                 'total_work_hours' => $workHours,
                 'created_by' => $operator->id,
-                'status' => $status->value,
+                'status' => TimesheetStatus::DRAFT->value,
             ]);
-
-            // Admin legacy direct-entry is final immediately; Operator entries
-            // wait for Admin validation before a Daily Work Invoice exists.
-            if ($status === TimesheetStatus::APPROVED) {
-                $this->createDailyInvoice->execute($operator, $timesheet);
-            }
 
             $timesheet->load([
                 'rentalDetail.assignment.unit',

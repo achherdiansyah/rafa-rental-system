@@ -134,6 +134,7 @@ class DailyWorkBillingRulesTest extends TestCase
             'break_minutes' => 0,
         ]);
         $res1->assertCreated();
+        $this->finalizeTimesheet((int) $res1->json('data.id'), $admin);
 
         $ts1 = Timesheet::find($res1->json('data.id'));
         $this->assertEquals(TimesheetStatus::APPROVED->value, $ts1->status->value);
@@ -154,6 +155,7 @@ class DailyWorkBillingRulesTest extends TestCase
             'break_minutes' => 0,
         ]);
         $res2->assertCreated();
+        $this->finalizeTimesheet((int) $res2->json('data.id'), $admin);
 
         $ts2 = Timesheet::find($res2->json('data.id'));
         $this->assertEquals(TimesheetStatus::APPROVED->value, $ts2->status->value);
@@ -194,6 +196,7 @@ class DailyWorkBillingRulesTest extends TestCase
             'break_minutes' => 0,
         ]);
         $res->assertCreated();
+        $this->finalizeTimesheet((int) $res->json('data.id'), $admin);
 
         $ts = Timesheet::find($res->json('data.id'));
         $inv = Invoice::where('timesheet_id', $ts->id)->first();
@@ -242,6 +245,7 @@ class DailyWorkBillingRulesTest extends TestCase
             'break_minutes' => 0,
         ]);
         $res->assertCreated();
+        $this->finalizeTimesheet((int) $res->json('data.id'), $admin);
 
         $ts = Timesheet::find($res->json('data.id'));
         $inv = Invoice::where('timesheet_id', $ts->id)->first();
@@ -277,6 +281,7 @@ class DailyWorkBillingRulesTest extends TestCase
                 'break_minutes' => 0,
             ]);
             $res->assertCreated();
+            $this->finalizeTimesheet((int) $res->json('data.id'), $admin);
         }
 
         $unpaidCount = Invoice::where('booking_id', $booking->id)
@@ -297,3 +302,4 @@ class DailyWorkBillingRulesTest extends TestCase
             ->assertJson(['code' => 'BUSINESS_RULE_VIOLATION']);
     }
 }
+

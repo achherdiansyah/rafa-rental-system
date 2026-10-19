@@ -91,6 +91,7 @@ class CoreFlowRegressionTest extends TestCase
             'start_hm' => 8,
             'end_hm' => 16,
         ])->json('data.id');
+        $this->finalizeTimesheet((int) $tsid, $admin);
 
         // 3) Return + inspection -> READY
         foreach (['return', 'inspect'] as $t) {

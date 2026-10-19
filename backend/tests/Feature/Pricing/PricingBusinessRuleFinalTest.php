@@ -236,6 +236,8 @@ class PricingBusinessRuleFinalTest extends TestCase
         ]);
         $res->assertCreated();
         $tsId = $res->json('data.id');
+        $this->assertEquals('DRAFT', Timesheet::find($tsId)->status->value);
+        $this->finalizeTimesheet((int) $tsId, $admin);
         $this->assertEquals('APPROVED', Timesheet::find($tsId)->status->value);
 
         // 8. User attempts to create timesheet -> FORBIDDEN (read-only)
@@ -304,6 +306,7 @@ class PricingBusinessRuleFinalTest extends TestCase
             'break_minutes' => 0,
         ]);
         $res->assertCreated();
+        $this->finalizeTimesheet((int) $res->json('data.id'), $admin);
 
         $ts = Timesheet::find($res->json('data.id'));
         $invoice = Invoice::where('timesheet_id', $ts->id)->firstOrFail();

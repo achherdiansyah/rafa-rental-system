@@ -89,6 +89,7 @@ class BillingPaymentIntegrationTest extends TestCase
             'start_hm' => 8,
             'end_hm' => 8 + $hours,
         ])->json('data.id');
+        $this->finalizeTimesheet((int) $tsId, $admin);
 
         foreach (['return', 'inspect'] as $t) {
             $this->postJson("/api/v1/rentals/{$rentalId}/{$t}")->assertOk();

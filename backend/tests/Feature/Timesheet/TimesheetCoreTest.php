@@ -15,6 +15,7 @@ use App\Models\EquipmentUnit;
 use App\Models\ProjectLocation;
 use App\Models\Rental;
 use App\Models\RentalDetail;
+use App\Models\Timesheet;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
@@ -91,12 +92,15 @@ class TimesheetCoreTest extends TestCase
         $response = $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id));
 
         $response->assertStatus(201)
-            ->assertJsonPath('data.status', TimesheetStatus::APPROVED->value)
+            ->assertJsonPath('data.status', TimesheetStatus::DRAFT->value)
             ->assertJsonPath('data.operator_name', 'Bambang Operator')
             ->assertJsonPath('data.signature_reference', 'sig-abc123')
             ->assertJsonPath('data.rental.unit_serial', EquipmentUnit::first()->serial_number);
 
-        $this->assertEqualsWithDelta(11.0, $response->json('data.total_work_hours'), 0.01); // 12 jam - 1 jam break
+        $this->assertEqualsWithDelta(11.0, $response->json('data.total_work_hours'), 0.01);
+
+        $this->finalizeTimesheet((int) $response->json('data.id'), $admin);
+        $this->assertEquals(TimesheetStatus::APPROVED, Timesheet::find($response->json('data.id'))->status);
     }
 
     public function test_calculation_no_rounding_without_break(): void
@@ -231,6 +235,7 @@ class TimesheetCoreTest extends TestCase
 
         Sanctum::actingAs($admin);
         $timesheetId = $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id))->json('data.id');
+        $this->finalizeTimesheet((int) $timesheetId, $admin);
 
         $submit = $this->postJson("/api/v1/timesheets/{$timesheetId}/submit");
         $submit->assertStatus(200)
