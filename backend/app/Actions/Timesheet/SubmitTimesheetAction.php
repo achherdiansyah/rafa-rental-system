@@ -39,15 +39,17 @@ class SubmitTimesheetAction
 
             $timesheet->loadMissing(['rentalDetail.rental', 'attachments']);
 
-            if ($actor->isOperator()) {
-                $assigned = $timesheet->rentalDetail?->operatorAssignments()
-                    ->where('operator_user_id', $actor->id)
-                    ->where('status', 'ACTIVE')
-                    ->exists();
+            if (! $actor->isOperator()) {
+                throw new AuthorizationException('Hanya Operator yang dapat submit Timesheet.');
+            }
 
-                if (! $assigned) {
-                    throw new AuthorizationException('Anda hanya dapat submit Timesheet untuk penugasan aktif Anda.');
-                }
+            $assigned = $timesheet->rentalDetail?->operatorAssignments()
+                ->where('operator_user_id', $actor->id)
+                ->where('status', 'ACTIVE')
+                ->exists();
+
+            if (! $assigned) {
+                throw new AuthorizationException('Anda hanya dapat submit Timesheet untuk penugasan aktif Anda.');
             }
 
             $hasPaper = $timesheet->attachments

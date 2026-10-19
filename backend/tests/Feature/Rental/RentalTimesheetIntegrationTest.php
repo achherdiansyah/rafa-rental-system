@@ -15,6 +15,7 @@ use App\Models\EquipmentModel;
 use App\Models\EquipmentUnit;
 use App\Models\ProjectLocation;
 use App\Models\Rental;
+use App\Models\RentalOperatorAssignment;
 use App\Models\Timesheet;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -132,7 +133,7 @@ class RentalTimesheetIntegrationTest extends TestCase
         /** 5) Timesheet: admin inputs daily hours based on operator report (8->16 minus 60min break = 7h) */
         $detail = $rental->details()->first();
         Sanctum::actingAs($admin);
-        $tsRes = $this->postJson('/api/v1/timesheets', [
+        $tsRes = $this->createTimesheetAsOperator( [
             'rental_detail_id' => $detail->id,
             'report_date' => now()->toDateString(),
             'start_hm' => 8.00,
@@ -147,9 +148,21 @@ class RentalTimesheetIntegrationTest extends TestCase
         $this->assertEqualsWithDelta(7.0, (float) $tsRes->json('data.total_work_hours'), 0.01);
         $this->assertEquals(TimesheetStatus::DRAFT->value, $tsRes->json('data.status'));
 
+        // Assign the same Operator to the second unit for this operational test.
+        $secondDetailId = (int) $rental->details()->get()[1]->id;
+        $operator = $this->operatorForRentalDetail((int) $rental->details()->first()->id);
+        RentalOperatorAssignment::create([
+            'rental_id' => $rental->id,
+            'rental_detail_id' => $secondDetailId,
+            'operator_user_id' => $operator->id,
+            'assigned_by' => $admin->id,
+            'started_at' => now(),
+            'status' => RentalOperatorAssignment::ACTIVE,
+        ]);
+
         // Timesheet only allowed while rental is ONGOING
-        $second = $this->postJson('/api/v1/timesheets', [
-            'rental_detail_id' => $rental->details()->get()[1]->id,
+        $second = $this->createTimesheetAsOperator( [
+            'rental_detail_id' => $secondDetailId,
             'report_date' => now()->toDateString(),
             'start_hm' => 8.00,
             'end_hm' => 12.00,
@@ -169,10 +182,8 @@ class RentalTimesheetIntegrationTest extends TestCase
         Storage::disk('local')->assertExists($timesheet->fresh()->attachments()->first()->file_path);
 
         /** 7) Submit for validation (admin, after input) - idempotent */
-        $this->attachTimesheetPaper((int) $tsId, $admin);
-        Sanctum::actingAs($admin);
-        $this->postJson("/api/v1/timesheets/{$tsId}/submit")
-            ->assertOk()->assertJsonPath('data.status', TimesheetStatus::SUBMITTED->value);
+        $this->submitTimesheet((int) $tsId);
+        $this->assertEquals(TimesheetStatus::SUBMITTED, Timesheet::find($tsId)->status);
 
         /** 8) Admin approves - idempotent */
         Sanctum::actingAs($admin);
@@ -279,7 +290,7 @@ class RentalTimesheetIntegrationTest extends TestCase
         $detail = Rental::find($rentalId)->details()->first()->id;
 
         Sanctum::actingAs($admin);
-        $tsId = $this->postJson('/api/v1/timesheets', [
+        $tsId = $this->createTimesheetAsOperator( [
             'rental_detail_id' => $detail,
             'report_date' => now()->toDateString(),
             'start_hm' => 8,
@@ -308,3 +319,4 @@ class RentalTimesheetIntegrationTest extends TestCase
         }
     }
 }
+

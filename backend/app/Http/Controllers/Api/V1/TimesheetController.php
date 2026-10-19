@@ -36,6 +36,7 @@ class TimesheetController extends ApiController
             'rentalDetail.rental.booking.projectLocation',
             'attachments',
             'revisions',
+            'invoice',
         ])->latest('report_date');
 
         if ($user->isOperator()) {
@@ -101,6 +102,7 @@ class TimesheetController extends ApiController
             'rentalDetail.rental.booking.projectLocation',
             'attachments',
             'revisions',
+            'invoice',
         ]);
 
         return $this->success(

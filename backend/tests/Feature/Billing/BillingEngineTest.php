@@ -113,7 +113,7 @@ class BillingEngineTest extends TestCase
             $hours = $hoursByDetail[$idx] ?? 8.5;
 
             Sanctum::actingAs($admin);
-            $tsId = $this->postJson('/api/v1/timesheets', [
+            $tsId = $this->createTimesheetAsOperator( [
                 'rental_detail_id' => $rd->id,
                 'report_date' => now()->toDateString(),
                 'start_hm' => 8,
@@ -267,7 +267,7 @@ class BillingEngineTest extends TestCase
         ]);
 
         Sanctum::actingAs($admin);
-        $tsApprovedId = $this->postJson('/api/v1/timesheets', [
+        $tsApprovedId = $this->createTimesheetAsOperator( [
             'rental_detail_id' => $rd->id,
             'report_date' => now()->toDateString(),
             'start_hm' => 8,
@@ -306,3 +306,4 @@ class BillingEngineTest extends TestCase
         app(GenerateRentalBillAction::class)->execute($intruder, $rental);
     }
 }
+

@@ -38,6 +38,15 @@ class TimesheetResource extends JsonResource
             'rejection_reason' => $this->whenLoaded('revisions', function () {
                 return $this->revisions->sortByDesc('version')->first()?->revision_reason;
             }),
+            'invoice' => $this->whenLoaded('invoice', function () {
+                return $this->invoice ? [
+                    'id' => $this->invoice->id,
+                    'invoice_number' => $this->invoice->invoice_number,
+                    'status' => $this->invoice->status instanceof \BackedEnum ? $this->invoice->status->value : $this->invoice->status,
+                    'grand_total' => (float) $this->invoice->grand_total,
+                    'due_at' => $this->invoice->due_at?->toIso8601String(),
+                ] : null;
+            }),
             'paper_form' => $this->whenLoaded('attachments', function () {
                 $paper = $this->attachments
                     ->where('document_type', 'TIMESHEET_PAPER')

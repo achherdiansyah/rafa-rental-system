@@ -62,7 +62,7 @@ class TimesheetValidationTest extends TestCase
         $rentalDetail = RentalDetail::factory()->create(['rental_id' => $rental->id, 'assignment_id' => $assignment->id]);
 
         Sanctum::actingAs($admin);
-        $timesheetId = $this->postJson('/api/v1/timesheets', [
+        $timesheetId = $this->createTimesheetAsOperator( [
             'rental_detail_id' => $rentalDetail->id,
             'report_date' => now()->toDateString(),
             'start_hm' => 100.00,
@@ -169,6 +169,7 @@ class TimesheetValidationTest extends TestCase
             'reason' => 'Perlu konfirmasi jam operator.',
         ])->assertStatus(200);
 
+        Sanctum::actingAs($this->operatorForRentalDetail((int) $timesheet->rental_detail_id));
         $res = $this->postJson("/api/v1/timesheets/{$timesheet->id}/submit");
         $res->assertStatus(200)
             ->assertJsonPath('data.status', TimesheetStatus::SUBMITTED->value);
@@ -245,3 +246,4 @@ class TimesheetValidationTest extends TestCase
             ->with(\Mockery::pattern('/TIMESHEET_REVISED/'), \Mockery::type('array'));
     }
 }
+

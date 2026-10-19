@@ -126,7 +126,7 @@ class DailyWorkBillingRulesTest extends TestCase
 
         // Day 1: 7 hours × 350.000 = Rp 2.450.000
         $day1 = now()->subDays(2)->toDateString();
-        $res1 = $this->postJson('/api/v1/timesheets', [
+        $res1 = $this->createTimesheetAsOperator( [
             'rental_detail_id' => $rd->id,
             'report_date' => $day1,
             'start_hm' => 10,
@@ -147,7 +147,7 @@ class DailyWorkBillingRulesTest extends TestCase
 
         // Day 2: 6 hours × 350.000 = Rp 2.100.000
         $day2 = now()->subDays(1)->toDateString();
-        $res2 = $this->postJson('/api/v1/timesheets', [
+        $res2 = $this->createTimesheetAsOperator( [
             'rental_detail_id' => $rd->id,
             'report_date' => $day2,
             'start_hm' => 17,
@@ -188,7 +188,7 @@ class DailyWorkBillingRulesTest extends TestCase
         $rd = Rental::findOrFail($rentalId)->details()->first();
 
         // 10 hours: 8 normal × 350.000 (2.800.000) + 2 overtime × 400.000 (800.000) = 3.600.000
-        $res = $this->postJson('/api/v1/timesheets', [
+        $res = $this->createTimesheetAsOperator( [
             'rental_detail_id' => $rd->id,
             'report_date' => now()->toDateString(),
             'start_hm' => 8,
@@ -237,7 +237,7 @@ class DailyWorkBillingRulesTest extends TestCase
 
         $rd = Rental::findOrFail($rentalId)->details()->first();
 
-        $res = $this->postJson('/api/v1/timesheets', [
+        $res = $this->createTimesheetAsOperator( [
             'rental_detail_id' => $rd->id,
             'report_date' => now()->toDateString(),
             'start_hm' => 8,
@@ -273,7 +273,7 @@ class DailyWorkBillingRulesTest extends TestCase
         // Days 1, 2, 3: Success, creates 3 unpaid daily invoices
         for ($i = 3; $i >= 1; $i--) {
             $date = now()->subDays($i)->toDateString();
-            $res = $this->postJson('/api/v1/timesheets', [
+            $res = $this->createTimesheetAsOperator( [
                 'rental_detail_id' => $rd->id,
                 'report_date' => $date,
                 'start_hm' => 8 + (3 - $i) * 10,
@@ -290,7 +290,7 @@ class DailyWorkBillingRulesTest extends TestCase
         $this->assertEquals(3, $unpaidCount);
 
         // Day 4: Must fail because max_outstanding_days = 3
-        $res4 = $this->postJson('/api/v1/timesheets', [
+        $res4 = $this->createTimesheetAsOperator( [
             'rental_detail_id' => $rd->id,
             'report_date' => now()->toDateString(),
             'start_hm' => 40,
@@ -302,4 +302,5 @@ class DailyWorkBillingRulesTest extends TestCase
             ->assertJson(['code' => 'BUSINESS_RULE_VIOLATION']);
     }
 }
+
 

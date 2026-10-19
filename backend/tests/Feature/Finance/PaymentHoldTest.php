@@ -17,6 +17,7 @@ use App\Models\Invoice;
 use App\Models\ProjectLocation;
 use App\Models\Rental;
 use App\Models\RentalDetail;
+use App\Models\RentalOperatorAssignment;
 use App\Models\RentalPaymentHold;
 use App\Models\Timesheet;
 use App\Models\User;
@@ -159,6 +160,66 @@ class PaymentHoldTest extends TestCase
 
         $this->assertSame(0, RentalPaymentHold::where('rental_id', $rental->id)->where('status', 'ACTIVE')->count());
         $this->assertEquals(RentalStatus::ONGOING, $rental->fresh()->status);
+    }
+
+    public function test_resume_notifies_owner_active_operator_and_admin_only_once(): void
+    {
+        ['rental' => $rental, 'detail' => $detail, 'admin' => $admin] = $this->setupRental();
+        $owner = $rental->booking->user;
+        $activeOperator = User::factory()->operator()->create();
+        $endedOperator = User::factory()->operator()->create();
+
+        RentalOperatorAssignment::create([
+            'rental_id' => $rental->id,
+            'rental_detail_id' => $detail->id,
+            'operator_user_id' => $activeOperator->id,
+            'assigned_by' => $admin->id,
+            'started_at' => now(),
+            'status' => RentalOperatorAssignment::ACTIVE,
+        ]);
+        RentalOperatorAssignment::create([
+            'rental_id' => $rental->id,
+            'rental_detail_id' => $detail->id,
+            'operator_user_id' => $endedOperator->id,
+            'assigned_by' => $admin->id,
+            'started_at' => now()->subDay(),
+            'ended_at' => now(),
+            'status' => RentalOperatorAssignment::ENDED,
+        ]);
+
+        $invoices = [
+            $this->dailyInvoice($rental, $detail, 'INV/NOTIF1'),
+            $this->dailyInvoice($rental, $detail, 'INV/NOTIF2'),
+            $this->dailyInvoice($rental, $detail, 'INV/NOTIF3'),
+        ];
+        $this->artisan('rentals:evaluate-payment-holds')->assertSuccessful();
+
+        foreach ($invoices as $invoice) {
+            $invoice->update(['paid_amount' => $invoice->grand_total, 'status' => InvoiceStatus::PAID]);
+        }
+
+        Sanctum::actingAs($admin);
+        $this->postJson("/api/v1/admin/rentals/{$rental->id}/payment-hold/resume", [
+            'reason' => 'Semua invoice sudah lunas dan diverifikasi.',
+        ])->assertOk();
+
+        $eventCount = fn (User $user) => $user->notifications()
+            ->get()
+            ->filter(fn ($n) => ($n->data['event'] ?? null) === 'PAYMENT_HOLD_RESOLVED')
+            ->count();
+
+        $this->assertSame(1, $eventCount($owner));
+        $this->assertSame(1, $eventCount($activeOperator));
+        $this->assertSame(1, $eventCount($admin));
+        $this->assertSame(0, $eventCount($endedOperator));
+
+        // Repeating resume on an already resolved hold must not create new notifications.
+        $this->postJson("/api/v1/admin/rentals/{$rental->id}/payment-hold/resume", [
+            'reason' => 'Percobaan resume ulang.',
+        ])->assertStatus(409);
+        $this->assertSame(1, $eventCount($owner));
+        $this->assertSame(1, $eventCount($activeOperator));
+        $this->assertSame(1, $eventCount($admin));
     }
 
     public function test_partial_payment_still_counts_as_outstanding(): void

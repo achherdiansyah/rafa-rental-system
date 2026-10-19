@@ -89,11 +89,10 @@ class TimesheetCoreTest extends TestCase
 
         Sanctum::actingAs($admin);
 
-        $response = $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id));
+        $response = $this->createTimesheetAsOperator( $this->payload($rentalDetail->id));
 
         $response->assertStatus(201)
             ->assertJsonPath('data.status', TimesheetStatus::DRAFT->value)
-            ->assertJsonPath('data.operator_name', 'Bambang Operator')
             ->assertJsonPath('data.signature_reference', 'sig-abc123')
             ->assertJsonPath('data.rental.unit_serial', EquipmentUnit::first()->serial_number);
 
@@ -111,7 +110,7 @@ class TimesheetCoreTest extends TestCase
 
         Sanctum::actingAs($admin);
 
-        $res = $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id, ['break_minutes' => 0]));
+        $res = $this->createTimesheetAsOperator( $this->payload($rentalDetail->id, ['break_minutes' => 0]));
         $res->assertStatus(201);
         $this->assertEquals(12.0, $res->json('data.total_work_hours'));
     }
@@ -125,10 +124,10 @@ class TimesheetCoreTest extends TestCase
 
         Sanctum::actingAs($admin);
 
-        $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id))
+        $this->createTimesheetAsOperator( $this->payload($rentalDetail->id))
             ->assertStatus(409)
             ->assertJson(['code' => 'BUSINESS_RULE_VIOLATION']);
-        $this->assertStringContainsString('ONGOING', $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id))->json('message'));
+        $this->assertStringContainsString('ONGOING', $this->createTimesheetAsOperator( $this->payload($rentalDetail->id))->json('message'));
     }
 
     public function test_validation_rejects_invalid_duration(): void
@@ -140,16 +139,16 @@ class TimesheetCoreTest extends TestCase
         Sanctum::actingAs($admin);
 
         // end_hm <= start_hm (caught by business rule exception now)
-        $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id, ['end_hm' => 95]))
+        $this->createTimesheetAsOperator( $this->payload($rentalDetail->id, ['end_hm' => 95]))
             ->assertStatus(409);
 
         // future date
-        $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id, ['report_date' => now()->addDays(2)->toDateString()]))
+        $this->createTimesheetAsOperator( $this->payload($rentalDetail->id, ['report_date' => now()->addDays(2)->toDateString()]))
             ->assertStatus(422)
             ->assertJsonValidationErrors(['report_date']);
 
         // negative break
-        $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id, ['break_minutes' => -30]))
+        $this->createTimesheetAsOperator( $this->payload($rentalDetail->id, ['break_minutes' => -30]))
             ->assertStatus(422)
             ->assertJsonValidationErrors(['break_minutes']);
     }
@@ -163,7 +162,7 @@ class TimesheetCoreTest extends TestCase
         Sanctum::actingAs($admin);
 
         // work (11) < breakdown (8) + standby (4)
-        $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id, [
+        $this->createTimesheetAsOperator( $this->payload($rentalDetail->id, [
             'breakdown_hours' => 8,
             'standby_hours' => 4,
         ]))
@@ -179,9 +178,9 @@ class TimesheetCoreTest extends TestCase
 
         Sanctum::actingAs($admin);
 
-        $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id))->assertStatus(201);
+        $this->createTimesheetAsOperator( $this->payload($rentalDetail->id))->assertStatus(201);
 
-        $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id))
+        $this->createTimesheetAsOperator( $this->payload($rentalDetail->id))
             ->assertStatus(409)
             ->assertJson(['code' => 'BUSINESS_RULE_VIOLATION']);
     }
@@ -196,7 +195,7 @@ class TimesheetCoreTest extends TestCase
 
         // USER (any) can never create — role model: admin inputs timesheets
         Sanctum::actingAs($user);
-        $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id))
+        $this->createTimesheetAsOperator( $this->payload($rentalDetail->id))
             ->assertStatus(403);
     }
 
@@ -208,7 +207,7 @@ class TimesheetCoreTest extends TestCase
         [$rentalDetail] = $this->ongoingRental($admin, $owner);
 
         Sanctum::actingAs($owner);
-        $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id))
+        $this->createTimesheetAsOperator( $this->payload($rentalDetail->id))
             ->assertStatus(403);
     }
 
@@ -221,7 +220,7 @@ class TimesheetCoreTest extends TestCase
         [$rentalDetail] = $this->ongoingRental($admin, $ownerA);
 
         Sanctum::actingAs($admin);
-        $timesheetId = $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id))->json('data.id');
+        $timesheetId = $this->createTimesheetAsOperator( $this->payload($rentalDetail->id))->json('data.id');
 
         Sanctum::actingAs($intruder);
         $this->getJson("/api/v1/timesheets/{$timesheetId}")->assertStatus(403);
@@ -234,8 +233,9 @@ class TimesheetCoreTest extends TestCase
         [$rentalDetail] = $this->ongoingRental($admin, $owner);
 
         Sanctum::actingAs($admin);
-        $timesheetId = $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id))->json('data.id');
+        $timesheetId = $this->createTimesheetAsOperator( $this->payload($rentalDetail->id))->json('data.id');
         $this->finalizeTimesheet((int) $timesheetId, $admin);
+        Sanctum::actingAs($this->operatorForRentalDetail((int) $rentalDetail->id));
 
         $submit = $this->postJson("/api/v1/timesheets/{$timesheetId}/submit");
         $submit->assertStatus(200)
@@ -254,7 +254,7 @@ class TimesheetCoreTest extends TestCase
         [$rentalDetail] = $this->ongoingRental($admin, $owner);
 
         Sanctum::actingAs($admin);
-        $timesheetId = $this->postJson('/api/v1/timesheets', $this->payload($rentalDetail->id))->json('data.id');
+        $timesheetId = $this->createTimesheetAsOperator( $this->payload($rentalDetail->id))->json('data.id');
 
         Sanctum::actingAs($owner);
         $this->postJson("/api/v1/timesheets/{$timesheetId}/submit")

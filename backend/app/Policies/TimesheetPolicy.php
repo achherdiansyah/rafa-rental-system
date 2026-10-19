@@ -33,7 +33,8 @@ class TimesheetPolicy
      */
     public function create(User $user): bool
     {
-        return $user->isAdmin() || $user->isOperator();
+        // Only field Operators create operational Timesheets. Admin only validates.
+        return $user->isOperator();
     }
 
     /**
@@ -42,14 +43,11 @@ class TimesheetPolicy
      */
     public function submit(User $user, Timesheet $timesheet): bool
     {
-        if ($user->isAdmin()) {
-            return true;
-        }
-
         return $user->isOperator()
-            && $timesheet->rentalDetail?->operatorAssignments()
+            && ($timesheet->rentalDetail?->operatorAssignments()
                 ->where('operator_user_id', $user->id)
-                ->exists() ?? false;
+                ->where('status', 'ACTIVE')
+                ->exists() ?? false);
     }
 
     public function uploadPaper(User $user, Timesheet $timesheet): bool

@@ -227,7 +227,7 @@ class PricingBusinessRuleFinalTest extends TestCase
 
         // 7. Admin inputs timesheet -> auto valid / APPROVED
         Sanctum::actingAs($admin);
-        $res = $this->postJson('/api/v1/timesheets', [
+        $res = $this->createTimesheetAsOperator( [
             'rental_detail_id' => $rd->id,
             'report_date' => now()->toDateString(),
             'start_time' => '08:00',
@@ -242,7 +242,7 @@ class PricingBusinessRuleFinalTest extends TestCase
 
         // 8. User attempts to create timesheet -> FORBIDDEN (read-only)
         Sanctum::actingAs($user);
-        $this->postJson('/api/v1/timesheets', [
+        $this->createTimesheetAsOperator( [
             'rental_detail_id' => $rd->id,
             'report_date' => now()->subDay()->toDateString(),
             'start_time' => '08:00',
@@ -298,7 +298,7 @@ class PricingBusinessRuleFinalTest extends TestCase
         // 2h overtime * 300.000 = 600.000
         // Total Daily Invoice = 2.600.000
         Sanctum::actingAs($admin);
-        $res = $this->postJson('/api/v1/timesheets', [
+        $res = $this->createTimesheetAsOperator( [
             'rental_detail_id' => $rd->id,
             'report_date' => now()->toDateString(),
             'start_time' => '08:00',
@@ -326,3 +326,4 @@ class PricingBusinessRuleFinalTest extends TestCase
         $this->assertStringContainsString('Non All-in', $ot->description);
     }
 }
+

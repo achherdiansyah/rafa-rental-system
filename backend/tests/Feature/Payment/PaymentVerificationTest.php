@@ -80,7 +80,7 @@ class PaymentVerificationTest extends TestCase
 
         $rental = Rental::findOrFail($rentalId);
         Sanctum::actingAs($admin);
-        $tsId = $this->postJson('/api/v1/timesheets', [
+        $tsId = $this->createTimesheetAsOperator( [
             'rental_detail_id' => $rental->details()->first()->id,
             'report_date' => now()->toDateString(),
             'start_hm' => 8,
@@ -277,3 +277,4 @@ class PaymentVerificationTest extends TestCase
         return User::factory()->create(['role' => UserRole::USER]);
     }
 }
+

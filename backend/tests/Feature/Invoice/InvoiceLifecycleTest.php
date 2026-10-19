@@ -84,7 +84,7 @@ class InvoiceLifecycleTest extends TestCase
         $rental = Rental::findOrFail($rentalId);
         foreach ($rental->details as $rd) {
             Sanctum::actingAs($admin);
-            $tsId = $this->postJson('/api/v1/timesheets', [
+            $tsId = $this->createTimesheetAsOperator( [
                 'rental_detail_id' => $rd->id,
                 'report_date' => now()->toDateString(),
                 'start_hm' => 8,
@@ -331,3 +331,4 @@ class InvoiceLifecycleTest extends TestCase
         $this->assertStringStartsWith('%PDF-1.4', $res->getContent());
     }
 }
+

@@ -83,7 +83,7 @@ class BillingPaymentIntegrationTest extends TestCase
 
         $rental = Rental::findOrFail($rentalId);
         Sanctum::actingAs($admin);
-        $tsId = $this->postJson('/api/v1/timesheets', [
+        $tsId = $this->createTimesheetAsOperator( [
             'rental_detail_id' => $rental->details()->first()->id,
             'report_date' => now()->toDateString(),
             'start_hm' => 8,
@@ -245,3 +245,4 @@ class BillingPaymentIntegrationTest extends TestCase
         $this->assertEquals(100.00, (float) $after->paid_amount, 'paid_amount tidak dibukukan ulang.');
     }
 }
+

@@ -30,6 +30,13 @@ export interface Timesheet {
   signature?: TimesheetSignature | null
   paper_form?: { id: number; file_name: string; mime_type: string; file_size: number } | null
   rejection_reason?: string | null
+  invoice?: {
+    id: number
+    invoice_number: string
+    status: string
+    grand_total: number
+    due_at: string | null
+  } | null
   rental?: {
     rental_id: number
     booking_code: string | null

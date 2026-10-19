@@ -30,19 +30,17 @@ class CreateTimesheetAction
                 throw new BusinessRuleException('Rincian rental tidak ditemukan.');
             }
 
-            if (! $operator->isAdmin() && ! $operator->isOwner() && ! $operator->isOperator()) {
-                throw new BusinessRuleException('Hanya Admin atau Operator yang dapat menginput timesheet.');
+            if (! $operator->isOperator()) {
+                throw new AuthorizationException('Hanya Operator yang dapat membuat Timesheet operasional.');
             }
 
-            if ($operator->isOperator()) {
-                $assigned = RentalOperatorAssignment::where('rental_detail_id', $rentalDetail->id)
-                    ->where('operator_user_id', $operator->id)
-                    ->where('status', RentalOperatorAssignment::ACTIVE)
-                    ->exists();
+            $assigned = RentalOperatorAssignment::where('rental_detail_id', $rentalDetail->id)
+                ->where('operator_user_id', $operator->id)
+                ->where('status', RentalOperatorAssignment::ACTIVE)
+                ->exists();
 
-                if (! $assigned) {
-                    throw new AuthorizationException('Anda hanya dapat menginput Timesheet untuk unit yang ditugaskan kepada Anda.');
-                }
+            if (! $assigned) {
+                throw new AuthorizationException('Anda hanya dapat menginput Timesheet untuk unit yang ditugaskan kepada Anda.');
             }
 
             if ($rentalDetail->rental->status !== RentalStatus::ONGOING) {
@@ -107,7 +105,7 @@ class CreateTimesheetAction
                 'total_work_hours' => $workHours,
                 'standby_hours' => $standby,
                 'breakdown_hours' => $breakdown,
-                'operator_name' => $data['operator_name'] ?? $operator->name,
+                'operator_name' => $operator->name,
                 'notes' => $data['notes'] ?? null,
                 'signature_reference' => $data['signature_reference'] ?? null,
                 'status' => TimesheetStatus::DRAFT,

@@ -85,7 +85,7 @@ class CoreFlowRegressionTest extends TestCase
         // 2) Timesheet + approval (auto creates DAILY invoice)
         Sanctum::actingAs($admin);
         $rd = $rental->details()->first();
-        $tsid = $this->postJson('/api/v1/timesheets', [
+        $tsid = $this->createTimesheetAsOperator( [
             'rental_detail_id' => $rd->id,
             'report_date' => now()->toDateString(),
             'start_hm' => 8,
@@ -135,3 +135,4 @@ class CoreFlowRegressionTest extends TestCase
         $this->assertEquals(1, $invoice->details()->count());
     }
 }
+

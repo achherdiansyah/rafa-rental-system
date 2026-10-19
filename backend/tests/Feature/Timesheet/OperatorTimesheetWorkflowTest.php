@@ -105,7 +105,7 @@ class OperatorTimesheetWorkflowTest extends TestCase
         ['admin' => $admin, 'operator' => $operator, 'detail' => $detail] = $this->scenario();
 
         Sanctum::actingAs($operator);
-        $created = $this->postJson('/api/v1/timesheets', [
+        $created = $this->createTimesheetAsOperator( [
             'rental_detail_id' => $detail->id,
             'report_date' => now()->toDateString(),
             'start_time' => '08:00',
@@ -143,12 +143,36 @@ class OperatorTimesheetWorkflowTest extends TestCase
         $this->assertSame(1, Invoice::where('timesheet_id', $id)->count());
     }
 
+    public function test_admin_cannot_create_or_submit_operational_timesheet(): void
+    {
+        ['admin' => $admin, 'operator' => $operator, 'detail' => $detail] = $this->scenario();
+
+        Sanctum::actingAs($admin);
+        $this->postJson('/api/v1/timesheets', [
+            'rental_detail_id' => $detail->id,
+            'report_date' => now()->toDateString(),
+            'start_time' => '08:00',
+            'end_time' => '17:00',
+        ])->assertForbidden();
+
+        Sanctum::actingAs($operator);
+        $id = $this->postJson('/api/v1/timesheets', [
+            'rental_detail_id' => $detail->id,
+            'report_date' => now()->toDateString(),
+            'start_time' => '08:00',
+            'end_time' => '17:00',
+        ])->json('data.id');
+
+        Sanctum::actingAs($admin);
+        $this->postJson("/api/v1/timesheets/{$id}/submit")->assertForbidden();
+    }
+
     public function test_operator_cannot_create_or_submit_for_another_operators_assignment(): void
     {
         ['other' => $other, 'detail' => $detail] = $this->scenario();
 
         Sanctum::actingAs($other);
-        $this->postJson('/api/v1/timesheets', [
+        $this->createTimesheetAsOperator( [
             'rental_detail_id' => $detail->id,
             'report_date' => now()->toDateString(),
             'start_time' => '08:00',
@@ -169,7 +193,7 @@ class OperatorTimesheetWorkflowTest extends TestCase
         ]);
 
         Sanctum::actingAs($operator);
-        $this->postJson('/api/v1/timesheets', [
+        $this->createTimesheetAsOperator( [
             'rental_detail_id' => $detail->id,
             'report_date' => now()->toDateString(),
             'start_time' => '08:00',
@@ -182,7 +206,7 @@ class OperatorTimesheetWorkflowTest extends TestCase
         ['admin' => $admin, 'operator' => $operator, 'detail' => $detail] = $this->scenario();
 
         Sanctum::actingAs($operator);
-        $id = $this->postJson('/api/v1/timesheets', [
+        $id = $this->createTimesheetAsOperator( [
             'rental_detail_id' => $detail->id,
             'report_date' => now()->toDateString(),
             'start_time' => '08:00',
@@ -206,4 +230,5 @@ class OperatorTimesheetWorkflowTest extends TestCase
         $this->assertSame(1, Invoice::where('timesheet_id', $id)->count());
     }
 }
+
 

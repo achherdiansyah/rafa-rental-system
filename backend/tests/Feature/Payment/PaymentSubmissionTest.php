@@ -79,7 +79,7 @@ class PaymentSubmissionTest extends TestCase
         // Record timesheet while rental is ONGOING (auto-approved and invoice auto-created)
         $rental = Rental::findOrFail($rentalId);
         Sanctum::actingAs($admin);
-        $tsId = $this->postJson('/api/v1/timesheets', [
+        $tsId = $this->createTimesheetAsOperator( [
             'rental_detail_id' => $rental->details()->first()->id,
             'report_date' => now()->toDateString(),
             'start_hm' => 8,
@@ -251,3 +251,4 @@ class PaymentSubmissionTest extends TestCase
         $this->getJson("/api/v1/payments/{$payment->id}/proof")->assertOk();
     }
 }
+

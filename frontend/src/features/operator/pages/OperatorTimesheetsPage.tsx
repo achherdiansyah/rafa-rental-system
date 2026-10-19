@@ -62,6 +62,25 @@ export const OperatorTimesheetsPage: React.FC<{ history?: boolean }> = ({ histor
 
   const ongoing = assignments.filter((a) => a.rental_status === 'ONGOING' && a.status === 'ACTIVE')
 
+  const pickFile = (picked: File | null) => {
+    if (!picked) {
+      setFile(null)
+      return
+    }
+    const allowed = ['image/jpeg', 'image/png', 'image/webp']
+    if (!allowed.includes(picked.type)) {
+      showError('Tipe file tidak diizinkan. Gunakan JPG, PNG, atau WebP.')
+      setFile(null)
+      return
+    }
+    if (picked.size > 5 * 1024 * 1024) {
+      showError('Ukuran file melebihi 5 MB.')
+      setFile(null)
+      return
+    }
+    setFile(picked)
+  }
+
   const handleCreate = async () => {
     if (!form.rental_detail_id) return showError('Pilih unit rental ONGOING.')
     if (!form.start_time || !form.end_time) return showError('Jam mulai dan selesai wajib diisi.')
@@ -165,7 +184,7 @@ export const OperatorTimesheetsPage: React.FC<{ history?: boolean }> = ({ histor
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
-                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                  onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
                   className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-primary-50 file:px-3 file:py-2 file:text-primary-700"
                 />
                 <p className="mt-1 text-xs text-slate-400">JPG/PNG/WebP maksimal 5 MB, disimpan privat.</p>
@@ -181,7 +200,7 @@ export const OperatorTimesheetsPage: React.FC<{ history?: boolean }> = ({ histor
       {history && (
         <Card className="p-4">
           <label className="block text-sm font-medium text-slate-700 mb-1.5">Pilih foto untuk Timesheet yang ditolak / draft</label>
-          <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="block w-full text-sm" />
+          <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => pickFile(e.target.files?.[0] ?? null)} className="block w-full text-sm" />
         </Card>
       )}
 
@@ -202,6 +221,11 @@ export const OperatorTimesheetsPage: React.FC<{ history?: boolean }> = ({ histor
                 {t.start_time ?? t.start_hm} → {t.end_time ?? t.end_hm} • {t.total_work_hours} jam
               </p>
               {t.rejection_reason && <p className="text-xs text-rose-600">Alasan: {t.rejection_reason}</p>}
+              {t.status === 'APPROVED' && t.invoice && (
+                <p className="text-xs text-emerald-700">
+                  Daily Work Invoice: {t.invoice.invoice_number} — Rp {Number(t.invoice.grand_total).toLocaleString('id-ID')}
+                </p>
+              )}
               <div className="flex flex-wrap gap-2">
                 {t.paper_form && (
                   <Button variant="outline" size="sm" className="gap-1.5" onClick={() => openPaper(t.id)}>
@@ -212,7 +236,7 @@ export const OperatorTimesheetsPage: React.FC<{ history?: boolean }> = ({ histor
                   <>
                     <label className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 cursor-pointer hover:bg-slate-50">
                       <Upload size={13} /> Pilih Foto
-                      <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+                      <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => pickFile(e.target.files?.[0] ?? null)} />
                     </label>
                     <Button size="sm" className="gap-1.5" disabled={!file} isLoading={isSubmitting} onClick={() => uploadAndSubmit(t)}>
                       <Send size={13} /> Unggah & Submit
@@ -229,3 +253,4 @@ export const OperatorTimesheetsPage: React.FC<{ history?: boolean }> = ({ histor
 }
 
 export default OperatorTimesheetsPage
+

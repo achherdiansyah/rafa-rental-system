@@ -374,7 +374,7 @@ class SupervisorOperatorWorkflowTest extends TestCase
         $timesheet = Timesheet::factory()->create(['rental_detail_id' => $rentalDetail->id]);
 
         Sanctum::actingAs($operator);
-        $this->postJson('/api/v1/timesheets', [
+        $this->createTimesheetAsOperator( [
             'rental_detail_id' => $rentalDetail->id,
             'report_date' => now()->toDateString(),
             'start_time' => '08:00',
@@ -410,3 +410,4 @@ class SupervisorOperatorWorkflowTest extends TestCase
             ->assertForbidden();
     }
 }
+

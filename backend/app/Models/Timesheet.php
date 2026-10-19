@@ -66,4 +66,9 @@ class Timesheet extends Model
     {
         return $this->morphMany(Attachment::class, 'attachable');
     }
+
+    public function invoice(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Invoice::class);
+    }
 }
