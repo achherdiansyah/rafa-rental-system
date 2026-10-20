@@ -289,7 +289,7 @@ describe('Cart UI Suite', () => {
     expect(cartService.addItem).not.toHaveBeenCalled()
   })
 
-  it('rejects today as the rental start date (H-1 rule)', async () => {
+  it('accepts today as the rental start date', async () => {
     vi.mocked(cartService.addItem).mockResolvedValue({ success: true, message: 'OK', data: mockCart } as any)
 
     render(
@@ -300,18 +300,41 @@ describe('Cart UI Suite', () => {
       </MemoryRouter>
     )
 
-    const startInput = screen.getByLabelText(/tanggal mulai sewa/i) as HTMLInputElement
-    fireEvent.change(startInput, { target: { value: jakartaToday() } })
-    fireEvent.change(screen.getByLabelText(/tanggal selesai sewa/i), { target: { value: addDays(jakartaToday(), 3) } })
-    expect(startInput.value).toBe(jakartaToday())
-    expect(startInput.min).toBe(minRentalStartDate())
+    const start = jakartaToday()
+    const end = addDays(jakartaToday(), 3)
+    fireEvent.change(screen.getByLabelText(/tanggal mulai sewa/i), { target: { value: start } })
+    fireEvent.change(screen.getByLabelText(/tanggal selesai sewa/i), { target: { value: end } })
 
     const submit = screen.getByRole('button', { name: /tambah ke keranjang/i })
     await waitFor(() => expect(submit).toBeEnabled())
     fireEvent.click(submit)
 
-    await waitFor(() => expect(startInput.getAttribute('aria-invalid')).toBe('true'))
-    expect(screen.getByText(/pemesanan wajib dilakukan H-1/i)).toBeInTheDocument()
+    await waitFor(() => {
+      expect(cartService.addItem).toHaveBeenCalledWith(
+        expect.objectContaining({ start_date: start, end_date: end })
+      )
+    })
+  })
+
+  it('rejects yesterday as the rental start date', async () => {
+    vi.mocked(cartService.addItem).mockResolvedValue({ success: true, message: 'OK', data: mockCart } as any)
+
+    render(
+      <MemoryRouter>
+        <ToastProvider>
+          <AddToCartModal isOpen model={mockModel} onClose={vi.fn()} />
+        </ToastProvider>
+      </MemoryRouter>
+    )
+
+    fireEvent.change(screen.getByLabelText(/tanggal mulai sewa/i), { target: { value: addDays(jakartaToday(), -1) } })
+    fireEvent.change(screen.getByLabelText(/tanggal selesai sewa/i), { target: { value: addDays(jakartaToday(), 3) } })
+
+    const submit = screen.getByRole('button', { name: /tambah ke keranjang/i })
+    await waitFor(() => expect(submit).toBeEnabled())
+    fireEvent.click(submit)
+
+    expect(await screen.findByText(/tidak boleh sebelum hari ini/i)).toBeInTheDocument()
     expect(cartService.addItem).not.toHaveBeenCalled()
   })
 
@@ -337,7 +360,7 @@ describe('Cart UI Suite', () => {
     expect(await screen.findByText(/tidak boleh mendahului tanggal mulai/i)).toBeInTheDocument()
   })
 
-  it('start date input exposes tomorrow as the minimum selectable date', async () => {
+  it('start date input exposes today as the minimum selectable date', async () => {
     render(
       <MemoryRouter>
         <ToastProvider>
@@ -367,7 +390,7 @@ describe('Cart UI Suite', () => {
       </MemoryRouter>
     )
 
-    // Fill dates (H-1 compliant, so client-side validation accepts them)
+    // Fill dates (start today or later, so client-side validation accepts them)
     const start = minRentalStartDate()
     const end = addDays(start, 5)
 

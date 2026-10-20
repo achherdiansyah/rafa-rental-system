@@ -21,14 +21,14 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
-class RentalH1RuleTest extends TestCase
+class RentalStartDateRuleTest extends TestCase
 {
     use RefreshDatabase;
 
     protected function setUp(): void
     {
         parent::setUp();
-        // Controlled "today" in Asia/Jakarta -> minimum start is 2026-10-21.
+        // Controlled "today" in Asia/Jakarta -> minimum start is 2026-10-20.
         Carbon::setTestNow(Carbon::create(2026, 10, 20, 9, 0, 0, RentalDateWindow::TIMEZONE));
     }
 
@@ -61,7 +61,7 @@ class RentalH1RuleTest extends TestCase
         ];
     }
 
-    public function test_cart_rejects_yesterday_today_and_accepts_tomorrow(): void
+    public function test_cart_rejects_yesterday_and_accepts_today_and_tomorrow(): void
     {
         $user = User::factory()->create(['role' => UserRole::USER]);
         Sanctum::actingAs($user);
@@ -72,15 +72,16 @@ class RentalH1RuleTest extends TestCase
             ->assertJsonValidationErrors(['start_date'])
             ->assertJsonPath('errors.start_date.0', RentalDateWindow::START_MESSAGE);
 
-        $this->postJson('/api/v1/cart/items', $this->cartPayload($model, '2026-10-20', '2026-10-25'))
-            ->assertStatus(422)
-            ->assertJsonValidationErrors(['start_date']);
-
         $this->assertDatabaseCount('cart_items', 0);
 
-        $this->postJson('/api/v1/cart/items', $this->cartPayload($model, '2026-10-21', '2026-10-25'))
+        // Today is now allowed (H-1 temporarily lifted).
+        $this->postJson('/api/v1/cart/items', $this->cartPayload($model, '2026-10-20', '2026-10-25'))
             ->assertStatus(201);
-        $this->assertDatabaseHas('cart_items', ['start_date' => '2026-10-21 00:00:00']);
+        $this->assertDatabaseHas('cart_items', ['start_date' => '2026-10-20 00:00:00']);
+
+        // Tomorrow remains allowed.
+        $this->postJson('/api/v1/cart/items', $this->cartPayload($model, '2026-10-21', '2026-10-26'))
+            ->assertStatus(201);
     }
 
     public function test_cart_rejects_end_date_before_start_date(): void
@@ -95,7 +96,7 @@ class RentalH1RuleTest extends TestCase
             ->assertJsonPath('errors.end_date.0', RentalDateWindow::END_MESSAGE);
     }
 
-    public function test_update_cart_item_rejects_today(): void
+    public function test_update_cart_item_accepts_today_and_rejects_yesterday(): void
     {
         $user = User::factory()->create(['role' => UserRole::USER]);
         Sanctum::actingAs($user);
@@ -110,10 +111,13 @@ class RentalH1RuleTest extends TestCase
         ]);
 
         $this->putJson("/api/v1/cart/items/{$item->id}", ['start_date' => '2026-10-20'])
+            ->assertStatus(200);
+        $this->assertSame('2026-10-20', $item->fresh()->start_date->toDateString());
+
+        $this->putJson("/api/v1/cart/items/{$item->id}", ['start_date' => '2026-10-19'])
             ->assertStatus(422)
             ->assertJsonValidationErrors(['start_date']);
-
-        $this->assertSame('2026-10-21', $item->fresh()->start_date->toDateString());
+        $this->assertSame('2026-10-20', $item->fresh()->start_date->toDateString());
     }
 
     public function test_checkout_rejects_cart_item_that_became_stale_after_day_change(): void
@@ -133,7 +137,7 @@ class RentalH1RuleTest extends TestCase
             'equipment_model_id' => $model->id,
             'quantity' => 1,
             'is_all_in' => false,
-            'start_date' => '2026-10-20',
+            'start_date' => '2026-10-19',
             'end_date' => '2026-10-25',
         ]);
 
@@ -178,32 +182,46 @@ class RentalH1RuleTest extends TestCase
         $this->assertEquals(BookingStatus::DRAFT, $booking->fresh()->status);
     }
 
-    public function test_reschedule_rejects_today_as_new_start_date(): void
+    public function test_reschedule_accepts_today_and_rejects_yesterday(): void
     {
         $user = User::factory()->create(['role' => UserRole::USER]);
         $location = ProjectLocation::factory()->create(['user_id' => $user->id]);
+        $model = $this->modelWithAvailability();
         $booking = Booking::factory()->create([
             'user_id' => $user->id,
             'project_location_id' => $location->id,
-            'status' => BookingStatus::PENDING_APPROVAL,
+            'status' => BookingStatus::APPROVED,
+        ]);
+        BookingDetail::factory()->create([
+            'booking_id' => $booking->id,
+            'equipment_model_id' => $model->id,
+            'quantity' => 1,
+            'start_date' => '2026-10-22',
+            'end_date' => '2026-10-25',
         ]);
 
         Sanctum::actingAs($user);
 
         $this->postJson("/api/v1/bookings/{$booking->id}/reschedule", [
-            'new_start_date' => '2026-10-20',
+            'new_start_date' => '2026-10-19',
             'new_end_date' => '2026-10-25',
             'reason' => 'Proyek dimajukan oleh pemilik lahan.',
         ])->assertStatus(422)->assertJsonValidationErrors(['new_start_date']);
+
+        $this->postJson("/api/v1/bookings/{$booking->id}/reschedule", [
+            'new_start_date' => '2026-10-20',
+            'new_end_date' => '2026-10-25',
+            'reason' => 'Proyek dimajukan oleh pemilik lahan.',
+        ])->assertStatus(200);
     }
 
-    public function test_availability_still_enforced_after_h1_passes(): void
+    public function test_availability_still_enforced_after_date_rule_passes(): void
     {
         $user = User::factory()->create(['role' => UserRole::USER]);
         Sanctum::actingAs($user);
         $model = $this->modelWithAvailability(1);
 
-        $response = $this->postJson('/api/v1/cart/items', $this->cartPayload($model, '2026-10-21', '2026-10-25', 3))
+        $response = $this->postJson('/api/v1/cart/items', $this->cartPayload($model, '2026-10-20', '2026-10-25', 3))
             ->assertStatus(409)
             ->assertJson(['code' => 'BUSINESS_RULE_VIOLATION']);
 

@@ -1,7 +1,7 @@
 export const RENTAL_TZ = 'Asia/Jakarta'
 
 export const RENTAL_START_MESSAGE =
-  'Tanggal mulai sewa minimal besok karena pemesanan wajib dilakukan H-1.'
+  'Tanggal mulai sewa tidak boleh sebelum hari ini.'
 
 export const RENTAL_END_MESSAGE =
   'Tanggal selesai sewa tidak boleh mendahului tanggal mulai sewa.'
@@ -10,12 +10,12 @@ export const RENTAL_END_MESSAGE =
 export const jakartaToday = (): string =>
   new Intl.DateTimeFormat('en-CA', { timeZone: RENTAL_TZ }).format(new Date())
 
-/** Earliest selectable rental start date (tomorrow in Asia/Jakarta). */
-export const minRentalStartDate = (): string => {
-  const [year, month, day] = jakartaToday().split('-').map(Number)
-  const next = new Date(Date.UTC(year, month - 1, day + 1))
-  return new Intl.DateTimeFormat('en-CA', { timeZone: 'UTC' }).format(next)
-}
+/**
+ * Earliest selectable rental start date (today in Asia/Jakarta).
+ * NOTE: H-1 is temporarily disabled for the thesis demo; add one day here
+ * (and restore RENTAL_START_MESSAGE) to re-enable it.
+ */
+export const minRentalStartDate = (): string => jakartaToday()
 
 export const isRentalStartValid = (startDate: string): boolean =>
   Boolean(startDate) && startDate >= minRentalStartDate()

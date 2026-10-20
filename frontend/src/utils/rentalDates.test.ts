@@ -6,7 +6,7 @@ import {
   isRentalEndValid,
 } from './rentalDates'
 
-describe('rentalDates H-1 rules (Asia/Jakarta)', () => {
+describe('rentalDates start-date rules (Asia/Jakarta)', () => {
   afterEach(() => {
     vi.useRealTimers()
   })
@@ -17,7 +17,7 @@ describe('rentalDates H-1 rules (Asia/Jakarta)', () => {
     vi.setSystemTime(new Date('2026-10-20T02:00:00Z'))
 
     expect(jakartaToday()).toBe('2026-10-20')
-    expect(minRentalStartDate()).toBe('2026-10-21')
+    expect(minRentalStartDate()).toBe('2026-10-20')
   })
 
   it('rolls the window at Jakarta midnight, not UTC midnight', () => {
@@ -26,15 +26,15 @@ describe('rentalDates H-1 rules (Asia/Jakarta)', () => {
     vi.setSystemTime(new Date('2026-10-20T18:00:00Z'))
 
     expect(jakartaToday()).toBe('2026-10-21')
-    expect(minRentalStartDate()).toBe('2026-10-22')
+    expect(minRentalStartDate()).toBe('2026-10-21')
   })
 
-  it('rejects yesterday and today, accepts tomorrow or later', () => {
+  it('rejects yesterday, accepts today and later', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-10-20T02:00:00Z'))
 
     expect(isRentalStartValid('2026-10-19')).toBe(false)
-    expect(isRentalStartValid('2026-10-20')).toBe(false)
+    expect(isRentalStartValid('2026-10-20')).toBe(true)
     expect(isRentalStartValid('2026-10-21')).toBe(true)
     expect(isRentalStartValid('2026-11-01')).toBe(true)
   })
@@ -45,3 +45,4 @@ describe('rentalDates H-1 rules (Asia/Jakarta)', () => {
     expect(isRentalEndValid('2026-10-21', '2026-10-25')).toBe(true)
   })
 })
+

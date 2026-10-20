@@ -49,7 +49,7 @@ class SubmitBookingAction
                   );
               }
 
-            // H-1 re-check: a draft created before the day rolled over must
+            // Start-date re-check: a draft created on a previous day must
             // still satisfy the minimum start date at submission time.
             $booking->loadMissing('details');
             foreach ($booking->details as $detail) {

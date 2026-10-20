@@ -115,8 +115,8 @@ class CreateBookingFromCartAction
                 ];
             }
 
-            // 2b. H-1 rule re-check: a cart saved yesterday must not bypass the
-            // minimum start date after the day rolls over.
+            // 2b. Start-date re-check: a cart saved on a previous day must not
+            // bypass the minimum start date after the day rolls over.
             foreach ($lineItems as $line) {
                 RentalDateWindow::assertAllowed($line['start_date'], $line['end_date']);
             }
